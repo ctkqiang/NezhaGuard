@@ -14,4 +14,19 @@ add_executable(NezhaGuard
         src/core/types.h
         src/core/arena.cc
         src/core/arena.h
+        src/core/capture.cc
+        src/core/capture.h
+        src/core/decoder.cc
+        src/core/decoder.h
 )
+
+target_include_directories(NezhaGuard PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+
+find_library(PCAP_LIB pcap REQUIRED
+    PATHS /opt/homebrew/lib /usr/local/lib /usr/lib
+)
+find_path(PCAP_INCLUDE_DIR pcap.h REQUIRED
+    PATHS /opt/homebrew/include /usr/local/include /usr/include
+)
+target_include_directories(NezhaGuard PRIVATE ${PCAP_INCLUDE_DIR})
+target_link_libraries(NezhaGuard PRIVATE ${PCAP_LIB})

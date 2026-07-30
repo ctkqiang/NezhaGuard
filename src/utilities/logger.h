@@ -68,11 +68,10 @@ namespace Nezha::Log {
 
         template<typename... Args>
         void log(Level lv,
-                 std::format_string<Args...> fmt,
-                 Args &&... args,
-                 const std::source_location & /*loc*/ = std::source_location::current()) {
+                 const char *fmt,
+                 Args &&... args) {
             if (!enabled(lv)) return;
-            std::string msg = std::format(fmt, std::forward<Args>(args)...);
+            std::string msg = std::vformat(fmt, std::make_format_args(args...));
 
             auto now = std::chrono::system_clock::now();
             auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
