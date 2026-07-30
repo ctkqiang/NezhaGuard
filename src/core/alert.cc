@@ -15,18 +15,16 @@ namespace Nezha::Core {
         std::string ip(a.src_ip);
         Nanos cutoff = a.ts_ns - static_cast<Nanos>(dedup_sec_) * 1'000'000'000ULL;
 
-        // 查找去重缓冲中是否有同类型同 IP 的告警
         for (auto &dk: buffer_) {
             if (dk.type == a.type && dk.ip == ip && dk.first_ns >= cutoff) {
                 dk.count++;
                 dk.max_score = std::max(dk.max_score, a.score);
                 if (a.level > dk.max_level) dk.max_level = a.level;
                 if (!a.detail.empty()) dk.detail = std::string(a.detail);
-                return; // 已合并
+                return;
             }
         }
 
-        // 新告警
         DedupKey dk{};
         dk.type = a.type;
         dk.ip = ip;

@@ -16,17 +16,15 @@
 namespace Nezha::Core {
     class Arena;
 
-    // 日志采集回调
     using LogEventCallback = std::function<void(const event &)>;
 
-    // 日志源配置
     struct LogSource {
-        std::string path;        // 日志文件路径
-        EventSource source_type; // Log 或 Honeypot
-        AppId app_id = 0;        // 应用标识
+        std::string path;
+        EventSource source_type;
+        AppId app_id = 0;
     };
 
-    // 日志文件监控器：tail -f 模式跟踪多个日志源，逐行解析生成 event
+    // tail -f 模式跟踪多个日志源，逐行解析；文件轮转后自动重开
     class LogWatcher {
     public:
         LogWatcher() = default;
@@ -35,13 +33,8 @@ namespace Nezha::Core {
         LogWatcher(const LogWatcher &) = delete;
         LogWatcher &operator=(const LogWatcher &) = delete;
 
-        // 添加监控源
         void add_source(const LogSource &src);
-
-        // 启动监控线程，arena 用于字符串驻留，cb 每行调用
         void start(Arena &arena, LogEventCallback cb);
-
-        // 停止监控
         void stop();
 
         [[nodiscard]] bool running() const noexcept { return running_; }
@@ -50,7 +43,6 @@ namespace Nezha::Core {
         void watch_loop(Arena *arena, LogEventCallback *cb);
         bool parse_line(std::string_view line, Arena &arena, const LogSource &src, event &out);
 
-        // 各日志格式解析
         static bool parse_combined(std::string_view line, Arena &arena, event &out);
         static bool parse_syslog(std::string_view line, Arena &arena, event &out);
         static bool parse_auth(std::string_view line, Arena &arena, event &out);

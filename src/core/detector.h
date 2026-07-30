@@ -16,7 +16,6 @@
 namespace Nezha::Core {
     class Arena;
 
-    // 攻击类别
     enum class AttackType : std::uint8_t {
         SQLi,
         XSS,
@@ -35,7 +34,6 @@ namespace Nezha::Core {
 
     const char *attack_type_cstr(AttackType t) noexcept;
 
-    // 签名规则
     struct SigRule {
         AttackType type;
         Severity level;
@@ -44,7 +42,6 @@ namespace Nezha::Core {
         const char *desc;
     };
 
-    // 检测结果
     struct Alert {
         AttackType type = AttackType::UnknownMal;
         Severity level = Severity::Info;
@@ -58,7 +55,7 @@ namespace Nezha::Core {
 
     using AlertCallback = std::function<void(const Alert &)>;
 
-    // 攻击检测引擎：签名匹配 + 速率追踪 + 威胁评分
+    // 签名匹配 + 速率追踪：输入 Core::event，匹配命中时回调 Alert
     class AttackDetector {
     public:
         AttackDetector() = default;

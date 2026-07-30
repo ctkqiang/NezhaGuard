@@ -14,7 +14,6 @@
 namespace Nezha::Core {
     using CaptureCallback = std::function<void(const std::uint8_t *raw, std::size_t len, const timeval &ts)>;
 
-    // libpcap 采集器，RAII 管理句柄，不可拷贝，可移动
     class PacketCapture {
     public:
         static std::vector<std::string> list_devices();
@@ -34,7 +33,6 @@ namespace Nezha::Core {
 
         bool set_filter(const std::string &expr);
 
-        // 阻塞循环，每收到一个包回调 cb，直到出错或 stop() 被调用
         void start(CaptureCallback cb);
         void stop();
 
@@ -42,7 +40,7 @@ namespace Nezha::Core {
         [[nodiscard]] const std::string &error() const noexcept { return err_; }
 
     private:
-        void *handle_ = nullptr; // pcap_t*
+        void *handle_ = nullptr; // pcap_t* — 避免头文件泄漏 libpcap 类型
         std::string err_;
         volatile bool stop_ = false;
     };

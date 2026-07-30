@@ -26,6 +26,7 @@ add_executable(NezhaGuard
         src/core/honeypot.h
         src/core/alert.cc
         src/core/alert.h
+        src/model/request.h
 )
 
 target_include_directories(NezhaGuard PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})

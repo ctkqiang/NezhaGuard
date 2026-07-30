@@ -8,16 +8,13 @@
 #include <chrono>
 #include <cstring>
 #include <fstream>
-#include <regex>
 #include <sstream>
 
 namespace Nezha::Core {
 
     LogWatcher::~LogWatcher() { stop(); }
 
-    void LogWatcher::add_source(const LogSource &src) {
-        sources_.push_back(src);
-    }
+    void LogWatcher::add_source(const LogSource &src) { sources_.push_back(src); }
 
     void LogWatcher::start(Arena &arena, LogEventCallback cb) {
         if (running_) return;
@@ -33,7 +30,6 @@ namespace Nezha::Core {
     }
 
     void LogWatcher::watch_loop(Arena *arena, LogEventCallback *cb) {
-        // 记录每个文件当前大小，仅读增量
         struct FileState {
             std::string path;
             std::ifstream stream;
@@ -54,7 +50,6 @@ namespace Nezha::Core {
         while (running_) {
             for (std::size_t i = 0; i < sources_.size() && running_; ++i) {
                 auto &st = states[i];
-                // 文件被轮转后重新打开
                 if (!st.stream.is_open()) {
                     st.stream.open(st.path);
                     if (st.stream.is_open()) {
@@ -67,7 +62,7 @@ namespace Nezha::Core {
                 st.stream.seekg(0, std::ios::end);
                 auto cur_pos = st.stream.tellg();
                 if (cur_pos < st.last_pos) {
-                    // 文件被截断（轮转），从头开始
+                    // 日志轮转后文件截断，从头开始
                     st.stream.clear();
                     st.stream.seekg(0, std::ios::beg);
                     st.last_pos = 0;
@@ -104,27 +99,22 @@ namespace Nezha::Core {
         if (parse_auth(line, arena, out)) return true;
         if (parse_json(line, arena, out)) return true;
 
-        // 兜底：存原始行
         out.msg = arena.intern(line);
         return true;
     }
 
-    // Nginx/Apache 通用日志: IP - - [time] "METHOD /path HTTP/1.x" status size "ref" "ua"
     bool LogWatcher::parse_combined(std::string_view line, Arena &arena, event &out) {
-        // 快速检测：以 IP 开头 + 包含 "] \""
         auto bracket = line.find("] \"");
         if (bracket == std::string_view::npos) return false;
         auto first_space = line.find(' ');
         if (first_space == std::string_view::npos) return false;
 
-        // 源 IP
         std::string_view ip_str = line.substr(0, first_space);
         IPAddress::ipaddr ip;
         if (!IPAddress::ipaddr::parse(ip_str, ip)) return false;
         out.src = ip;
         out.proto = PROTO_TCP;
 
-        // 时间戳 [dd/MMM/yyyy:HH:mm:ss +TZ]
         auto ts_start = line.find('[');
         auto ts_end = line.find(']', ts_start);
         if (ts_start != std::string_view::npos && ts_end != std::string_view::npos) {
@@ -134,14 +124,12 @@ namespace Nezha::Core {
             }
         }
 
-        // 请求行 "METHOD /path HTTP/1.x"
         auto req_start = line.find('"', ts_end);
         auto req_end = line.find('"', req_start + 1);
         if (req_start != std::string_view::npos && req_end != std::string_view::npos) {
             std::string_view req = line.substr(req_start + 1, req_end - req_start - 1);
             out.msg = arena.intern(req);
 
-            // 解析 GET /path HTTP/1.1 或 POST /login
             auto sp1 = req.find(' ');
             if (sp1 != std::string_view::npos) {
                 std::string_view method = req.substr(0, sp1);
@@ -154,19 +142,16 @@ namespace Nezha::Core {
             }
         }
 
-        // 状态码
         auto status_start = req_end + 2;
         if (status_start < line.size()) {
             auto status_end = line.find(' ', status_start);
             if (status_end != std::string_view::npos) {
                 std::string_view status = line.substr(status_start, status_end - status_start);
                 out.fields.put(4, FieldVal::num(std::stoi(std::string(status))));
-                // HTTP 5xx → 警告级, 4xx → Info
                 if (!status.empty() && status[0] == '5') out.level = Severity::Warn;
                 if (!status.empty() && status[0] == '4') out.level = Severity::Info;
             }
 
-            // User-Agent
             auto ua_pos = line.rfind("\" \"");
             if (ua_pos != std::string_view::npos) {
                 auto ua_end = line.rfind('"');
@@ -177,36 +162,24 @@ namespace Nezha::Core {
             }
         }
 
-        // 端口猜测
         out.dport = 443;
-        if (line.find(":80 ") != std::string_view::npos ||
-            req_end != std::string_view::npos) {
-            // 根据请求内容推断
-        }
-
         out.source = EventSource::Log;
         return true;
     }
 
-    // Syslog: <pri>timestamp hostname process[pid]: message
     bool LogWatcher::parse_syslog(std::string_view line, Arena &arena, event &out) {
         if (line.size() < 15 || line[0] != '<') return false;
         auto end_pri = line.find('>');
         if (end_pri == std::string_view::npos || end_pri > 5) return false;
 
-        // hostname (第4个空格分隔字段)
         auto after_pri = line.substr(end_pri + 1);
 
-        auto sp = std::string_view::npos;
         int field = 0;
         std::size_t pos = 0;
-        std::string_view hostname;
         for (std::size_t i = 0; i < after_pri.size(); ++i) {
             if (after_pri[i] == ' ') {
                 ++field;
                 if (field == 3) {
-                    hostname = after_pri.substr(pos, i - pos);
-                    // message from hostname onwards (field 5+)
                     auto msg_start = i + 1;
                     for (int j = 0; j < 2 && msg_start < after_pri.size(); ++msg_start) {
                         if (after_pri[msg_start - 1] == ' ') ++j;
@@ -221,19 +194,15 @@ namespace Nezha::Core {
             }
         }
 
-        // 尝试从消息中提取 IP
         out.source = EventSource::Log;
         out.proto = PROTO_TCP;
         return true;
     }
 
-    // /var/log/auth.log: MMM DD HH:MM:SS host process[pid]: message
     bool LogWatcher::parse_auth(std::string_view line, Arena &arena, event &out) {
         if (line.size() < 20) return false;
-        // 格式: 前15字符是时间戳
         if (line[3] != ' ' || line[6] != ' ') return false;
 
-        // 从消息提取 IP (如 "from 1.2.3.4 port 22")
         auto from_pos = line.find("from ");
         if (from_pos != std::string_view::npos) {
             auto ip_start = from_pos + 5;
@@ -246,7 +215,6 @@ namespace Nezha::Core {
             }
         }
 
-        // 检测认证事件类型
         if (line.find("Failed password") != std::string_view::npos) {
             out.level = Severity::Warn;
             out.fields.put(0, FieldVal::str(arena.intern("SSH_BRUTE")));
@@ -264,10 +232,9 @@ namespace Nezha::Core {
         return true;
     }
 
-    // JSON 日志 (如应用写出的结构化日志)
     bool LogWatcher::parse_json(std::string_view line, Arena &arena, event &out) {
         if (line.empty() || line[0] != '{') return false;
-        // 简易 JSON 提取: "ip", "method", "path", "status", "message"
+
         auto extract_str = [&](const char *key, FieldId id) {
             std::string search = std::string("\"") + key + "\":\"";
             auto pos = line.find(search);
@@ -290,7 +257,6 @@ namespace Nezha::Core {
         extract_str("path", 3);
         extract_str("message", 7);
 
-        // 尝试用 ip 字段设置 src
         const FieldVal *ip_val = out.fields.get(6);
         if (ip_val && ip_val->kind == FieldVal::Kind::Str) {
             IPAddress::ipaddr ip;

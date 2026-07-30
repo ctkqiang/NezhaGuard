@@ -72,10 +72,8 @@ namespace Nezha::Core {
 
         int opt = 1;
         setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
-        // 双栈: IPv6 同时接受 IPv4
+        // 双栈: IPv6 socket 同时接受 IPv4 连接
         setsockopt(fd, IPPROTO_IPV6, IPV6_V6ONLY, &opt, 0);
-
-        // 非阻塞
         fcntl(fd, F_SETFL, O_NONBLOCK);
 
         sockaddr_in6 addr{};

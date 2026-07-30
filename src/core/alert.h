@@ -13,24 +13,17 @@
 
 namespace Nezha::Core {
 
-    // 告警输出目标
     enum class AlertSink { Log, File, Webhook };
 
-    // 告警管理器：去重、聚合、分级路由
+    // 同类型同 IP 在去重窗口内合并，达到阈值时触发输出
     class AlertManager {
     public:
         AlertManager() = default;
 
-        // 提交一条告警，自动去重，达到阈值时触发输出
         void submit(const Alert &a);
-
-        // 设置告警回调（用于 Webhook 等自定义输出）
         void set_callback(std::function<void(const Alert &)> cb) { callback_ = std::move(cb); }
-
-        // 手动刷新去重缓冲
         void flush();
 
-        // 去重窗口大小（同类型同 IP 在此窗口内合并，秒）
         void set_dedup_window(int seconds) { dedup_sec_ = seconds; }
 
         [[nodiscard]] std::size_t total_alerts() const noexcept { return total_; }
