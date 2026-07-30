@@ -1,1 +1,0 @@
-/usr/bin/c++  -arch arm64 -Wl,-search_paths_first -Wl,-headerpad_max_install_names CMakeFiles/NezhaGuard.dir/main.cc.o CMakeFiles/NezhaGuard.dir/src/utilities/logger.cc.o CMakeFiles/NezhaGuard.dir/src/core/ipaddr.cc.o CMakeFiles/NezhaGuard.dir/src/core/event.cc.o CMakeFiles/NezhaGuard.dir/src/core/arena.cc.o -o NezhaGuard
