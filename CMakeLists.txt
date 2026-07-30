@@ -18,6 +18,14 @@ add_executable(NezhaGuard
         src/core/capture.h
         src/core/decoder.cc
         src/core/decoder.h
+        src/core/log_watcher.cc
+        src/core/log_watcher.h
+        src/core/detector.cc
+        src/core/detector.h
+        src/core/honeypot.cc
+        src/core/honeypot.h
+        src/core/alert.cc
+        src/core/alert.h
 )
 
 target_include_directories(NezhaGuard PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})

@@ -150,7 +150,8 @@ namespace Nezha::Core {
     };
     static constexpr std::size_t kSigCount = sizeof(kSignatures) / sizeof(kSignatures[0]);
 
-    const SigRule *AttackDetector::match_signature(std::string_view msg, std::string_view ua) {
+    namespace {
+        const SigRule *match_signature(std::string_view msg, std::string_view ua) {
         const SigRule *best = nullptr;
         double best_score = 0.0;
 
@@ -179,6 +180,7 @@ namespace Nezha::Core {
         if (!ua.empty()) try_match(ua, true);
         return best;
     }
+    } // anonymous namespace
 
     AttackDetector::IpPortKey AttackDetector::make_key(const event &e) noexcept {
         // 简单哈希: IP 前 8 字节 + port
