@@ -26,17 +26,17 @@ namespace Nezha::Log {
                     const char *color_code = "";
                     switch (lv) {
                         case Level::Trace: color_code = "\033[37m";
-                            break; // 白色
+                            break;
                         case Level::Debug: color_code = "\033[36m";
-                            break; // 青色
+                            break;
                         case Level::Info: color_code = "\033[32m";
-                            break; // 绿色
+                            break;
                         case Level::Warn: color_code = "\033[33m";
-                            break; // 黄色
+                            break;
                         case Level::Error: color_code = "\033[31m";
-                            break; // 红色
+                            break;
                         case Level::Critical: color_code = "\033[41;37m";
-                            break; // 红底白字
+                            break;
                         default: break;
                     }
                     std::fprintf(stderr, "%s%.*s\033[0m\n", color_code, static_cast<int>(len), line);
@@ -54,14 +54,12 @@ namespace Nezha::Log {
         };
     }
 
-
     namespace {
         class FileSink final : public ISink {
         public:
-            FileSink(const std::string &path, std::size_t max_bytes, int max_files) : path_(path),
-                max_bytes_(max_bytes), max_files_(max_files) {
+            FileSink(const std::string &path, std::size_t max_bytes, int max_files)
+                : path_(path), max_bytes_(max_bytes), max_files_(max_files) {
                 fs::create_directories(fs::path(path_).parent_path());
-
                 if (fs::exists(path_)) {
                     current_size_ = fs::file_size(path_);
                 }
@@ -78,13 +76,11 @@ namespace Nezha::Log {
                 if (!file_.is_open()) {
                     open_file();
                 }
-
                 if (current_size_ + len + 1 > max_bytes_) {
                     rotate();
                     open_file();
                     current_size_ = 0;
                 }
-
                 file_.write(line, static_cast<std::streamsize>(len));
                 file_.put('\n');
                 file_.flush();
@@ -107,7 +103,6 @@ namespace Nezha::Log {
 
             void rotate() {
                 file_.close();
-
                 for (int i = max_files_ - 1; i >= 1; --i) {
                     std::string old_name = path_ + "." + std::to_string(i);
                     std::string new_name = path_ + "." + std::to_string(i + 1);
@@ -118,7 +113,6 @@ namespace Nezha::Log {
                         fs::rename(old_name, new_name);
                     }
                 }
-
                 std::string first = path_ + ".1";
                 if (fs::exists(first)) {
                     fs::remove(first);
@@ -135,7 +129,6 @@ namespace Nezha::Log {
             std::ofstream file_;
         };
     }
-
 
     Logger &Logger::instance() noexcept {
         static Logger instance;
@@ -167,44 +160,39 @@ namespace Nezha::Log {
         }
     }
 
-    // 兼容旧式 printf 风格（内部转为字符串后转发）
-    void Logger::vlogf(Level lv, const char *file, int line, const char *fmt, va_list ap) {
+    void Logger::vlogf(Level lv, const char * /*file*/, int /*line*/, const char *fmt, va_list ap) {
         if (!enabled(lv)) return;
-
-        // 先用 vsnprintf 计算长度
         va_list ap_copy;
         va_copy(ap_copy, ap);
         int len = std::vsnprintf(nullptr, 0, fmt, ap_copy);
         va_end(ap_copy);
-
-        if (len < 0) return; // 格式化失败
-
+        if (len < 0) return;
         std::string msg(static_cast<std::size_t>(len) + 1, '\0');
         std::vsnprintf(msg.data(), msg.size(), fmt, ap);
         msg.resize(static_cast<std::size_t>(len));
 
-        // 组装完整日志行（类似 log() 的格式）
-        std::string full = std::format(
-            "[{}:{}] {}",
-            file, line,
-            msg
+        auto now = std::chrono::system_clock::now();
+        auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
+        std::time_t tt = std::chrono::system_clock::to_time_t(now);
+        std::tm tm = *std::localtime(&tt);
+        std::string time_str = std::format(
+            "{:04d}-{:02d}-{:02d} {:02d}:{:02d}:{:02d}.{:03d}",
+            tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday,
+            tm.tm_hour, tm.tm_min, tm.tm_sec, ms.count()
         );
 
+        std::string full = std::format(
+            "[哪吒系统] [{}] @ {}: {}",
+            level_to_string(lv), time_str, msg
+        );
         write_to_sinks(lv, full);
     }
 
-    // ============================================================
-    // 全局辅助函数实现（与 logger.h 声明完全匹配）
-    // ============================================================
     void init_default(const std::string &file_path, Level lv) {
         auto &logger = Logger::instance();
         logger.set_level(lv);
         logger.clear_sinks();
-
-        // 添加 stderr sink（彩色）
         logger.add_sink(make_stderr_sink(true));
-
-        // 添加文件 sink
         if (!file_path.empty()) {
             logger.add_sink(make_file_sink(file_path));
         }
@@ -221,4 +209,4 @@ namespace Nezha::Log {
     ) {
         return std::make_shared<FileSink>(path, max_bytes, max_files);
     }
-} // namespace Nezha::Log
+}
