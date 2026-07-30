@@ -9,4 +9,7 @@ add_executable(NezhaGuard
         src/utilities/logger.h
         src/core/ipaddr.cc
         src/core/ipaddr.h
+        src/core/event.cc
+        src/core/event.h
+        src/core/types.h
 )
