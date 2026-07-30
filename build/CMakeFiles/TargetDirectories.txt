@@ -1,0 +1,3 @@
+/Users/johnmelodyme/Documents/ctkqiang/NezhaGuard/build/CMakeFiles/NezhaGuard.dir
+/Users/johnmelodyme/Documents/ctkqiang/NezhaGuard/build/CMakeFiles/edit_cache.dir
+/Users/johnmelodyme/Documents/ctkqiang/NezhaGuard/build/CMakeFiles/rebuild_cache.dir

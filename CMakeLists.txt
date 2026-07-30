@@ -12,4 +12,6 @@ add_executable(NezhaGuard
         src/core/event.cc
         src/core/event.h
         src/core/types.h
+        src/core/arena.cc
+        src/core/arena.h
 )
