@@ -5,7 +5,6 @@
 #ifndef NEZHAGUARD_CAPTURE_H
 #define NEZHAGUARD_CAPTURE_H
 
-#include <cstdint>
 #include <functional>
 #include <string>
 #include <vector>
@@ -19,11 +18,15 @@ namespace Nezha::Core {
         static std::vector<std::string> list_devices();
 
         PacketCapture() = default;
+
         ~PacketCapture();
 
         PacketCapture(const PacketCapture &) = delete;
+
         PacketCapture &operator=(const PacketCapture &) = delete;
+
         PacketCapture(PacketCapture &&o) noexcept;
+
         PacketCapture &operator=(PacketCapture &&o) noexcept;
 
         bool open(const std::string &iface,
@@ -34,6 +37,7 @@ namespace Nezha::Core {
         bool set_filter(const std::string &expr);
 
         void start(CaptureCallback cb);
+
         void stop();
 
         [[nodiscard]] bool is_open() const noexcept { return handle_ != nullptr; }

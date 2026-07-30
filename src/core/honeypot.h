@@ -24,7 +24,6 @@ namespace Nezha::Core {
         const char *service;
     };
 
-    // 多端口 TCP 蜜罐：绑定常见攻击端口，每个连接记录为 event
     class HoneypotListener {
     public:
         HoneypotListener() = default;

@@ -24,7 +24,6 @@ namespace Nezha::Core {
         AppId app_id = 0;
     };
 
-    // tail -f 模式跟踪多个日志源，逐行解析；文件轮转后自动重开
     class LogWatcher {
     public:
         LogWatcher() = default;

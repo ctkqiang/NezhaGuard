@@ -15,7 +15,6 @@ namespace Nezha::Core {
 
     enum class AlertSink { Log, File, Webhook };
 
-    // 同类型同 IP 在去重窗口内合并，达到阈值时触发输出
     class AlertManager {
     public:
         AlertManager() = default;

@@ -10,7 +10,6 @@
 #include <chrono>
 
 namespace Nezha::Data {
-
     struct Location {
         std::int64_t id;
 
@@ -32,7 +31,6 @@ namespace Nezha::Data {
 
         std::chrono::system_clock::time_point created_at;
     };
-
 }
 
 #endif //NEZHAGUARD_REQUEST_H

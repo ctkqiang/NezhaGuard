@@ -37,10 +37,8 @@ int main() {
     Core::AttackDetector detector;
     Core::AlertManager alerter;
 
-    // 告警去重窗口: 120 秒
     alerter.set_dedup_window(120);
 
-    // 告警回调: 严重级别以上打印到 stderr
     alerter.set_callback([&](const Core::Alert &a) {
         if (a.level >= Severity::Error && a.count >= 5) {
             NZ_WARN("[聚合告警] {} 共检测 {} 次, 威胁评分={:.0f}",
@@ -82,7 +80,6 @@ int main() {
 
     // ---- 3. 日志监控 ----
     Core::LogWatcher log_watcher;
-    // 按需配置日志源路径
     const char *log_paths[] = {
         "/var/log/nginx/access.log",
         "/var/log/apache2/access.log",
@@ -107,10 +104,8 @@ int main() {
             Core::event e{};
             if (!Core::ProtocolDecoder::decode(raw, len, ts, arena, e)) return;
 
-            // 通过检测引擎
             detector.analyze(e, arena, [&](const Core::Alert &a) { alerter.submit(a); });
 
-            // 定期刷新告警去重缓冲
             static Nanos last_flush = 0;
             if (e.ts_ns - last_flush > 30'000'000'000ULL) {
                 alerter.flush();
@@ -118,7 +113,6 @@ int main() {
             }
         });
     } else {
-        // 无网卡采集时仅靠日志/蜜罐，等待信号
         NZ_INFO("运行中 (无网络采集)，Ctrl+C 退出");
         while (g_running) {
             std::this_thread::sleep_for(std::chrono::seconds(1));

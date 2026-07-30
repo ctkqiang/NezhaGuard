@@ -91,7 +91,6 @@ namespace Nezha::Core {
             return;
         }
 
-        // 存储 fd 以便 stop 关闭
         for (auto &t: threads_) {
             if (t.fd < 0) { t.fd = fd; break; }
         }

@@ -55,7 +55,6 @@ namespace Nezha::Core {
 
     using AlertCallback = std::function<void(const Alert &)>;
 
-    // 签名匹配 + 速率追踪：输入 Core::event，匹配命中时回调 Alert
     class AttackDetector {
     public:
         AttackDetector() = default;

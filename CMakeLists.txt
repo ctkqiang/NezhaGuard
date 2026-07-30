@@ -27,6 +27,7 @@ add_executable(NezhaGuard
         src/core/alert.cc
         src/core/alert.h
         src/model/request.h
+        src/model/severity.h
 )
 
 target_include_directories(NezhaGuard PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
