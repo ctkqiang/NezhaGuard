@@ -58,9 +58,14 @@ static int run_cli_mode() {
 
     alerter.set_callback([&](const Core::Alert &a) {
         if (a.level >= Severity::Error && a.count >= 5) {
-            NZ_WARN("聚合: {} | 来源 {} | 频次 {} | 评分 {:.0f}",
-                    attack_type_cstr(a.type),
-                    std::string(a.src_ip), a.count, a.score);
+            std::string ip(a.src_ip);
+            std::string host = IPAddress::ipaddr::ResolveHostname(ip);
+            if (host != ip)
+                NZ_WARN("[聚合] {}  {} ({}), {} 次, 评分 {:.0f}",
+                        attack_type_cstr(a.type), ip, host, a.count, a.score);
+            else
+                NZ_WARN("[聚合] {}  {}, {} 次, 评分 {:.0f}",
+                        attack_type_cstr(a.type), ip, a.count, a.score);
         }
     });
 
@@ -181,12 +186,13 @@ static int run_gui_mode(int argc, char *argv[]) {
 
     Log::init_default("logs/nezha.log", Log::Level::Debug);
     Database::DatabaseHelper::InitializeQuarantineDatabase();
-    NZ_INFO("══════════════════════════════════════════");
-    NZ_INFO("  哪吒网络安全 SIEM 系统 {}",
+    NZ_INFO("══════════════════════════════════════════════════");
+    NZ_INFO("  哪吒网络安全 SIEM 系统 {} [蓝队模式]",
            Configuration::ApplicationConstants::ApplicationVersion);
-    NZ_INFO("  隔离阈值: {} 次异常请求",
-           Configuration::ApplicationConstants::AnomaliesQuarantineThreshold);
-    NZ_INFO("══════════════════════════════════════════");
+    NZ_INFO("  隔离阈值: {} 次  |  历史隔离记录: {} 条",
+           Configuration::ApplicationConstants::AnomaliesQuarantineThreshold,
+           Database::DatabaseHelper::GetQuarantineList().size());
+    NZ_INFO("══════════════════════════════════════════════════");
     Core::dump_network_info();
 
     monitor window;
@@ -205,9 +211,14 @@ static int run_gui_mode(int argc, char *argv[]) {
 
     alerter.set_callback([&](const Core::Alert &a) {
         if (a.level >= Severity::Error && a.count >= 5) {
-            NZ_WARN("聚合: {} | 来源 {} | 频次 {} | 评分 {:.0f}",
-                    attack_type_cstr(a.type),
-                    std::string(a.src_ip), a.count, a.score);
+            std::string ip(a.src_ip);
+            std::string host = IPAddress::ipaddr::ResolveHostname(ip);
+            if (host != ip)
+                NZ_WARN("[聚合] {}  {} ({}), {} 次, 评分 {:.0f}",
+                        attack_type_cstr(a.type), ip, host, a.count, a.score);
+            else
+                NZ_WARN("[聚合] {}  {}, {} 次, 评分 {:.0f}",
+                        attack_type_cstr(a.type), ip, a.count, a.score);
         }
         uint64_t ts_ns = a.ts_ns;
         std::string type_str = attack_type_cstr(a.type);
