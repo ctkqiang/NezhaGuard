@@ -20,6 +20,13 @@
 				},
 				{
 					"directoryIndex" : 0,
+					"id" : "Qt6::Charts::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-Qt6__Charts-Release-54d72b75f8fc4d69d20b.json",
+					"name" : "Qt6::Charts",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
 					"id" : "Qt6::Core::@6890427a1f51a3e7e1df",
 					"jsonFile" : "target-Qt6__Core-Release-852261004a8cd19bc20b.json",
 					"name" : "Qt6::Core",
@@ -51,6 +58,20 @@
 					"id" : "Qt6::Gui::@6890427a1f51a3e7e1df",
 					"jsonFile" : "target-Qt6__Gui-Release-d22d4d9a3d217471144b.json",
 					"name" : "Qt6::Gui",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "Qt6::OpenGL::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-Qt6__OpenGL-Release-2dc456f1bbc99de0074b.json",
+					"name" : "Qt6::OpenGL",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "Qt6::OpenGLWidgets::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-Qt6__OpenGLWidgets-Release-cf56ca008fbe427a36ba.json",
+					"name" : "Qt6::OpenGLWidgets",
 					"projectIndex" : 0
 				},
 				{
@@ -713,7 +734,10 @@
 						84,
 						85,
 						86,
-						87
+						87,
+						88,
+						89,
+						90
 					],
 					"build" : ".",
 					"jsonFile" : "directory-.-Release-fd6451d79dc282e2f566.json",
@@ -824,7 +848,10 @@
 						84,
 						85,
 						86,
-						87
+						87,
+						88,
+						89,
+						90
 					],
 					"directoryIndexes" : 
 					[

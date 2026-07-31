@@ -42,7 +42,7 @@ static int run_cli_mode() {
     Log::init_default("logs/nezha.log", Log::Level::Debug);
     Database::DatabaseHelper::InitializeQuarantineDatabase();
     NZ_INFO("══════════════════════════════════════════");
-    NZ_INFO("  哪吒网络安全 SIEM 系统 v{}",
+    NZ_INFO("  哪吒网络安全 SIEM 系统 {}",
            Configuration::ApplicationConstants::ApplicationVersion);
     NZ_INFO("  隔离阈值: {} 次异常请求",
            Configuration::ApplicationConstants::AnomaliesQuarantineThreshold);
@@ -166,7 +166,13 @@ static int run_gui_mode(int argc, char *argv[]) {
         QString::fromLatin1(Configuration::ApplicationConstants::ApplicationVersion));
 
     Log::init_default("logs/nezha.log", Log::Level::Debug);
-    NZ_INFO("SIEM 引擎已启动 [GUI]");
+    Database::DatabaseHelper::InitializeQuarantineDatabase();
+    NZ_INFO("══════════════════════════════════════════");
+    NZ_INFO("  哪吒网络安全 SIEM 系统 {}",
+           Configuration::ApplicationConstants::ApplicationVersion);
+    NZ_INFO("  隔离阈值: {} 次异常请求",
+           Configuration::ApplicationConstants::AnomaliesQuarantineThreshold);
+    NZ_INFO("══════════════════════════════════════════");
     Core::dump_network_info();
 
     monitor window;

@@ -16,6 +16,9 @@ class QSortFilterProxyModel;
 class QListWidgetItem;
 class QTableWidget;
 class QTimer;
+class QChart;
+
+namespace QtCharts { class QChartView; class QLineSeries; class QDateTimeAxis; class QValueAxis; }
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class monitor; }
@@ -58,6 +61,8 @@ private:
     void refresh_local_ips();
     void refresh_arp_table();
     void refresh_quarantine_list();
+    void setup_chart();
+    void update_chart(int alert_count);
 
     Ui::monitor *ui;
     LogModel *log_model_;
@@ -73,6 +78,7 @@ private:
     QStyledItemDelegate *honey_delegate_;
     bool dark_mode_ = true;
     QTime start_time_;
+    int chart_points_ = 0;
 };
 
 #endif //NEZHAGUARD_MONITOR_H

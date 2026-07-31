@@ -11661,3 +11661,576 @@ events:
         - "/Network/Library/Frameworks"
         - "/System/Library/Frameworks"
 ...
+
+---
+events:
+  -
+    kind: "find_package-v1"
+    backtrace:
+      - "/Applications/CLion.app/Contents/bin/cmake/mac/aarch64/share/cmake-4.3/Modules/CMakeFindDependencyMacro.cmake:93 (find_package)"
+      - "/Applications/CLion.app/Contents/bin/cmake/mac/aarch64/share/cmake-4.3/Modules/CMakeFindDependencyMacro.cmake:125 (__find_dependency_common)"
+      - "/opt/homebrew/lib/cmake/Qt6/QtPublicDependencyHelpers.cmake:142 (find_dependency)"
+      - "/opt/homebrew/opt/qt/lib/cmake/Qt6Charts/Qt6ChartsDependencies.cmake:50 (_qt_internal_find_qt_dependencies)"
+      - "/opt/homebrew/opt/qt/lib/cmake/Qt6Charts/Qt6ChartsConfig.cmake:40 (include)"
+      - "/opt/homebrew/opt/qt/lib/cmake/Qt6/Qt6Config.cmake:253 (find_package)"
+      - "CMakeLists.txt:57 (find_package)"
+    name: "Qt6OpenGL"
+    configs:
+      -
+        filename: "Qt6OpenGL.cps"
+        kind: "cps"
+      -
+        filename: "qt6opengl.cps"
+        kind: "cps"
+      -
+        filename: "Qt6OpenGLConfig.cmake"
+        kind: "cmake"
+      -
+        filename: "qt6opengl-config.cmake"
+        kind: "cmake"
+    version_request:
+      version: "6.11.1"
+      version_complete: "6.11.1"
+      exact: false
+    settings:
+      required: "optional"
+      quiet: false
+      global: false
+      policy_scope: true
+      bypass_provider: false
+      names:
+        - "Qt6OpenGL"
+      search_paths:
+        - "/opt/homebrew/opt/qt/lib/cmake/Qt6Charts/.."
+        - "/opt/homebrew/opt/qt/lib/cmake"
+      path_suffixes:
+        - ""
+      paths:
+        CMAKE_FIND_USE_CMAKE_PATH: false
+        CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: true
+        CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+        CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+        CMAKE_FIND_USE_INSTALL_PREFIX: true
+        CMAKE_FIND_USE_PACKAGE_ROOT_PATH: true
+        CMAKE_FIND_USE_CMAKE_PACKAGE_REGISTRY: true
+        CMAKE_FIND_USE_SYSTEM_PACKAGE_REGISTRY: true
+        CMAKE_FIND_ROOT_PATH_MODE: "BOTH"
+    candidates:
+      -
+        path: "/Users/johnmelodyme/Documents/ctkqiang/NezhaGuard/cmake-build-release/CMakeFiles/pkgRedirects/Qt6OpenGLConfig.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/Users/johnmelodyme/Documents/ctkqiang/NezhaGuard/cmake-build-release/CMakeFiles/pkgRedirects/qt6opengl-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/Users/johnmelodyme/Documents/ctkqiang/NezhaGuard/cmake-build-release/CMakeFiles/pkgRedirects/lib64/cps/Qt6OpenGL.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/Users/johnmelodyme/Documents/ctkqiang/NezhaGuard/cmake-build-release/CMakeFiles/pkgRedirects/lib64/cps/qt6opengl.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/Users/johnmelodyme/Documents/ctkqiang/NezhaGuard/cmake-build-release/CMakeFiles/pkgRedirects/lib/cps/Qt6OpenGL.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/Users/johnmelodyme/Documents/ctkqiang/NezhaGuard/cmake-build-release/CMakeFiles/pkgRedirects/lib/cps/qt6opengl.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/Users/johnmelodyme/Documents/ctkqiang/NezhaGuard/cmake-build-release/CMakeFiles/pkgRedirects/share/cps/Qt6OpenGL.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/Users/johnmelodyme/Documents/ctkqiang/NezhaGuard/cmake-build-release/CMakeFiles/pkgRedirects/share/cps/qt6opengl.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/opt/homebrew/opt/qt/lib/cmake/Qt6OpenGLConfig.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/opt/homebrew/opt/qt/lib/cmake/qt6opengl-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/opt/homebrew/opt/qt/lib/cmake/Qt6OpenGLWidgets/Qt6OpenGLConfig.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/opt/homebrew/opt/qt/lib/cmake/Qt6OpenGLWidgets/qt6opengl-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/opt/homebrew/opt/qt/lib/cmake/Qt6OpenGLPrivate/Qt6OpenGLConfig.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/opt/homebrew/opt/qt/lib/cmake/Qt6OpenGLPrivate/qt6opengl-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+    found:
+      path: "/opt/homebrew/opt/qt/lib/cmake/Qt6OpenGL/Qt6OpenGLConfig.cmake"
+      mode: "config"
+      version: "6.11.1"
+    search_context:
+      CMAKE_PREFIX_PATH:
+        - "/opt/homebrew/opt/qt"
+        - "/usr/local/opt/qt"
+      ENV{PATH}:
+        - "/Users/johnmelodyme/.meituan-catpaw/bin"
+        - "/Users/johnmelodyme/hermes-cli-darwin"
+        - "/Users/johnmelodyme/documents/hackingtools/blutter"
+        - "/Users/johnmelodyme/.tiup/bin"
+        - "/usr/local/bin"
+        - "/opt/homebrew/lib/ruby/gems/3.4.0/bin"
+        - "/opt/homebrew/opt/ruby/bin"
+        - "/Users/johnmelodyme/.ticloud/bin"
+        - "/Users/johnmelodyme/Library/Android/sdk/emulator"
+        - "/Users/johnmelodyme/Library/Android/sdk/tools"
+        - "/Users/johnmelodyme/Library/Android/sdk/platform-tools"
+        - "/Users/johnmelodyme/.bun/bin"
+        - "/opt/metasploit-framework/bin"
+        - "/opt/metasploit-framework/bin"
+        - "/Users/johnmelodyme/perl5/bin"
+        - "/opt/homebrew/opt/php@8.0/sbin"
+        - "/opt/homebrew/opt/php@8.0/bin"
+        - "/opt/homebrew/lib/ruby/gems/3.3.0/bin"
+        - "/opt/homebrew/opt/ruby/bin"
+        - "/Library/Java/JavaVirtualMachines/jdk-11.jdk/Contents/Home/bin"
+        - "/opt/homebrew/opt/openjdk/bin"
+        - "/Library/Frameworks/Python.framework/Versions/2.7/bin"
+        - "/Users/johnmelodyme/.cargo/bin"
+        - "/usr/local/mysql-8.0.30-macos12-arm64/bin"
+        - "/Users/johnmelodyme/mongodb-macos-aarch64-6.0.0/bin"
+        - "/Library/Java/JavaVirtualMachines/jdk-11.jdk/Contents/Home/bin"
+        - "/Users/johnmelodyme/flutter/bin"
+        - "/opt/homebrew/bin/fvm"
+        - "/bin/bash"
+        - "/Library/Frameworks/Python.framework/Versions/3.10/bin"
+        - "/Users/johnmelodyme/fvm/versions/3.0.2/bin"
+        - "/opt/homebrew/bin"
+        - "/opt/homebrew/sbin"
+        - "/usr/local/bin"
+        - "/System/Cryptexes/App/usr/bin"
+        - "/usr/bin"
+        - "/bin"
+        - "/usr/sbin"
+        - "/sbin"
+        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin"
+        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin"
+        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin"
+        - "/Library/Apple/usr/bin"
+        - "/Users/johnmelodyme/.dotnet/tools"
+        - "/usr/local/go/bin"
+        - "/Users/johnmelodyme/.pub-cache/bin"
+        - "/Users/johnmelodyme/Documents/HackingTools/WhatWeb/"
+        - "/Users/johnmelodyme/go/bin"
+        - "/Users/johnmelodyme/go/bin"
+        - "/Users/johnmelodyme/go/bin"
+        - "/Users/johnmelodyme/Library/Android/sdk/cmdline-tools/latest/bin"
+        - "/Users/johnmelodyme/Documents/ctkqiang/dirleaks"
+        - "/Users/johnmelodyme/.local/bin"
+        - "/Applications/CLion.app/Contents/bin/ninja/mac/aarch64"
+      CMAKE_INSTALL_PREFIX: "/usr/local"
+      CMAKE_SYSTEM_PREFIX_PATH:
+        - "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr"
+        - "/opt/homebrew"
+        - "/usr/local"
+        - "/usr"
+        - "/"
+        - "/Applications/CLion.app/Contents/bin/cmake/mac/aarch64"
+        - "/usr/local"
+        - "/usr/X11R6"
+        - "/usr/pkg"
+        - "/opt"
+        - "/sw"
+        - "/opt/local"
+      CMAKE_SYSTEM_FRAMEWORK_PATH:
+        - "~/Library/Frameworks"
+        - "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/Library/Frameworks"
+        - "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/Network/Library/Frameworks"
+        - "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks"
+        - "/Library/Developer/CommandLineTools/Library/Frameworks"
+        - "/Library/Developer/CommandLineTools/Library/Frameworks"
+        - "/Library/Frameworks"
+        - "/Network/Library/Frameworks"
+        - "/System/Library/Frameworks"
+  -
+    kind: "find_package-v1"
+    backtrace:
+      - "/Applications/CLion.app/Contents/bin/cmake/mac/aarch64/share/cmake-4.3/Modules/CMakeFindDependencyMacro.cmake:93 (find_package)"
+      - "/Applications/CLion.app/Contents/bin/cmake/mac/aarch64/share/cmake-4.3/Modules/CMakeFindDependencyMacro.cmake:125 (__find_dependency_common)"
+      - "/opt/homebrew/lib/cmake/Qt6/QtPublicDependencyHelpers.cmake:142 (find_dependency)"
+      - "/opt/homebrew/opt/qt/lib/cmake/Qt6Charts/Qt6ChartsDependencies.cmake:50 (_qt_internal_find_qt_dependencies)"
+      - "/opt/homebrew/opt/qt/lib/cmake/Qt6Charts/Qt6ChartsConfig.cmake:40 (include)"
+      - "/opt/homebrew/opt/qt/lib/cmake/Qt6/Qt6Config.cmake:253 (find_package)"
+      - "CMakeLists.txt:57 (find_package)"
+    name: "Qt6OpenGLWidgets"
+    configs:
+      -
+        filename: "Qt6OpenGLWidgets.cps"
+        kind: "cps"
+      -
+        filename: "qt6openglwidgets.cps"
+        kind: "cps"
+      -
+        filename: "Qt6OpenGLWidgetsConfig.cmake"
+        kind: "cmake"
+      -
+        filename: "qt6openglwidgets-config.cmake"
+        kind: "cmake"
+    version_request:
+      version: "6.11.1"
+      version_complete: "6.11.1"
+      exact: false
+    settings:
+      required: "optional"
+      quiet: false
+      global: false
+      policy_scope: true
+      bypass_provider: false
+      names:
+        - "Qt6OpenGLWidgets"
+      search_paths:
+        - "/opt/homebrew/opt/qt/lib/cmake/Qt6Charts/.."
+        - "/opt/homebrew/opt/qt/lib/cmake"
+      path_suffixes:
+        - ""
+      paths:
+        CMAKE_FIND_USE_CMAKE_PATH: false
+        CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: true
+        CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+        CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+        CMAKE_FIND_USE_INSTALL_PREFIX: true
+        CMAKE_FIND_USE_PACKAGE_ROOT_PATH: true
+        CMAKE_FIND_USE_CMAKE_PACKAGE_REGISTRY: true
+        CMAKE_FIND_USE_SYSTEM_PACKAGE_REGISTRY: true
+        CMAKE_FIND_ROOT_PATH_MODE: "BOTH"
+    candidates:
+      -
+        path: "/Users/johnmelodyme/Documents/ctkqiang/NezhaGuard/cmake-build-release/CMakeFiles/pkgRedirects/Qt6OpenGLWidgetsConfig.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/Users/johnmelodyme/Documents/ctkqiang/NezhaGuard/cmake-build-release/CMakeFiles/pkgRedirects/qt6openglwidgets-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/Users/johnmelodyme/Documents/ctkqiang/NezhaGuard/cmake-build-release/CMakeFiles/pkgRedirects/lib64/cps/Qt6OpenGLWidgets.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/Users/johnmelodyme/Documents/ctkqiang/NezhaGuard/cmake-build-release/CMakeFiles/pkgRedirects/lib64/cps/qt6openglwidgets.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/Users/johnmelodyme/Documents/ctkqiang/NezhaGuard/cmake-build-release/CMakeFiles/pkgRedirects/lib/cps/Qt6OpenGLWidgets.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/Users/johnmelodyme/Documents/ctkqiang/NezhaGuard/cmake-build-release/CMakeFiles/pkgRedirects/lib/cps/qt6openglwidgets.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/Users/johnmelodyme/Documents/ctkqiang/NezhaGuard/cmake-build-release/CMakeFiles/pkgRedirects/share/cps/Qt6OpenGLWidgets.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/Users/johnmelodyme/Documents/ctkqiang/NezhaGuard/cmake-build-release/CMakeFiles/pkgRedirects/share/cps/qt6openglwidgets.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/opt/homebrew/opt/qt/lib/cmake/Qt6OpenGLWidgetsConfig.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/opt/homebrew/opt/qt/lib/cmake/qt6openglwidgets-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+    found:
+      path: "/opt/homebrew/opt/qt/lib/cmake/Qt6OpenGLWidgets/Qt6OpenGLWidgetsConfig.cmake"
+      mode: "config"
+      version: "6.11.1"
+    search_context:
+      CMAKE_PREFIX_PATH:
+        - "/opt/homebrew/opt/qt"
+        - "/usr/local/opt/qt"
+      ENV{PATH}:
+        - "/Users/johnmelodyme/.meituan-catpaw/bin"
+        - "/Users/johnmelodyme/hermes-cli-darwin"
+        - "/Users/johnmelodyme/documents/hackingtools/blutter"
+        - "/Users/johnmelodyme/.tiup/bin"
+        - "/usr/local/bin"
+        - "/opt/homebrew/lib/ruby/gems/3.4.0/bin"
+        - "/opt/homebrew/opt/ruby/bin"
+        - "/Users/johnmelodyme/.ticloud/bin"
+        - "/Users/johnmelodyme/Library/Android/sdk/emulator"
+        - "/Users/johnmelodyme/Library/Android/sdk/tools"
+        - "/Users/johnmelodyme/Library/Android/sdk/platform-tools"
+        - "/Users/johnmelodyme/.bun/bin"
+        - "/opt/metasploit-framework/bin"
+        - "/opt/metasploit-framework/bin"
+        - "/Users/johnmelodyme/perl5/bin"
+        - "/opt/homebrew/opt/php@8.0/sbin"
+        - "/opt/homebrew/opt/php@8.0/bin"
+        - "/opt/homebrew/lib/ruby/gems/3.3.0/bin"
+        - "/opt/homebrew/opt/ruby/bin"
+        - "/Library/Java/JavaVirtualMachines/jdk-11.jdk/Contents/Home/bin"
+        - "/opt/homebrew/opt/openjdk/bin"
+        - "/Library/Frameworks/Python.framework/Versions/2.7/bin"
+        - "/Users/johnmelodyme/.cargo/bin"
+        - "/usr/local/mysql-8.0.30-macos12-arm64/bin"
+        - "/Users/johnmelodyme/mongodb-macos-aarch64-6.0.0/bin"
+        - "/Library/Java/JavaVirtualMachines/jdk-11.jdk/Contents/Home/bin"
+        - "/Users/johnmelodyme/flutter/bin"
+        - "/opt/homebrew/bin/fvm"
+        - "/bin/bash"
+        - "/Library/Frameworks/Python.framework/Versions/3.10/bin"
+        - "/Users/johnmelodyme/fvm/versions/3.0.2/bin"
+        - "/opt/homebrew/bin"
+        - "/opt/homebrew/sbin"
+        - "/usr/local/bin"
+        - "/System/Cryptexes/App/usr/bin"
+        - "/usr/bin"
+        - "/bin"
+        - "/usr/sbin"
+        - "/sbin"
+        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin"
+        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin"
+        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin"
+        - "/Library/Apple/usr/bin"
+        - "/Users/johnmelodyme/.dotnet/tools"
+        - "/usr/local/go/bin"
+        - "/Users/johnmelodyme/.pub-cache/bin"
+        - "/Users/johnmelodyme/Documents/HackingTools/WhatWeb/"
+        - "/Users/johnmelodyme/go/bin"
+        - "/Users/johnmelodyme/go/bin"
+        - "/Users/johnmelodyme/go/bin"
+        - "/Users/johnmelodyme/Library/Android/sdk/cmdline-tools/latest/bin"
+        - "/Users/johnmelodyme/Documents/ctkqiang/dirleaks"
+        - "/Users/johnmelodyme/.local/bin"
+        - "/Applications/CLion.app/Contents/bin/ninja/mac/aarch64"
+      CMAKE_INSTALL_PREFIX: "/usr/local"
+      CMAKE_SYSTEM_PREFIX_PATH:
+        - "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr"
+        - "/opt/homebrew"
+        - "/usr/local"
+        - "/usr"
+        - "/"
+        - "/Applications/CLion.app/Contents/bin/cmake/mac/aarch64"
+        - "/usr/local"
+        - "/usr/X11R6"
+        - "/usr/pkg"
+        - "/opt"
+        - "/sw"
+        - "/opt/local"
+      CMAKE_SYSTEM_FRAMEWORK_PATH:
+        - "~/Library/Frameworks"
+        - "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/Library/Frameworks"
+        - "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/Network/Library/Frameworks"
+        - "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks"
+        - "/Library/Developer/CommandLineTools/Library/Frameworks"
+        - "/Library/Developer/CommandLineTools/Library/Frameworks"
+        - "/Library/Frameworks"
+        - "/Network/Library/Frameworks"
+        - "/System/Library/Frameworks"
+  -
+    kind: "find_package-v1"
+    backtrace:
+      - "/opt/homebrew/opt/qt/lib/cmake/Qt6/Qt6Config.cmake:253 (find_package)"
+      - "CMakeLists.txt:57 (find_package)"
+    name: "Qt6Charts"
+    configs:
+      -
+        filename: "Qt6Charts.cps"
+        kind: "cps"
+      -
+        filename: "qt6charts.cps"
+        kind: "cps"
+      -
+        filename: "Qt6ChartsConfig.cmake"
+        kind: "cmake"
+      -
+        filename: "qt6charts-config.cmake"
+        kind: "cmake"
+    version_request:
+      exact: false
+    settings:
+      required: "optional"
+      quiet: false
+      global: false
+      policy_scope: true
+      bypass_provider: false
+      names:
+        - "Qt6Charts"
+      search_paths:
+        - "/opt/homebrew/opt/qt/lib/cmake"
+      path_suffixes:
+        - ""
+      paths:
+        CMAKE_FIND_USE_CMAKE_PATH: false
+        CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: true
+        CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+        CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+        CMAKE_FIND_USE_INSTALL_PREFIX: true
+        CMAKE_FIND_USE_PACKAGE_ROOT_PATH: true
+        CMAKE_FIND_USE_CMAKE_PACKAGE_REGISTRY: true
+        CMAKE_FIND_USE_SYSTEM_PACKAGE_REGISTRY: true
+        CMAKE_FIND_ROOT_PATH_MODE: "BOTH"
+    candidates:
+      -
+        path: "/Users/johnmelodyme/Documents/ctkqiang/NezhaGuard/cmake-build-release/CMakeFiles/pkgRedirects/Qt6ChartsConfig.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/Users/johnmelodyme/Documents/ctkqiang/NezhaGuard/cmake-build-release/CMakeFiles/pkgRedirects/qt6charts-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/Users/johnmelodyme/Documents/ctkqiang/NezhaGuard/cmake-build-release/CMakeFiles/pkgRedirects/lib64/cps/Qt6Charts.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/Users/johnmelodyme/Documents/ctkqiang/NezhaGuard/cmake-build-release/CMakeFiles/pkgRedirects/lib64/cps/qt6charts.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/Users/johnmelodyme/Documents/ctkqiang/NezhaGuard/cmake-build-release/CMakeFiles/pkgRedirects/lib/cps/Qt6Charts.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/Users/johnmelodyme/Documents/ctkqiang/NezhaGuard/cmake-build-release/CMakeFiles/pkgRedirects/lib/cps/qt6charts.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/Users/johnmelodyme/Documents/ctkqiang/NezhaGuard/cmake-build-release/CMakeFiles/pkgRedirects/share/cps/Qt6Charts.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/Users/johnmelodyme/Documents/ctkqiang/NezhaGuard/cmake-build-release/CMakeFiles/pkgRedirects/share/cps/qt6charts.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/opt/homebrew/opt/qt/lib/cmake/Qt6ChartsConfig.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/opt/homebrew/opt/qt/lib/cmake/qt6charts-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/opt/homebrew/opt/qt/lib/cmake/Qt6ChartsQmlPrivate/Qt6ChartsConfig.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/opt/homebrew/opt/qt/lib/cmake/Qt6ChartsQmlPrivate/qt6charts-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/opt/homebrew/opt/qt/lib/cmake/Qt6ChartsQml/Qt6ChartsConfig.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/opt/homebrew/opt/qt/lib/cmake/Qt6ChartsQml/qt6charts-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/opt/homebrew/opt/qt/lib/cmake/Qt6ChartsPrivate/Qt6ChartsConfig.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/opt/homebrew/opt/qt/lib/cmake/Qt6ChartsPrivate/qt6charts-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+    found:
+      path: "/opt/homebrew/opt/qt/lib/cmake/Qt6Charts/Qt6ChartsConfig.cmake"
+      mode: "config"
+      version: "6.11.1"
+    search_context:
+      CMAKE_PREFIX_PATH:
+        - "/opt/homebrew/opt/qt"
+        - "/usr/local/opt/qt"
+      ENV{PATH}:
+        - "/Users/johnmelodyme/.meituan-catpaw/bin"
+        - "/Users/johnmelodyme/hermes-cli-darwin"
+        - "/Users/johnmelodyme/documents/hackingtools/blutter"
+        - "/Users/johnmelodyme/.tiup/bin"
+        - "/usr/local/bin"
+        - "/opt/homebrew/lib/ruby/gems/3.4.0/bin"
+        - "/opt/homebrew/opt/ruby/bin"
+        - "/Users/johnmelodyme/.ticloud/bin"
+        - "/Users/johnmelodyme/Library/Android/sdk/emulator"
+        - "/Users/johnmelodyme/Library/Android/sdk/tools"
+        - "/Users/johnmelodyme/Library/Android/sdk/platform-tools"
+        - "/Users/johnmelodyme/.bun/bin"
+        - "/opt/metasploit-framework/bin"
+        - "/opt/metasploit-framework/bin"
+        - "/Users/johnmelodyme/perl5/bin"
+        - "/opt/homebrew/opt/php@8.0/sbin"
+        - "/opt/homebrew/opt/php@8.0/bin"
+        - "/opt/homebrew/lib/ruby/gems/3.3.0/bin"
+        - "/opt/homebrew/opt/ruby/bin"
+        - "/Library/Java/JavaVirtualMachines/jdk-11.jdk/Contents/Home/bin"
+        - "/opt/homebrew/opt/openjdk/bin"
+        - "/Library/Frameworks/Python.framework/Versions/2.7/bin"
+        - "/Users/johnmelodyme/.cargo/bin"
+        - "/usr/local/mysql-8.0.30-macos12-arm64/bin"
+        - "/Users/johnmelodyme/mongodb-macos-aarch64-6.0.0/bin"
+        - "/Library/Java/JavaVirtualMachines/jdk-11.jdk/Contents/Home/bin"
+        - "/Users/johnmelodyme/flutter/bin"
+        - "/opt/homebrew/bin/fvm"
+        - "/bin/bash"
+        - "/Library/Frameworks/Python.framework/Versions/3.10/bin"
+        - "/Users/johnmelodyme/fvm/versions/3.0.2/bin"
+        - "/opt/homebrew/bin"
+        - "/opt/homebrew/sbin"
+        - "/usr/local/bin"
+        - "/System/Cryptexes/App/usr/bin"
+        - "/usr/bin"
+        - "/bin"
+        - "/usr/sbin"
+        - "/sbin"
+        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin"
+        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin"
+        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin"
+        - "/Library/Apple/usr/bin"
+        - "/Users/johnmelodyme/.dotnet/tools"
+        - "/usr/local/go/bin"
+        - "/Users/johnmelodyme/.pub-cache/bin"
+        - "/Users/johnmelodyme/Documents/HackingTools/WhatWeb/"
+        - "/Users/johnmelodyme/go/bin"
+        - "/Users/johnmelodyme/go/bin"
+        - "/Users/johnmelodyme/go/bin"
+        - "/Users/johnmelodyme/Library/Android/sdk/cmdline-tools/latest/bin"
+        - "/Users/johnmelodyme/Documents/ctkqiang/dirleaks"
+        - "/Users/johnmelodyme/.local/bin"
+        - "/Applications/CLion.app/Contents/bin/ninja/mac/aarch64"
+      CMAKE_INSTALL_PREFIX: "/usr/local"
+      CMAKE_SYSTEM_PREFIX_PATH:
+        - "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr"
+        - "/opt/homebrew"
+        - "/usr/local"
+        - "/usr"
+        - "/"
+        - "/Applications/CLion.app/Contents/bin/cmake/mac/aarch64"
+        - "/usr/local"
+        - "/usr/X11R6"
+        - "/usr/pkg"
+        - "/opt"
+        - "/sw"
+        - "/opt/local"
+      CMAKE_SYSTEM_FRAMEWORK_PATH:
+        - "~/Library/Frameworks"
+        - "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/Library/Frameworks"
+        - "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/Network/Library/Frameworks"
+        - "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks"
+        - "/Library/Developer/CommandLineTools/Library/Frameworks"
+        - "/Library/Developer/CommandLineTools/Library/Frameworks"
+        - "/Library/Frameworks"
+        - "/Network/Library/Frameworks"
+        - "/System/Library/Frameworks"
+...

@@ -94,7 +94,7 @@ namespace Nezha::IPAddress {
     }
 
     std::string ipaddr::ResolveHostname(const std::string &ip) {
-        struct sockaddr_in sa {};
+        struct sockaddr_in sa{};
         sa.sin_family = AF_INET;
         if (::inet_pton(AF_INET, ip.c_str(), &sa.sin_addr) != 1)
             return ip;

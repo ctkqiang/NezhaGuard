@@ -16,11 +16,16 @@ void GuiSink::write(Nezha::Log::Level lv, const char *line, std::size_t len) {
     QString timestamp;
     QString message;
 
-    int bracket = raw.indexOf(QStringLiteral("  ["));
-    if (bracket > 0) {
-        timestamp = raw.left(bracket);
-        int msg_start = raw.indexOf(QStringLiteral("]  "), bracket);
-        message = msg_start > 0 ? raw.mid(msg_start + 3) : raw.mid(bracket + 2);
+    int p1 = raw.indexOf(QStringLiteral("  [哪吒] ["));
+    if (p1 > 0) {
+        timestamp = raw.left(p1);
+        int p2 = raw.indexOf(QChar(']'), p1 + 8);
+        if (p2 > 0) {
+            int p3 = raw.indexOf(QStringLiteral("  "), p2 + 1);
+            message = p3 > 0 ? raw.mid(p3 + 2) : raw.mid(p2 + 2);
+        } else {
+            message = raw.mid(p1 + 8);
+        }
     } else {
         timestamp = QStringLiteral("-");
         message = raw;
