@@ -22,7 +22,7 @@
         <widget class="QLabel" name="brand_badge">
          <property name="minimumSize"><size><width>26</width><height>26</height></size></property>
          <property name="maximumSize"><size><width>26</width><height>26</height></size></property>
-         <property name="text"><string>NG</string></property>
+         <property name="text"><string>NZ</string></property>
          <property name="alignment"><set>Qt::AlignCenter</set></property>
         </widget>
        </item>

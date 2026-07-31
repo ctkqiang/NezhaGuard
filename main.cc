@@ -177,7 +177,6 @@ static int run_cli_mode() {
 
 
 #include <QApplication>
-#include <QIcon>
 #include <QTimer>
 #include <QString>
 
@@ -190,7 +189,6 @@ static int run_gui_mode(int argc, char *argv[]) {
     app.setApplicationName(QStringLiteral("哪吒网络安全 SIEM"));
     app.setApplicationVersion(
         QString::fromLatin1(Configuration::ApplicationConstants::ApplicationVersion));
-    app.setWindowIcon(QIcon(QStringLiteral("src/views/app_icon.svg")));
     qputenv("QT_LOGGING_RULES", "qt.*=false");
 
     Log::init_default("logs/nezha.log", Log::Level::Info);

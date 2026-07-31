@@ -54,9 +54,9 @@ void LogModel::append(const QString &timestamp, const QString &level, const QStr
     else if (level.startsWith(QStringLiteral("WARN")) || level == QStringLiteral("Warn"))
         e.color = QColor("#d29922");
     else if (level.startsWith(QStringLiteral("INFO")) || level == QStringLiteral("Info"))
-        e.color = QColor("#3fb950");
+        e.color = QColor("#39c5bb");
     else if (level.startsWith(QStringLiteral("DEB")) || level == QStringLiteral("Debug"))
-        e.color = QColor("#58a6ff");
+        e.color = QColor("#4dd0e1");
     else
         e.color = QColor("#6e7681");
 
