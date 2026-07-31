@@ -15188,10 +15188,37 @@ CMakeFiles/NezhaGuard.dir/src/views/monitor.cc.o
  /Users/johnmelodyme/Documents/ctkqiang/NezhaGuard/src/views/gui_sink.h
  /Users/johnmelodyme/Documents/ctkqiang/NezhaGuard/src/views/log_model.h
  /Users/johnmelodyme/Documents/ctkqiang/NezhaGuard/src/views/monitor.h
+ /opt/homebrew/opt/qt/lib/QtCharts.framework/Headers/QAbstractAxis
+ /opt/homebrew/opt/qt/lib/QtCharts.framework/Headers/QAbstractSeries
+ /opt/homebrew/opt/qt/lib/QtCharts.framework/Headers/QChart
+ /opt/homebrew/opt/qt/lib/QtCharts.framework/Headers/QChartGlobal
+ /opt/homebrew/opt/qt/lib/QtCharts.framework/Headers/QChartView
+ /opt/homebrew/opt/qt/lib/QtCharts.framework/Headers/QDateTimeAxis
+ /opt/homebrew/opt/qt/lib/QtCharts.framework/Headers/QLegend
+ /opt/homebrew/opt/qt/lib/QtCharts.framework/Headers/QLineSeries
+ /opt/homebrew/opt/qt/lib/QtCharts.framework/Headers/QValueAxis
+ /opt/homebrew/opt/qt/lib/QtCharts.framework/Headers/QXYSeries
+ /opt/homebrew/opt/qt/lib/QtCharts.framework/Headers/qabstractaxis.h
+ /opt/homebrew/opt/qt/lib/QtCharts.framework/Headers/qabstractseries.h
+ /opt/homebrew/opt/qt/lib/QtCharts.framework/Headers/qchart.h
+ /opt/homebrew/opt/qt/lib/QtCharts.framework/Headers/qchartglobal.h
+ /opt/homebrew/opt/qt/lib/QtCharts.framework/Headers/qchartview.h
+ /opt/homebrew/opt/qt/lib/QtCharts.framework/Headers/qdatetimeaxis.h
+ /opt/homebrew/opt/qt/lib/QtCharts.framework/Headers/qlegend.h
+ /opt/homebrew/opt/qt/lib/QtCharts.framework/Headers/qlineseries.h
+ /opt/homebrew/opt/qt/lib/QtCharts.framework/Headers/qtcharts-config.h
+ /opt/homebrew/opt/qt/lib/QtCharts.framework/Headers/qtchartsexports.h
+ /opt/homebrew/opt/qt/lib/QtCharts.framework/Headers/qvalueaxis.h
+ /opt/homebrew/opt/qt/lib/QtCharts.framework/Headers/qxyseries.h
  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/QAbstractListModel
  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/QDateTime
+ /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/QList
+ /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/QMargins
  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/QObject
  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/QPointer
+ /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/QRect
+ /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/QSize
+ /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/QSizeF
  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/QSortFilterProxyModel
  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/QString
  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/QTime
@@ -15347,14 +15374,21 @@ CMakeFiles/NezhaGuard.dir/src/views/monitor.cc.o
  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qversiontagging.h
  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qxptype_traits.h
  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qyieldcpu.h
+ /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/QBrush
  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/QColor
+ /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/QFont
+ /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/QImage
  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/QPainter
+ /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/QPen
  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/QStyleHints
+ /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/QTransform
  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qaction.h
  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qbitmap.h
  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qbrush.h
  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qcolor.h
  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qcursor.h
+ /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qevent.h
+ /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qeventpoint.h
  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qfont.h
  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qfontinfo.h
  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qfontmetrics.h
@@ -15363,19 +15397,24 @@ CMakeFiles/NezhaGuard.dir/src/views/monitor.cc.o
  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qguiapplication_platform.h
  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qicon.h
  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qimage.h
+ /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qinputdevice.h
  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qinputmethod.h
  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qkeysequence.h
  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qpaintdevice.h
  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qpainter.h
+ /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qpainterpath.h
  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qpalette.h
  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qpen.h
  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qpicture.h
  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qpixelformat.h
  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qpixmap.h
+ /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qpointingdevice.h
  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qpolygon.h
  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qregion.h
  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qrgb.h
  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qrgba64.h
+ /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qscreen.h
+ /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qscreen_platform.h
  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qstylehints.h
  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qtextcursor.h
  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qtextdocument.h
@@ -15386,10 +15425,14 @@ CMakeFiles/NezhaGuard.dir/src/views/monitor.cc.o
  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qtguiglobal.h
  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qtransform.h
  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qvalidator.h
+ /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qvector2d.h
+ /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qvectornd.h
  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qwindowdefs.h
  /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/QApplication
  /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/QComboBox
  /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/QFrame
+ /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/QGraphicsView
+ /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/QGraphicsWidget
  /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/QHBoxLayout
  /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/QHeaderView
  /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/QLabel
@@ -15417,6 +15460,11 @@ CMakeFiles/NezhaGuard.dir/src/views/monitor.cc.o
  /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qboxlayout.h
  /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qcombobox.h
  /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qframe.h
+ /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qgraphicsitem.h
+ /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qgraphicslayoutitem.h
+ /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qgraphicsscene.h
+ /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qgraphicsview.h
+ /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qgraphicswidget.h
  /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qgridlayout.h
  /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qheaderview.h
  /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qlabel.h
@@ -15427,6 +15475,7 @@ CMakeFiles/NezhaGuard.dir/src/views/monitor.cc.o
  /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qmainwindow.h
  /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qpushbutton.h
  /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qrubberband.h
+ /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qscrollarea.h
  /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qsizepolicy.h
  /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qslider.h
  /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qstackedwidget.h

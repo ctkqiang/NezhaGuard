@@ -1301,6 +1301,15 @@ NezhaGuard_autogen/timestamp: /Library/Developer/CommandLineTools/SDKs/MacOSX26.
   /opt/homebrew/opt/qt/lib/cmake/Qt6/QtPublicCMakeEarlyPolicyHelpers.cmake \
   /opt/homebrew/opt/qt/lib/cmake/Qt6/QtPublicCMakeHelpers.cmake \
   /opt/homebrew/opt/qt/lib/cmake/Qt6/QtPublicCMakeVersionHelpers.cmake \
+  /opt/homebrew/opt/qt/lib/cmake/Qt6Charts/Qt6ChartsAdditionalTargetInfo.cmake \
+  /opt/homebrew/opt/qt/lib/cmake/Qt6Charts/Qt6ChartsConfig.cmake \
+  /opt/homebrew/opt/qt/lib/cmake/Qt6Charts/Qt6ChartsConfigVersion.cmake \
+  /opt/homebrew/opt/qt/lib/cmake/Qt6Charts/Qt6ChartsConfigVersionImpl.cmake \
+  /opt/homebrew/opt/qt/lib/cmake/Qt6Charts/Qt6ChartsDependencies.cmake \
+  /opt/homebrew/opt/qt/lib/cmake/Qt6Charts/Qt6ChartsTargets-release.cmake \
+  /opt/homebrew/opt/qt/lib/cmake/Qt6Charts/Qt6ChartsTargets.cmake \
+  /opt/homebrew/opt/qt/lib/cmake/Qt6Charts/Qt6ChartsTargetsPrecheck.cmake \
+  /opt/homebrew/opt/qt/lib/cmake/Qt6Charts/Qt6ChartsVersionlessAliasTargets.cmake \
   /opt/homebrew/opt/qt/lib/cmake/Qt6Core/Qt6CoreAdditionalTargetInfo.cmake \
   /opt/homebrew/opt/qt/lib/cmake/Qt6Core/Qt6CoreConfig.cmake \
   /opt/homebrew/opt/qt/lib/cmake/Qt6Core/Qt6CoreConfigExtras.cmake \
@@ -1491,6 +1500,24 @@ NezhaGuard_autogen/timestamp: /Library/Developer/CommandLineTools/SDKs/MacOSX26.
   /opt/homebrew/opt/qt/lib/cmake/Qt6GuiTools/Qt6GuiToolsTargets.cmake \
   /opt/homebrew/opt/qt/lib/cmake/Qt6GuiTools/Qt6GuiToolsTargetsPrecheck.cmake \
   /opt/homebrew/opt/qt/lib/cmake/Qt6GuiTools/Qt6GuiToolsVersionlessTargets.cmake \
+  /opt/homebrew/opt/qt/lib/cmake/Qt6OpenGL/Qt6OpenGLAdditionalTargetInfo.cmake \
+  /opt/homebrew/opt/qt/lib/cmake/Qt6OpenGL/Qt6OpenGLConfig.cmake \
+  /opt/homebrew/opt/qt/lib/cmake/Qt6OpenGL/Qt6OpenGLConfigVersion.cmake \
+  /opt/homebrew/opt/qt/lib/cmake/Qt6OpenGL/Qt6OpenGLConfigVersionImpl.cmake \
+  /opt/homebrew/opt/qt/lib/cmake/Qt6OpenGL/Qt6OpenGLDependencies.cmake \
+  /opt/homebrew/opt/qt/lib/cmake/Qt6OpenGL/Qt6OpenGLTargets-release.cmake \
+  /opt/homebrew/opt/qt/lib/cmake/Qt6OpenGL/Qt6OpenGLTargets.cmake \
+  /opt/homebrew/opt/qt/lib/cmake/Qt6OpenGL/Qt6OpenGLTargetsPrecheck.cmake \
+  /opt/homebrew/opt/qt/lib/cmake/Qt6OpenGL/Qt6OpenGLVersionlessAliasTargets.cmake \
+  /opt/homebrew/opt/qt/lib/cmake/Qt6OpenGLWidgets/Qt6OpenGLWidgetsAdditionalTargetInfo.cmake \
+  /opt/homebrew/opt/qt/lib/cmake/Qt6OpenGLWidgets/Qt6OpenGLWidgetsConfig.cmake \
+  /opt/homebrew/opt/qt/lib/cmake/Qt6OpenGLWidgets/Qt6OpenGLWidgetsConfigVersion.cmake \
+  /opt/homebrew/opt/qt/lib/cmake/Qt6OpenGLWidgets/Qt6OpenGLWidgetsConfigVersionImpl.cmake \
+  /opt/homebrew/opt/qt/lib/cmake/Qt6OpenGLWidgets/Qt6OpenGLWidgetsDependencies.cmake \
+  /opt/homebrew/opt/qt/lib/cmake/Qt6OpenGLWidgets/Qt6OpenGLWidgetsTargets-release.cmake \
+  /opt/homebrew/opt/qt/lib/cmake/Qt6OpenGLWidgets/Qt6OpenGLWidgetsTargets.cmake \
+  /opt/homebrew/opt/qt/lib/cmake/Qt6OpenGLWidgets/Qt6OpenGLWidgetsTargetsPrecheck.cmake \
+  /opt/homebrew/opt/qt/lib/cmake/Qt6OpenGLWidgets/Qt6OpenGLWidgetsVersionlessAliasTargets.cmake \
   /opt/homebrew/opt/qt/lib/cmake/Qt6Widgets/Qt6QMacStylePluginAdditionalTargetInfo.cmake \
   /opt/homebrew/opt/qt/lib/cmake/Qt6Widgets/Qt6QMacStylePluginConfig.cmake \
   /opt/homebrew/opt/qt/lib/cmake/Qt6Widgets/Qt6QMacStylePluginTargets-release.cmake \
@@ -1571,8 +1598,6 @@ NezhaGuard_autogen/timestamp: /Library/Developer/CommandLineTools/SDKs/MacOSX26.
 
 /opt/homebrew/share/cmake/Modules/Platform/Apple-AppleClang-CXX.cmake:
 
-/opt/homebrew/share/cmake/Modules/MacroAddFileDependencies.cmake:
-
 /opt/homebrew/share/cmake/Modules/Linker/AppleClang-C.cmake:
 
 /opt/homebrew/share/cmake/Modules/Internal/CheckSourceCompiles.cmake:
@@ -1624,6 +1649,20 @@ NezhaGuard_autogen/timestamp: /Library/Developer/CommandLineTools/SDKs/MacOSX26.
 /opt/homebrew/opt/qt/lib/cmake/Qt6Widgets/Qt6WidgetsAdditionalTargetInfo.cmake:
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Widgets/Qt6QMacStylePluginConfig.cmake:
+
+/opt/homebrew/share/cmake/Modules/MacroAddFileDependencies.cmake:
+
+/opt/homebrew/opt/qt/lib/cmake/Qt6OpenGLWidgets/Qt6OpenGLWidgetsDependencies.cmake:
+
+/opt/homebrew/opt/qt/lib/cmake/Qt6OpenGLWidgets/Qt6OpenGLWidgetsConfigVersionImpl.cmake:
+
+/opt/homebrew/opt/qt/lib/cmake/Qt6OpenGLWidgets/Qt6OpenGLWidgetsAdditionalTargetInfo.cmake:
+
+/opt/homebrew/opt/qt/lib/cmake/Qt6OpenGL/Qt6OpenGLVersionlessAliasTargets.cmake:
+
+/opt/homebrew/opt/qt/lib/cmake/Qt6OpenGL/Qt6OpenGLTargetsPrecheck.cmake:
+
+/opt/homebrew/opt/qt/lib/cmake/Qt6OpenGL/Qt6OpenGLTargets.cmake:
 
 /opt/homebrew/share/cmake/Modules/GNUInstallDirs.cmake:
 
@@ -1721,6 +1760,10 @@ NezhaGuard_autogen/timestamp: /Library/Developer/CommandLineTools/SDKs/MacOSX26.
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6GuiPlugins.cmake:
 
+/opt/homebrew/opt/qt/lib/cmake/Qt6OpenGLWidgets/Qt6OpenGLWidgetsTargetsPrecheck.cmake:
+
+/opt/homebrew/opt/qt/lib/cmake/Qt6OpenGL/Qt6OpenGLDependencies.cmake:
+
 /opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6GuiConfigVersionImpl.cmake:
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6GuiAdditionalTargetInfo.cmake:
@@ -1790,6 +1833,16 @@ NezhaGuard_autogen/timestamp: /Library/Developer/CommandLineTools/SDKs/MacOSX26.
 /opt/homebrew/opt/qt/lib/cmake/Qt6Core/Qt6CoreMacros.cmake:
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Core/Qt6CoreConfig.cmake:
+
+/opt/homebrew/opt/qt/lib/cmake/Qt6Charts/Qt6ChartsVersionlessAliasTargets.cmake:
+
+/opt/homebrew/opt/qt/lib/cmake/Qt6Charts/Qt6ChartsTargets.cmake:
+
+/opt/homebrew/opt/qt/lib/cmake/Qt6Charts/Qt6ChartsTargets-release.cmake:
+
+/opt/homebrew/opt/qt/lib/cmake/Qt6Charts/Qt6ChartsConfigVersionImpl.cmake:
+
+/opt/homebrew/opt/qt/lib/cmake/Qt6Charts/Qt6ChartsAdditionalTargetInfo.cmake:
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6/QtPublicCMakeEarlyPolicyHelpers.cmake:
 
@@ -2121,6 +2174,8 @@ CMakeFiles/4.3.4/CMakeCCompiler.cmake:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX26.0.sdk/usr/include/xlocale/_string.h:
 
+/opt/homebrew/opt/qt/lib/cmake/Qt6Charts/Qt6ChartsConfigVersion.cmake:
+
 /Library/Developer/CommandLineTools/SDKs/MacOSX26.0.sdk/usr/include/xlocale/_ctype.h:
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QWebpPluginConfig.cmake:
@@ -2225,6 +2280,8 @@ CMakeFiles/4.3.4/CMakeCCompiler.cmake:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX26.0.sdk/usr/include/sys/_pthread/_pthread_types.h:
 
+/opt/homebrew/opt/qt/lib/cmake/Qt6Charts/Qt6ChartsTargetsPrecheck.cmake:
+
 /Library/Developer/CommandLineTools/SDKs/MacOSX26.0.sdk/usr/include/sys/_pthread/_pthread_t.h:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX26.0.sdk/usr/include/sys/_types/_sigaltstack.h:
@@ -2307,6 +2364,8 @@ CMakeFiles/4.3.4/CMakeCCompiler.cmake:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX26.0.sdk/usr/include/c++/v1/type_traits:
 
+/opt/homebrew/opt/qt/lib/cmake/Qt6OpenGL/Qt6OpenGLConfig.cmake:
+
 /Library/Developer/CommandLineTools/SDKs/MacOSX26.0.sdk/usr/include/c++/v1/tuple:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX26.0.sdk/usr/include/c++/v1/string_view:
@@ -2314,6 +2373,8 @@ CMakeFiles/4.3.4/CMakeCCompiler.cmake:
 /Library/Developer/CommandLineTools/SDKs/MacOSX26.0.sdk/usr/include/c++/v1/sstream:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX26.0.sdk/usr/include/c++/v1/source_location:
+
+/opt/homebrew/opt/qt/lib/cmake/Qt6OpenGLWidgets/Qt6OpenGLWidgetsConfigVersion.cmake:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX26.0.sdk/usr/include/c++/v1/numeric:
 
@@ -2336,6 +2397,8 @@ CMakeFiles/4.3.4/CMakeCCompiler.cmake:
 /Library/Developer/CommandLineTools/SDKs/MacOSX26.0.sdk/usr/include/c++/v1/iosfwd:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX26.0.sdk/usr/include/c++/v1/ios:
+
+/opt/homebrew/opt/qt/lib/cmake/Qt6OpenGLWidgets/Qt6OpenGLWidgetsConfig.cmake:
 
 /Library/Developer/CommandLineTools/usr/lib/clang/17/include/__stdarg___va_copy.h:
 
@@ -2400,6 +2463,8 @@ CMakeFiles/4.3.4/CMakeCCompiler.cmake:
 /Library/Developer/CommandLineTools/SDKs/MacOSX26.0.sdk/usr/include/c++/v1/__vector/erase.h:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX26.0.sdk/usr/include/c++/v1/__vector/container_traits.h:
+
+/opt/homebrew/opt/qt/lib/cmake/Qt6OpenGL/Qt6OpenGLConfigVersionImpl.cmake:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX26.0.sdk/usr/include/c++/v1/__utility/unreachable.h:
 
@@ -2612,6 +2677,8 @@ CMakeFiles/4.3.4/CMakeCCompiler.cmake:
 /Library/Developer/CommandLineTools/SDKs/MacOSX26.0.sdk/usr/include/c++/v1/__type_traits/aligned_union.h:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX26.0.sdk/usr/include/c++/v1/__type_traits/add_rvalue_reference.h:
+
+/opt/homebrew/opt/qt/lib/cmake/Qt6OpenGLWidgets/Qt6OpenGLWidgetsVersionlessAliasTargets.cmake:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX26.0.sdk/usr/include/c++/v1/__type_traits/add_lvalue_reference.h:
 
@@ -3027,6 +3094,8 @@ CMakeFiles/4.3.4/CMakeCCompiler.cmake:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX26.0.sdk/usr/include/c++/v1/__iterator/mergeable.h:
 
+/opt/homebrew/opt/qt/lib/cmake/Qt6OpenGLWidgets/Qt6OpenGLWidgetsTargets-release.cmake:
+
 /Library/Developer/CommandLineTools/SDKs/MacOSX26.0.sdk/usr/include/c++/v1/__algorithm/generate.h:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX26.0.sdk/usr/include/c++/v1/__iterator/iterator_with_data.h:
@@ -3276,6 +3345,8 @@ CMakeFiles/4.3.4/CMakeCCompiler.cmake:
 /Library/Developer/CommandLineTools/SDKs/MacOSX26.0.sdk/usr/include/c++/v1/__type_traits/container_traits.h:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX26.0.sdk/usr/include/c++/v1/__functional/bind.h:
+
+/opt/homebrew/opt/qt/lib/cmake/Qt6OpenGLWidgets/Qt6OpenGLWidgetsTargets.cmake:
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Core/Qt6CoreConfigVersion.cmake:
 
@@ -3619,6 +3690,8 @@ NezhaGuard_autogen/moc_predefs.h:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX26.0.sdk/usr/include/c++/v1/__charconv/to_chars_integral.h:
 
+/opt/homebrew/opt/qt/lib/cmake/Qt6OpenGL/Qt6OpenGLTargets-release.cmake:
+
 /opt/homebrew/lib/cmake/Qt6/QtFeatureCommon.cmake:
 
 /opt/homebrew/Cellar/qtbase/6.11.1/lib/QtCore.framework/Versions/A/Headers/qstringview.h:
@@ -3720,6 +3793,8 @@ NezhaGuard_autogen/moc_predefs.h:
 /Library/Developer/CommandLineTools/SDKs/MacOSX26.0.sdk/usr/include/c++/v1/__algorithm/ranges_search_n.h:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX26.0.sdk/usr/include/c++/v1/__type_traits/is_polymorphic.h:
+
+/opt/homebrew/opt/qt/lib/cmake/Qt6OpenGL/Qt6OpenGLAdditionalTargetInfo.cmake:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX26.0.sdk/usr/include/c++/v1/__atomic/is_always_lock_free.h:
 
@@ -3866,6 +3941,8 @@ NezhaGuard_autogen/moc_predefs.h:
 /opt/homebrew/Cellar/qtbase/6.11.1/lib/QtGui.framework/Versions/A/Headers/qtguiexports.h:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX26.0.sdk/usr/include/c++/v1/__new/exceptions.h:
+
+/opt/homebrew/opt/qt/lib/cmake/Qt6Charts/Qt6ChartsConfig.cmake:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX26.0.sdk/usr/include/c++/v1/__algorithm/remove_if.h:
 
@@ -4118,6 +4195,8 @@ NezhaGuard_autogen/moc_predefs.h:
 /Library/Developer/CommandLineTools/SDKs/MacOSX26.0.sdk/usr/include/c++/v1/__algorithm/rotate.h:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX26.0.sdk/usr/include/c++/v1/__algorithm/ranges_copy_n.h:
+
+/opt/homebrew/opt/qt/lib/cmake/Qt6OpenGL/Qt6OpenGLConfigVersion.cmake:
 
 /opt/homebrew/Cellar/qtbase/6.11.1/lib/QtCore.framework/Versions/A/Headers/qsize.h:
 
@@ -4634,6 +4713,8 @@ CMakeFiles/4.3.4/CMakeSystem.cmake:
 /Library/Developer/CommandLineTools/SDKs/MacOSX26.0.sdk/usr/include/c++/v1/__format/format_error.h:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX26.0.sdk/usr/include/c++/v1/__chrono/sys_info.h:
+
+/opt/homebrew/opt/qt/lib/cmake/Qt6Charts/Qt6ChartsDependencies.cmake:
 
 /opt/homebrew/Cellar/qtbase/6.11.1/lib/QtWidgets.framework/Versions/A/Headers/qtableview.h:
 

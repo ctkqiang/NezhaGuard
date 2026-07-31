@@ -54,7 +54,7 @@ set(CMAKE_PREFIX_PATH
     ${CMAKE_PREFIX_PATH}
 )
 
-find_package(Qt6 REQUIRED COMPONENTS Widgets Charts)
+find_package(Qt6 REQUIRED COMPONENTS Widgets)
 
 find_library(PCAP_LIB pcap REQUIRED
     PATHS /opt/homebrew/lib /usr/local/lib /usr/lib
@@ -72,4 +72,4 @@ find_path(SQLITE3_INCLUDE_DIR sqlite3.h REQUIRED
           /opt/homebrew/include /usr/local/include /usr/include
 )
 target_include_directories(NezhaGuard PRIVATE ${SQLITE3_INCLUDE_DIR})
-target_link_libraries(NezhaGuard PRIVATE ${PCAP_LIB} Qt6::Widgets Qt6::Charts ${SQLITE3_LIB})
+target_link_libraries(NezhaGuard PRIVATE ${PCAP_LIB} Qt6::Widgets ${SQLITE3_LIB})

@@ -1297,15 +1297,6 @@ NezhaGuard_autogen/timestamp: \
 	/opt/homebrew/opt/qt/lib/cmake/Qt6/QtPublicCMakeEarlyPolicyHelpers.cmake \
 	/opt/homebrew/opt/qt/lib/cmake/Qt6/QtPublicCMakeHelpers.cmake \
 	/opt/homebrew/opt/qt/lib/cmake/Qt6/QtPublicCMakeVersionHelpers.cmake \
-	/opt/homebrew/opt/qt/lib/cmake/Qt6Charts/Qt6ChartsAdditionalTargetInfo.cmake \
-	/opt/homebrew/opt/qt/lib/cmake/Qt6Charts/Qt6ChartsConfig.cmake \
-	/opt/homebrew/opt/qt/lib/cmake/Qt6Charts/Qt6ChartsConfigVersion.cmake \
-	/opt/homebrew/opt/qt/lib/cmake/Qt6Charts/Qt6ChartsConfigVersionImpl.cmake \
-	/opt/homebrew/opt/qt/lib/cmake/Qt6Charts/Qt6ChartsDependencies.cmake \
-	/opt/homebrew/opt/qt/lib/cmake/Qt6Charts/Qt6ChartsTargets-release.cmake \
-	/opt/homebrew/opt/qt/lib/cmake/Qt6Charts/Qt6ChartsTargets.cmake \
-	/opt/homebrew/opt/qt/lib/cmake/Qt6Charts/Qt6ChartsTargetsPrecheck.cmake \
-	/opt/homebrew/opt/qt/lib/cmake/Qt6Charts/Qt6ChartsVersionlessAliasTargets.cmake \
 	/opt/homebrew/opt/qt/lib/cmake/Qt6Core/Qt6CoreAdditionalTargetInfo.cmake \
 	/opt/homebrew/opt/qt/lib/cmake/Qt6Core/Qt6CoreConfig.cmake \
 	/opt/homebrew/opt/qt/lib/cmake/Qt6Core/Qt6CoreConfigExtras.cmake \
@@ -1496,24 +1487,6 @@ NezhaGuard_autogen/timestamp: \
 	/opt/homebrew/opt/qt/lib/cmake/Qt6GuiTools/Qt6GuiToolsTargets.cmake \
 	/opt/homebrew/opt/qt/lib/cmake/Qt6GuiTools/Qt6GuiToolsTargetsPrecheck.cmake \
 	/opt/homebrew/opt/qt/lib/cmake/Qt6GuiTools/Qt6GuiToolsVersionlessTargets.cmake \
-	/opt/homebrew/opt/qt/lib/cmake/Qt6OpenGL/Qt6OpenGLAdditionalTargetInfo.cmake \
-	/opt/homebrew/opt/qt/lib/cmake/Qt6OpenGL/Qt6OpenGLConfig.cmake \
-	/opt/homebrew/opt/qt/lib/cmake/Qt6OpenGL/Qt6OpenGLConfigVersion.cmake \
-	/opt/homebrew/opt/qt/lib/cmake/Qt6OpenGL/Qt6OpenGLConfigVersionImpl.cmake \
-	/opt/homebrew/opt/qt/lib/cmake/Qt6OpenGL/Qt6OpenGLDependencies.cmake \
-	/opt/homebrew/opt/qt/lib/cmake/Qt6OpenGL/Qt6OpenGLTargets-release.cmake \
-	/opt/homebrew/opt/qt/lib/cmake/Qt6OpenGL/Qt6OpenGLTargets.cmake \
-	/opt/homebrew/opt/qt/lib/cmake/Qt6OpenGL/Qt6OpenGLTargetsPrecheck.cmake \
-	/opt/homebrew/opt/qt/lib/cmake/Qt6OpenGL/Qt6OpenGLVersionlessAliasTargets.cmake \
-	/opt/homebrew/opt/qt/lib/cmake/Qt6OpenGLWidgets/Qt6OpenGLWidgetsAdditionalTargetInfo.cmake \
-	/opt/homebrew/opt/qt/lib/cmake/Qt6OpenGLWidgets/Qt6OpenGLWidgetsConfig.cmake \
-	/opt/homebrew/opt/qt/lib/cmake/Qt6OpenGLWidgets/Qt6OpenGLWidgetsConfigVersion.cmake \
-	/opt/homebrew/opt/qt/lib/cmake/Qt6OpenGLWidgets/Qt6OpenGLWidgetsConfigVersionImpl.cmake \
-	/opt/homebrew/opt/qt/lib/cmake/Qt6OpenGLWidgets/Qt6OpenGLWidgetsDependencies.cmake \
-	/opt/homebrew/opt/qt/lib/cmake/Qt6OpenGLWidgets/Qt6OpenGLWidgetsTargets-release.cmake \
-	/opt/homebrew/opt/qt/lib/cmake/Qt6OpenGLWidgets/Qt6OpenGLWidgetsTargets.cmake \
-	/opt/homebrew/opt/qt/lib/cmake/Qt6OpenGLWidgets/Qt6OpenGLWidgetsTargetsPrecheck.cmake \
-	/opt/homebrew/opt/qt/lib/cmake/Qt6OpenGLWidgets/Qt6OpenGLWidgetsVersionlessAliasTargets.cmake \
 	/opt/homebrew/opt/qt/lib/cmake/Qt6Widgets/Qt6QMacStylePluginAdditionalTargetInfo.cmake \
 	/opt/homebrew/opt/qt/lib/cmake/Qt6Widgets/Qt6QMacStylePluginConfig.cmake \
 	/opt/homebrew/opt/qt/lib/cmake/Qt6Widgets/Qt6QMacStylePluginTargets-release.cmake \

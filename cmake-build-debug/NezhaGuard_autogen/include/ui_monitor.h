@@ -9,7 +9,6 @@
 #ifndef UI_MONITOR_H
 #define UI_MONITOR_H
 
-#include <QtCharts/QChartView>
 #include <QtCore/QVariant>
 #include <QtWidgets/QApplication>
 #include <QtWidgets/QComboBox>
@@ -68,7 +67,6 @@ public:
     QVBoxLayout *card_uptime_layout;
     QLabel *card_uptime_value;
     QLabel *card_uptime_label;
-    QChartView *alert_chart;
     QLabel *recent_alerts_label;
     QTableView *recent_alerts_view;
     QWidget *page_logs;
@@ -298,13 +296,6 @@ public:
 
 
         dash_layout->addLayout(cards_layout);
-
-        alert_chart = new QChartView(page_dashboard);
-        alert_chart->setObjectName("alert_chart");
-        alert_chart->setMinimumSize(QSize(0, 160));
-        alert_chart->setMaximumSize(QSize(16777215, 160));
-
-        dash_layout->addWidget(alert_chart);
 
         recent_alerts_label = new QLabel(page_dashboard);
         recent_alerts_label->setObjectName("recent_alerts_label");

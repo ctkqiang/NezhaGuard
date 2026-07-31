@@ -5,13 +5,10 @@
 #include "../service/database_helper.h"
 
 #include <QApplication>
-#include <QChartView>
 #include <QComboBox>
 #include <QDateTime>
-#include <QDateTimeAxis>
 #include <QHeaderView>
 #include <QLabel>
-#include <QLineSeries>
 #include <QListWidget>
 #include <QPainter>
 #include <QPushButton>
@@ -23,7 +20,6 @@
 #include <QTableWidget>
 #include <QTableWidgetItem>
 #include <QTimer>
-#include <QValueAxis>
 
 #include <arpa/inet.h>
 #include <ifaddrs.h>
@@ -274,19 +270,7 @@ void monitor::apply_theme(bool dark) {
 }
 
 void monitor::setup_sidebar() {
-    QStringList items = {QStringLiteral("  仪表盘"), QStringLiteral("  日志监控"),
-                         QStringLiteral("  安全告警"), QStringLiteral("  蜜罐监控"),
-                         QStringLiteral("  网络信息")};
-    for (int i = 0; i < items.size(); ++i) {
-        auto *it = new QListWidgetItem(items[i], ui->sidebar);
-        it->setSizeHint(QSize(0, 36));
-    }
-    connect(ui->sidebar, &QListWidget::currentRowChanged, this, &monitor::switch_page);
     ui->sidebar->setCurrentRow(0);
-}
-
-void monitor::switch_page(int row) {
-    ui->pages->setCurrentIndex(row);
 }
 
 void monitor::update_clock() {
@@ -372,7 +356,6 @@ void monitor::init_models() {
     setup_network_table(ui->quarantine_table);
     connect(ui->refresh_network, &QPushButton::clicked, this, &monitor::refresh_network_info);
     refresh_network_info();
-    setup_chart();
 }
 
 void monitor::update_stats(int log_count, int alert_count) {
@@ -388,59 +371,6 @@ void monitor::update_stats(int log_count, int alert_count) {
     int secs = start_time_.secsTo(QTime::currentTime());
     int h = secs / 3600, m = (secs % 3600) / 60, s = secs % 60;
     ui->card_uptime_value->setText(QStringLiteral("%1h %2m %3s").arg(h).arg(m).arg(s));
-    update_chart(alert_count);
-}
-
-void monitor::setup_chart() {
-    auto *chart = new QChart();
-    chart->setTitle(QStringLiteral("告警趋势"));
-    chart->setAnimationOptions(QChart::SeriesAnimations);
-    chart->legend()->hide();
-    chart->setBackgroundBrush(Qt::transparent);
-    chart->setTitleBrush(QColor(dark_mode_ ? "#d9d9d9" : "#434343"));
-
-    auto *series = new QLineSeries();
-    series->setName(QStringLiteral("告警"));
-    series->setColor(QColor("#f85149"));
-    series->setPen(QPen(QColor("#f85149"), 2));
-    chart->addSeries(series);
-
-    auto *axisX = new QDateTimeAxis();
-    axisX->setFormat(QStringLiteral("HH:mm"));
-    axisX->setLabelsColor(QColor("#8c8c8c"));
-    axisX->setGridLineColor(QColor(dark_mode_ ? "#1f1f1f" : "#f0f0f0"));
-    chart->addAxis(axisX, Qt::AlignBottom);
-    series->attachAxis(axisX);
-
-    auto *axisY = new QValueAxis();
-    axisY->setLabelFormat(QStringLiteral("%d"));
-    axisY->setLabelsColor(QColor("#8c8c8c"));
-    axisY->setGridLineColor(QColor(dark_mode_ ? "#1f1f1f" : "#f0f0f0"));
-    chart->addAxis(axisY, Qt::AlignLeft);
-    series->attachAxis(axisY);
-
-    auto *cv = new QChartView(chart, ui->alert_chart);
-    cv->setRenderHint(QPainter::Antialiasing);
-    cv->setStyleSheet(QStringLiteral("background:transparent;border:none;"));
-    cv->resize(ui->alert_chart->size());
-}
-
-void monitor::update_chart(int alert_count) {
-    auto *cv = ui->alert_chart->findChild<QChartView *>();
-    if (!cv || !cv->chart()) return;
-    auto *chart = cv->chart();
-    auto *series = qobject_cast<QLineSeries *>(chart->series().value(0, nullptr));
-    if (!series) return;
-
-    auto now = QDateTime::currentDateTime();
-    series->append(now.toMSecsSinceEpoch(), alert_count);
-    ++chart_points_;
-    if (chart_points_ > 120) series->remove(0);
-
-    auto *ax = qobject_cast<QDateTimeAxis *>(chart->axes(Qt::Horizontal).value(0, nullptr));
-    auto *ay = qobject_cast<QValueAxis *>(chart->axes(Qt::Vertical).value(0, nullptr));
-    if (ax) ax->setRange(now.addSecs(-120), now.addSecs(10));
-    if (ay) ay->setRange(0, std::max(10.0, alert_count * 1.5));
 }
 
 void monitor::append_alert(const QString &time, const QString &type, const QString &ip,

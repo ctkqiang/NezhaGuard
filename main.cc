@@ -41,12 +41,14 @@ static int run_cli_mode() {
 
     Log::init_default("logs/nezha.log", Log::Level::Debug);
     Database::DatabaseHelper::InitializeQuarantineDatabase();
-    NZ_INFO("══════════════════════════════════════════");
-    NZ_INFO("  哪吒网络安全 SIEM 系统 {}",
+    auto qlist = Database::DatabaseHelper::GetQuarantineList();
+    NZ_INFO("══════════════════════════════════════════════════");
+    NZ_INFO("  哪吒网络安全 SIEM 系统 {} [蓝队模式]",
            Configuration::ApplicationConstants::ApplicationVersion);
-    NZ_INFO("  隔离阈值: {} 次异常请求",
-           Configuration::ApplicationConstants::AnomaliesQuarantineThreshold);
-    NZ_INFO("══════════════════════════════════════════");
+    NZ_INFO("  隔离阈值: {} 次  |  历史隔离记录: {} 条",
+           Configuration::ApplicationConstants::AnomaliesQuarantineThreshold,
+           qlist.size());
+    NZ_INFO("══════════════════════════════════════════════════");
     Core::dump_network_info();
 
     Core::Arena arena(128 * 1024);
@@ -119,10 +121,16 @@ static int run_cli_mode() {
             }
             detector.analyze(e, arena, [&](const Core::Alert &a) { alerter.submit(a); });
             if (e.proto == PROTO_ICMP)
-                NZ_DEBUG("ICMP {} -> {}", e.src.to_string(), e.dst.to_string());
+                NZ_DEBUG("[ICMP] {} → {}  len={}",
+                         e.src.to_string(), e.dst.to_string(), len);
+            else if (e.proto == PROTO_TCP)
+                NZ_TRACE("[TCP] {}:{} → {}:{}  len={}",
+                         e.src.to_string(), e.sport,
+                         e.dst.to_string(), e.dport, len);
             else
-                NZ_TRACE("{} {}:{} -> :{}", e.proto == PROTO_TCP ? "TCP" : "UDP",
-                         e.src.to_string(), e.sport, e.dport);
+                NZ_TRACE("[UDP] {}:{} → {}:{}  len={}",
+                         e.src.to_string(), e.sport,
+                         e.dst.to_string(), e.dport, len);
             static Nanos last_flush = 0;
             if (e.ts_ns - last_flush > 30'000'000'000ULL) {
                 alerter.flush();
@@ -142,10 +150,16 @@ static int run_cli_mode() {
     log_watcher.stop();
     alerter.flush();
     Log::Logger::instance().flush();
-    NZ_INFO("══════════════════════════════════════════");
-    NZ_INFO("  SIEM 已停止");
-    NZ_INFO("  总告警数: {}", alerter.total_alerts());
-    NZ_INFO("══════════════════════════════════════════");
+    auto final_qlist = Database::DatabaseHelper::GetQuarantineList();
+    NZ_INFO("══════════════════════════════════════════════════");
+    NZ_INFO("  SIEM 已停止  |  本次告警: {}  |  隔离 IP: {}",
+           alerter.total_alerts(), final_qlist.size());
+    if (!final_qlist.empty()) {
+        NZ_INFO("  ── 隔离列表 ──");
+        for (const auto &r : final_qlist)
+            NZ_INFO("    {}  [{}]  score={:.0f}", r.ip_address, r.reason, r.threat_score);
+    }
+    NZ_INFO("══════════════════════════════════════════════════");
     return 0;
 }
 

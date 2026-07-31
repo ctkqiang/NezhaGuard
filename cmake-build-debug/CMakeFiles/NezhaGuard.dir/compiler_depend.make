@@ -15171,10 +15171,37 @@ CMakeFiles/NezhaGuard.dir/src/views/monitor.cc.o: /Users/johnmelodyme/Documents/
   /Users/johnmelodyme/Documents/ctkqiang/NezhaGuard/src/views/gui_sink.h \
   /Users/johnmelodyme/Documents/ctkqiang/NezhaGuard/src/views/log_model.h \
   /Users/johnmelodyme/Documents/ctkqiang/NezhaGuard/src/views/monitor.h \
+  /opt/homebrew/opt/qt/lib/QtCharts.framework/Headers/QAbstractAxis \
+  /opt/homebrew/opt/qt/lib/QtCharts.framework/Headers/QAbstractSeries \
+  /opt/homebrew/opt/qt/lib/QtCharts.framework/Headers/QChart \
+  /opt/homebrew/opt/qt/lib/QtCharts.framework/Headers/QChartGlobal \
+  /opt/homebrew/opt/qt/lib/QtCharts.framework/Headers/QChartView \
+  /opt/homebrew/opt/qt/lib/QtCharts.framework/Headers/QDateTimeAxis \
+  /opt/homebrew/opt/qt/lib/QtCharts.framework/Headers/QLegend \
+  /opt/homebrew/opt/qt/lib/QtCharts.framework/Headers/QLineSeries \
+  /opt/homebrew/opt/qt/lib/QtCharts.framework/Headers/QValueAxis \
+  /opt/homebrew/opt/qt/lib/QtCharts.framework/Headers/QXYSeries \
+  /opt/homebrew/opt/qt/lib/QtCharts.framework/Headers/qabstractaxis.h \
+  /opt/homebrew/opt/qt/lib/QtCharts.framework/Headers/qabstractseries.h \
+  /opt/homebrew/opt/qt/lib/QtCharts.framework/Headers/qchart.h \
+  /opt/homebrew/opt/qt/lib/QtCharts.framework/Headers/qchartglobal.h \
+  /opt/homebrew/opt/qt/lib/QtCharts.framework/Headers/qchartview.h \
+  /opt/homebrew/opt/qt/lib/QtCharts.framework/Headers/qdatetimeaxis.h \
+  /opt/homebrew/opt/qt/lib/QtCharts.framework/Headers/qlegend.h \
+  /opt/homebrew/opt/qt/lib/QtCharts.framework/Headers/qlineseries.h \
+  /opt/homebrew/opt/qt/lib/QtCharts.framework/Headers/qtcharts-config.h \
+  /opt/homebrew/opt/qt/lib/QtCharts.framework/Headers/qtchartsexports.h \
+  /opt/homebrew/opt/qt/lib/QtCharts.framework/Headers/qvalueaxis.h \
+  /opt/homebrew/opt/qt/lib/QtCharts.framework/Headers/qxyseries.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/QAbstractListModel \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/QDateTime \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/QList \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/QMargins \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/QObject \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/QPointer \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/QRect \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/QSize \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/QSizeF \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/QSortFilterProxyModel \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/QString \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/QTime \
@@ -15330,14 +15357,21 @@ CMakeFiles/NezhaGuard.dir/src/views/monitor.cc.o: /Users/johnmelodyme/Documents/
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qversiontagging.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qxptype_traits.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qyieldcpu.h \
+  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/QBrush \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/QColor \
+  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/QFont \
+  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/QImage \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/QPainter \
+  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/QPen \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/QStyleHints \
+  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/QTransform \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qaction.h \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qbitmap.h \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qbrush.h \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qcolor.h \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qcursor.h \
+  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qevent.h \
+  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qeventpoint.h \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qfont.h \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qfontinfo.h \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qfontmetrics.h \
@@ -15346,19 +15380,24 @@ CMakeFiles/NezhaGuard.dir/src/views/monitor.cc.o: /Users/johnmelodyme/Documents/
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qguiapplication_platform.h \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qicon.h \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qimage.h \
+  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qinputdevice.h \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qinputmethod.h \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qkeysequence.h \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qpaintdevice.h \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qpainter.h \
+  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qpainterpath.h \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qpalette.h \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qpen.h \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qpicture.h \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qpixelformat.h \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qpixmap.h \
+  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qpointingdevice.h \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qpolygon.h \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qregion.h \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qrgb.h \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qrgba64.h \
+  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qscreen.h \
+  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qscreen_platform.h \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qstylehints.h \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qtextcursor.h \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qtextdocument.h \
@@ -15369,10 +15408,14 @@ CMakeFiles/NezhaGuard.dir/src/views/monitor.cc.o: /Users/johnmelodyme/Documents/
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qtguiglobal.h \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qtransform.h \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qvalidator.h \
+  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qvector2d.h \
+  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qvectornd.h \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qwindowdefs.h \
   /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/QApplication \
   /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/QComboBox \
   /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/QFrame \
+  /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/QGraphicsView \
+  /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/QGraphicsWidget \
   /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/QHBoxLayout \
   /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/QHeaderView \
   /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/QLabel \
@@ -15400,6 +15443,11 @@ CMakeFiles/NezhaGuard.dir/src/views/monitor.cc.o: /Users/johnmelodyme/Documents/
   /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qboxlayout.h \
   /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qcombobox.h \
   /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qframe.h \
+  /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qgraphicsitem.h \
+  /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qgraphicslayoutitem.h \
+  /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qgraphicsscene.h \
+  /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qgraphicsview.h \
+  /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qgraphicswidget.h \
   /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qgridlayout.h \
   /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qheaderview.h \
   /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qlabel.h \
@@ -15410,6 +15458,7 @@ CMakeFiles/NezhaGuard.dir/src/views/monitor.cc.o: /Users/johnmelodyme/Documents/
   /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qmainwindow.h \
   /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qpushbutton.h \
   /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qrubberband.h \
+  /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qscrollarea.h \
   /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qsizepolicy.h \
   /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qslider.h \
   /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qstackedwidget.h \
@@ -15436,6 +15485,10 @@ CMakeFiles/NezhaGuard.dir/src/views/monitor.cc.o: /Users/johnmelodyme/Documents/
 
 /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qheaderview.h:
 
+/opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qgraphicsview.h:
+
+/opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qgraphicsitem.h:
+
 /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qcombobox.h:
 
 /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/QVBoxLayout:
@@ -15456,15 +15509,43 @@ CMakeFiles/NezhaGuard.dir/src/views/monitor.cc.o: /Users/johnmelodyme/Documents/
 
 /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/QHBoxLayout:
 
+/opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/QGraphicsWidget:
+
 /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qtextdocument.h:
+
+/opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qscreen_platform.h:
 
 /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qpainter.h:
 
+/opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qeventpoint.h:
+
 /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/QStyleHints:
+
+/opt/homebrew/opt/qt/lib/QtGui.framework/Headers/QPen:
+
+/opt/homebrew/opt/qt/lib/QtGui.framework/Headers/QImage:
 
 /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qiodevice.h:
 
 /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/QVariant:
+
+/opt/homebrew/opt/qt/lib/QtCore.framework/Headers/QSize:
+
+/opt/homebrew/opt/qt/lib/QtCore.framework/Headers/QList:
+
+/opt/homebrew/opt/qt/lib/QtCharts.framework/Headers/qvalueaxis.h:
+
+/opt/homebrew/opt/qt/lib/QtCharts.framework/Headers/qlineseries.h:
+
+/opt/homebrew/opt/qt/lib/QtCharts.framework/Headers/qchartview.h:
+
+/opt/homebrew/opt/qt/lib/QtCharts.framework/Headers/qchartglobal.h:
+
+/opt/homebrew/opt/qt/lib/QtCharts.framework/Headers/qabstractseries.h:
+
+/opt/homebrew/opt/qt/lib/QtCharts.framework/Headers/QXYSeries:
+
+/opt/homebrew/opt/qt/lib/QtCharts.framework/Headers/QValueAxis:
 
 /Users/johnmelodyme/Documents/ctkqiang/NezhaGuard/src/views/log_model.cc:
 
@@ -15584,6 +15665,8 @@ CMakeFiles/NezhaGuard.dir/src/views/monitor.cc.o: /Users/johnmelodyme/Documents/
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/unistd.h:
 
+/opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qevent.h:
+
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/time.h:
 
 /Users/johnmelodyme/Documents/ctkqiang/NezhaGuard/src/core/event.h:
@@ -15610,6 +15693,8 @@ CMakeFiles/NezhaGuard.dir/src/views/monitor.cc.o: /Users/johnmelodyme/Documents/
 
 /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qtwidgets-config.h:
 
+/opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qgraphicswidget.h:
+
 /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qtabwidget.h:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/inttypes.h:
@@ -15631,6 +15716,8 @@ CMakeFiles/NezhaGuard.dir/src/views/monitor.cc.o: /Users/johnmelodyme/Documents/
 /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qabstractitemdelegate.h:
 
 /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/QTableView:
+
+/opt/homebrew/opt/qt/lib/QtCharts.framework/Headers/qchart.h:
 
 /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/QStyledItemDelegate:
 
@@ -15762,6 +15849,8 @@ CMakeFiles/NezhaGuard.dir/src/views/monitor.cc.o: /Users/johnmelodyme/Documents/
 
 /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qdatetime.h:
 
+/opt/homebrew/opt/qt/lib/QtCharts.framework/Headers/qabstractaxis.h:
+
 /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qcontiguouscache.h:
 
 /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qconfig.h:
@@ -15769,6 +15858,8 @@ CMakeFiles/NezhaGuard.dir/src/views/monitor.cc.o: /Users/johnmelodyme/Documents/
 /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qcomparehelpers.h:
 
 /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qcompare_impl.h:
+
+/opt/homebrew/opt/qt/lib/QtCharts.framework/Headers/QDateTimeAxis:
 
 /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qcalendar.h:
 
@@ -15958,6 +16049,8 @@ NezhaGuard_autogen/Z3L7HTGYLD/moc_monitor.cpp:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/_types/_dev_t.h:
 
+/opt/homebrew/opt/qt/lib/QtGui.framework/Headers/QTransform:
+
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/_types/_ct_rune_t.h:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/_types/_clock_t.h:
@@ -16046,6 +16139,8 @@ NezhaGuard_autogen/Z3L7HTGYLD/moc_monitor.cpp:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/locale:
 
+/opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qvector2d.h:
+
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/list:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/iosfwd:
@@ -16069,6 +16164,8 @@ NezhaGuard_autogen/Z3L7HTGYLD/moc_monitor.cpp:
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/cstring:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/cstdint:
+
+/opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qpainterpath.h:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/cstdarg:
 
@@ -16117,6 +16214,8 @@ NezhaGuard_autogen/Z3L7HTGYLD/moc_monitor.cpp:
 /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/QTime:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__utility/scope_guard.h:
+
+/opt/homebrew/opt/qt/lib/QtCharts.framework/Headers/QAbstractSeries:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/unordered_set:
 
@@ -16354,6 +16453,8 @@ NezhaGuard_autogen/Z3L7HTGYLD/moc_monitor.cpp:
 
 /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/QStyleOptionViewItem:
 
+/opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/QGraphicsView:
+
 /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qversiontagging.h:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__tuple/sfinae_helpers.h:
@@ -16448,6 +16549,8 @@ NezhaGuard_autogen/Z3L7HTGYLD/moc_monitor.cpp:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__ranges/lazy_split_view.h:
 
+/opt/homebrew/opt/qt/lib/QtCore.framework/Headers/QRect:
+
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__algorithm/sort_heap.h:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__algorithm/ranges_find_if.h:
@@ -16526,6 +16629,8 @@ NezhaGuard_autogen/Z3L7HTGYLD/moc_monitor.cpp:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__type_traits/add_lvalue_reference.h:
 
+/opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qscreen.h:
+
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__algorithm/ranges_swap_ranges.h:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__numeric/reduce.h:
@@ -16559,6 +16664,8 @@ NezhaGuard_autogen/Z3L7HTGYLD/moc_monitor.cpp:
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__iterator/unreachable_sentinel.h:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__new/nothrow_t.h:
+
+/opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qgraphicslayoutitem.h:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__new/new_handler.h:
 
@@ -16603,6 +16710,8 @@ NezhaGuard_autogen/Z3L7HTGYLD/moc_monitor.cpp:
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__type_traits/is_enum.h:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__thread/id.h:
+
+/opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qinputdevice.h:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__type_traits/is_implicit_lifetime.h:
 
@@ -16700,6 +16809,8 @@ NezhaGuard_autogen/Z3L7HTGYLD/moc_monitor.cpp:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__iterator/reverse_access.h:
 
+/opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qgraphicsscene.h:
+
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__iterator/ranges_iterator_traits.h:
 
 /Users/johnmelodyme/Documents/ctkqiang/NezhaGuard/src/views/gui_sink.cc:
@@ -16771,6 +16882,8 @@ NezhaGuard_autogen/Z3L7HTGYLD/moc_monitor.cpp:
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__iterator/bounded_iter.h:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__locale_dir/locale_base_api.h:
+
+/opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qpointingdevice.h:
 
 /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qscopedpointer.h:
 
@@ -17232,6 +17345,8 @@ NezhaGuard_autogen/Z3L7HTGYLD/moc_monitor.cpp:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__bit/endian.h:
 
+/opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qscrollarea.h:
+
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__bit/countl.h:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__algorithm/ranges_is_sorted_until.h:
@@ -17273,6 +17388,8 @@ NezhaGuard_autogen/Z3L7HTGYLD/moc_monitor.cpp:
 /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qcontainerinfo.h:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__atomic/check_memory_order.h:
+
+/opt/homebrew/opt/qt/lib/QtCharts.framework/Headers/QAbstractAxis:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__iterator/erase_if_container.h:
 
@@ -17616,9 +17733,13 @@ NezhaGuard_autogen/include/ui_monitor.h:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_abort.h:
 
+/opt/homebrew/opt/qt/lib/QtCharts.framework/Headers/QChart:
+
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_types/_uint8_t.h:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__ranges/as_rvalue_view.h:
+
+/opt/homebrew/opt/qt/lib/QtCharts.framework/Headers/qdatetimeaxis.h:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__algorithm/ranges_remove_if.h:
 
@@ -17651,6 +17772,8 @@ NezhaGuard_autogen/include/ui_monitor.h:
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/wait.h:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__functional/default_searcher.h:
+
+/opt/homebrew/opt/qt/lib/QtCore.framework/Headers/QMargins:
 
 /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qshareddata.h:
 
@@ -17717,6 +17840,8 @@ NezhaGuard_autogen/include/ui_monitor.h:
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__algorithm/ranges_partition_point.h:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_types/_wctrans_t.h:
+
+/opt/homebrew/opt/qt/lib/QtCore.framework/Headers/QSizeF:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/xlocale/_wchar.h:
 
@@ -17852,6 +17977,8 @@ NezhaGuard_autogen/include/ui_monitor.h:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__format/width_estimation_table.h:
 
+/opt/homebrew/opt/qt/lib/QtGui.framework/Headers/QFont:
+
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/net/if.h:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__algorithm/nth_element.h:
@@ -17874,6 +18001,8 @@ NezhaGuard_autogen/include/ui_monitor.h:
 
 /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qlayout.h:
 
+/opt/homebrew/opt/qt/lib/QtCharts.framework/Headers/QChartGlobal:
+
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/_types/_suseconds_t.h:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/machine/signal.h:
@@ -17885,6 +18014,8 @@ NezhaGuard_autogen/include/ui_monitor.h:
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/algorithm:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__numeric/gcd_lcm.h:
+
+/opt/homebrew/opt/qt/lib/QtCharts.framework/Headers/QLegend:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/machine/endian.h:
 
@@ -17937,6 +18068,8 @@ NezhaGuard_autogen/include/ui_monitor.h:
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__stop_token/atomic_unique_lock.h:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__atomic/support/c11.h:
+
+/opt/homebrew/opt/qt/lib/QtCharts.framework/Headers/qtchartsexports.h:
 
 /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qwidget.h:
 
@@ -18038,6 +18171,8 @@ NezhaGuard_autogen/include/ui_monitor.h:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__ranges/dangling.h:
 
+/opt/homebrew/opt/qt/lib/QtCharts.framework/Headers/qtcharts-config.h:
+
 /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/QPointer:
 
 NezhaGuard_autogen/mocs_compilation.cpp:
@@ -18051,6 +18186,8 @@ NezhaGuard_autogen/mocs_compilation.cpp:
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__atomic/atomic_lock_free.h:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__math/inverse_hyperbolic_functions.h:
+
+/opt/homebrew/opt/qt/lib/QtGui.framework/Headers/QBrush:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__format/formatter_string.h:
 
@@ -18140,6 +18277,10 @@ NezhaGuard_autogen/mocs_compilation.cpp:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__algorithm/adjacent_find.h:
 
+/opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qvectornd.h:
+
+/opt/homebrew/opt/qt/lib/QtCharts.framework/Headers/QChartView:
+
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/_types/_uintptr_t.h:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__algorithm/ranges_none_of.h:
@@ -18163,6 +18304,8 @@ NezhaGuard_autogen/mocs_compilation.cpp:
 /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/QStackedWidget:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_time.h:
+
+/opt/homebrew/opt/qt/lib/QtCharts.framework/Headers/QLineSeries:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_wchar.h:
 
@@ -18274,6 +18417,8 @@ NezhaGuard_autogen/mocs_compilation.cpp:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__compare/synth_three_way.h:
 
+/opt/homebrew/opt/qt/lib/QtCharts.framework/Headers/qxyseries.h:
+
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__algorithm/for_each_segment.h:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__iterator/sortable.h:
@@ -18303,6 +18448,8 @@ NezhaGuard_autogen/mocs_compilation.cpp:
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__memory/shared_ptr.h:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__algorithm/in_in_result.h:
+
+/opt/homebrew/opt/qt/lib/QtCharts.framework/Headers/qlegend.h:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__algorithm/ranges_unique.h:
 

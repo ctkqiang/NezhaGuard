@@ -56,8 +56,6 @@ template <> constexpr inline auto monitor::qt_create_metaobjectdata<qt_meta_tag_
         "sport",
         "dport",
         "service",
-        "switch_page",
-        "row",
         "apply_log_filter",
         "index",
         "filter_alert_severity",
@@ -85,32 +83,28 @@ template <> constexpr inline auto monitor::qt_create_metaobjectdata<qt_meta_tag_
             { QMetaType::QString, 6 }, { QMetaType::QString, 13 }, { 0x80000000 | 14, 15 }, { 0x80000000 | 14, 16 },
             { QMetaType::QString, 17 },
         }}),
-        // Slot 'switch_page'
+        // Slot 'apply_log_filter'
         QtMocHelpers::SlotData<void(int)>(18, 2, QMC::AccessPrivate, QMetaType::Void, {{
             { QMetaType::Int, 19 },
         }}),
-        // Slot 'apply_log_filter'
-        QtMocHelpers::SlotData<void(int)>(20, 2, QMC::AccessPrivate, QMetaType::Void, {{
-            { QMetaType::Int, 21 },
-        }}),
         // Slot 'filter_alert_severity'
-        QtMocHelpers::SlotData<void(int)>(22, 2, QMC::AccessPrivate, QMetaType::Void, {{
-            { QMetaType::Int, 21 },
+        QtMocHelpers::SlotData<void(int)>(20, 2, QMC::AccessPrivate, QMetaType::Void, {{
+            { QMetaType::Int, 19 },
         }}),
         // Slot 'show_alert_detail'
-        QtMocHelpers::SlotData<void(const QModelIndex &)>(23, 2, QMC::AccessPrivate, QMetaType::Void, {{
-            { 0x80000000 | 24, 25 },
+        QtMocHelpers::SlotData<void(const QModelIndex &)>(21, 2, QMC::AccessPrivate, QMetaType::Void, {{
+            { 0x80000000 | 22, 23 },
         }}),
         // Slot 'show_honey_detail'
-        QtMocHelpers::SlotData<void(const QModelIndex &)>(26, 2, QMC::AccessPrivate, QMetaType::Void, {{
-            { 0x80000000 | 24, 25 },
+        QtMocHelpers::SlotData<void(const QModelIndex &)>(24, 2, QMC::AccessPrivate, QMetaType::Void, {{
+            { 0x80000000 | 22, 23 },
         }}),
         // Slot 'refresh_network_info'
-        QtMocHelpers::SlotData<void()>(27, 2, QMC::AccessPrivate, QMetaType::Void),
+        QtMocHelpers::SlotData<void()>(25, 2, QMC::AccessPrivate, QMetaType::Void),
         // Slot 'update_clock'
-        QtMocHelpers::SlotData<void()>(28, 2, QMC::AccessPrivate, QMetaType::Void),
+        QtMocHelpers::SlotData<void()>(26, 2, QMC::AccessPrivate, QMetaType::Void),
         // Slot 'sync_theme'
-        QtMocHelpers::SlotData<void()>(29, 2, QMC::AccessPrivate, QMetaType::Void),
+        QtMocHelpers::SlotData<void()>(27, 2, QMC::AccessPrivate, QMetaType::Void),
     };
     QtMocHelpers::UintData qt_properties {
     };
@@ -137,14 +131,13 @@ void monitor::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, voi
         case 0: _t->update_stats((*reinterpret_cast<std::add_pointer_t<int>>(_a[1])),(*reinterpret_cast<std::add_pointer_t<int>>(_a[2]))); break;
         case 1: _t->append_alert((*reinterpret_cast<std::add_pointer_t<QString>>(_a[1])),(*reinterpret_cast<std::add_pointer_t<QString>>(_a[2])),(*reinterpret_cast<std::add_pointer_t<QString>>(_a[3])),(*reinterpret_cast<std::add_pointer_t<int>>(_a[4])),(*reinterpret_cast<std::add_pointer_t<double>>(_a[5])),(*reinterpret_cast<std::add_pointer_t<QString>>(_a[6]))); break;
         case 2: _t->append_honeypot((*reinterpret_cast<std::add_pointer_t<QString>>(_a[1])),(*reinterpret_cast<std::add_pointer_t<QString>>(_a[2])),(*reinterpret_cast<std::add_pointer_t<uint16_t>>(_a[3])),(*reinterpret_cast<std::add_pointer_t<uint16_t>>(_a[4])),(*reinterpret_cast<std::add_pointer_t<QString>>(_a[5]))); break;
-        case 3: _t->switch_page((*reinterpret_cast<std::add_pointer_t<int>>(_a[1]))); break;
-        case 4: _t->apply_log_filter((*reinterpret_cast<std::add_pointer_t<int>>(_a[1]))); break;
-        case 5: _t->filter_alert_severity((*reinterpret_cast<std::add_pointer_t<int>>(_a[1]))); break;
-        case 6: _t->show_alert_detail((*reinterpret_cast<std::add_pointer_t<QModelIndex>>(_a[1]))); break;
-        case 7: _t->show_honey_detail((*reinterpret_cast<std::add_pointer_t<QModelIndex>>(_a[1]))); break;
-        case 8: _t->refresh_network_info(); break;
-        case 9: _t->update_clock(); break;
-        case 10: _t->sync_theme(); break;
+        case 3: _t->apply_log_filter((*reinterpret_cast<std::add_pointer_t<int>>(_a[1]))); break;
+        case 4: _t->filter_alert_severity((*reinterpret_cast<std::add_pointer_t<int>>(_a[1]))); break;
+        case 5: _t->show_alert_detail((*reinterpret_cast<std::add_pointer_t<QModelIndex>>(_a[1]))); break;
+        case 6: _t->show_honey_detail((*reinterpret_cast<std::add_pointer_t<QModelIndex>>(_a[1]))); break;
+        case 7: _t->refresh_network_info(); break;
+        case 8: _t->update_clock(); break;
+        case 9: _t->sync_theme(); break;
         default: ;
         }
     }
@@ -169,14 +162,14 @@ int monitor::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
     if (_id < 0)
         return _id;
     if (_c == QMetaObject::InvokeMetaMethod) {
-        if (_id < 11)
+        if (_id < 10)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 11;
+        _id -= 10;
     }
     if (_c == QMetaObject::RegisterMethodArgumentMetaType) {
-        if (_id < 11)
+        if (_id < 10)
             *reinterpret_cast<QMetaType *>(_a[0]) = QMetaType();
-        _id -= 11;
+        _id -= 10;
     }
     return _id;
 }
