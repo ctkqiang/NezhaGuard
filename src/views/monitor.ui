@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>monitor</class>
+ <widget class="QMainWindow" name="monitor">
+  <property name="geometry">
+   <rect><x>0</x><y>0</y><width>1360</width><height>860</height></rect>
+  </property>
+  <property name="windowTitle">
+   <string>NezhaGuard SIEM</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QVBoxLayout" name="root_layout">
+    <property name="spacing"><number>0</number></property>
+    <property name="leftMargin"><number>0</number></property>
+    <property name="topMargin"><number>0</number></property>
+    <property name="rightMargin"><number>0</number></property>
+    <property name="bottomMargin"><number>0</number></property>
+    <item>
+     <widget class="QWidget" name="header" native="true">
+      <property name="minimumSize"><size><width>0</width><height>48</height></size></property>
+      <property name="maximumSize"><size><width>16777215</width><height>48</height></size></property>
+      <layout class="QHBoxLayout" name="header_layout">
+       <property name="spacing"><number>8</number></property>
+       <property name="leftMargin"><number>16</number></property>
+       <property name="topMargin"><number>0</number></property>
+       <property name="rightMargin"><number>16</number></property>
+       <property name="bottomMargin"><number>0</number></property>
+       <item>
+        <widget class="QLabel" name="app_title">
+         <property name="text"><string>NezhaGuard SIEM</string></property>
+         <property name="styleSheet"><string>font-size:15px;font-weight:bold;</string></property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="header_spacer"><property name="orientation"><enum>Qt::Horizontal</enum></property></spacer>
+       </item>
+       <item>
+        <widget class="QLabel" name="clock_label"><property name="text"><string/></property></widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="status_dot">
+         <property name="minimumSize"><size><width>8</width><height>8</height></size></property>
+         <property name="maximumSize"><size><width>8</width><height>8</height></size></property>
+         <property name="text"><string/></property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="status_text"><property name="text"><string>Running</string></property></widget>
+       </item>
+      </layout>
+     </widget>
+    </item>
+    <item>
+     <widget class="QWidget" name="body" native="true">
+      <layout class="QHBoxLayout" name="body_layout">
+       <property name="spacing"><number>0</number></property>
+       <property name="leftMargin"><number>0</number></property>
+       <property name="topMargin"><number>0</number></property>
+       <property name="rightMargin"><number>0</number></property>
+       <property name="bottomMargin"><number>0</number></property>
+       <item>
+        <widget class="QListWidget" name="sidebar">
+         <property name="minimumSize"><size><width>200</width><height>0</height></size></property>
+         <property name="maximumSize"><size><width>200</width><height>16777215</height></size></property>
+         <property name="frameShape"><enum>QFrame::NoFrame</enum></property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QStackedWidget" name="pages">
+         <widget class="QWidget" name="page_dashboard">
+          <layout class="QVBoxLayout" name="dash_layout">
+           <property name="spacing"><number>16</number></property>
+           <property name="leftMargin"><number>24</number></property>
+           <property name="topMargin"><number>24</number></property>
+           <property name="rightMargin"><number>24</number></property>
+           <property name="bottomMargin"><number>24</number></property>
+           <item><widget class="QLabel" name="dash_title"><property name="text"><string>Dashboard</string></property></widget></item>
+           <item>
+            <layout class="QHBoxLayout" name="cards_layout">
+             <item>
+              <widget class="QFrame" name="card_logs">
+               <property name="frameShape"><enum>QFrame::StyledPanel</enum></property>
+               <layout class="QVBoxLayout" name="card_logs_layout">
+                <item><widget class="QLabel" name="card_logs_value"><property name="text"><string>0</string></property></widget></item>
+                <item><widget class="QLabel" name="card_logs_label"><property name="text"><string>Total Logs</string></property></widget></item>
+               </layout>
+              </widget>
+             </item>
+             <item>
+              <widget class="QFrame" name="card_alerts">
+               <property name="frameShape"><enum>QFrame::StyledPanel</enum></property>
+               <layout class="QVBoxLayout" name="card_alerts_layout">
+                <item><widget class="QLabel" name="card_alerts_value"><property name="text"><string>0</string></property></widget></item>
+                <item><widget class="QLabel" name="card_alerts_label"><property name="text"><string>Alerts</string></property></widget></item>
+               </layout>
+              </widget>
+             </item>
+             <item>
+              <widget class="QFrame" name="card_threats">
+               <property name="frameShape"><enum>QFrame::StyledPanel</enum></property>
+               <layout class="QVBoxLayout" name="card_threats_layout">
+                <item><widget class="QLabel" name="card_threats_value"><property name="text"><string>0</string></property></widget></item>
+                <item><widget class="QLabel" name="card_threats_label"><property name="text"><string>Threats</string></property></widget></item>
+               </layout>
+              </widget>
+             </item>
+             <item>
+              <widget class="QFrame" name="card_uptime">
+               <property name="frameShape"><enum>QFrame::StyledPanel</enum></property>
+               <layout class="QVBoxLayout" name="card_uptime_layout">
+                <item><widget class="QLabel" name="card_uptime_value"><property name="text"><string>00:00</string></property></widget></item>
+                <item><widget class="QLabel" name="card_uptime_label"><property name="text"><string>Uptime</string></property></widget></item>
+               </layout>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item><widget class="QLabel" name="recent_alerts_label"><property name="text"><string>Recent Alerts</string></property></widget></item>
+           <item><widget class="QTableView" name="recent_alerts_view"/></item>
+          </layout>
+         </widget>
+         <widget class="QWidget" name="page_logs">
+          <layout class="QVBoxLayout" name="logs_layout">
+           <property name="spacing"><number>12</number></property>
+           <property name="leftMargin"><number>24</number></property>
+           <property name="topMargin"><number>24</number></property>
+           <property name="rightMargin"><number>24</number></property>
+           <property name="bottomMargin"><number>24</number></property>
+           <item><widget class="QLabel" name="logs_title"><property name="text"><string>Log Monitor</string></property></widget></item>
+           <item>
+            <layout class="QHBoxLayout" name="logs_filter_layout">
+             <item><widget class="QLabel" name="logs_filter_label"><property name="text"><string>Level</string></property></widget></item>
+             <item>
+              <widget class="QComboBox" name="level_filter">
+               <item><property name="text"><string>ALL</string></property></item>
+               <item><property name="text"><string>Trace</string></property></item>
+               <item><property name="text"><string>Debug</string></property></item>
+               <item><property name="text"><string>Info</string></property></item>
+               <item><property name="text"><string>Warn</string></property></item>
+               <item><property name="text"><string>Error</string></property></item>
+               <item><property name="text"><string>Critical</string></property></item>
+              </widget>
+             </item>
+             <item><spacer name="logs_spacer"><property name="orientation"><enum>Qt::Horizontal</enum></property></spacer></item>
+            </layout>
+           </item>
+           <item><widget class="QTableView" name="log_view"/></item>
+          </layout>
+         </widget>
+         <widget class="QWidget" name="page_alerts">
+          <layout class="QVBoxLayout" name="alerts_layout">
+           <property name="spacing"><number>12</number></property>
+           <property name="leftMargin"><number>24</number></property>
+           <property name="topMargin"><number>24</number></property>
+           <property name="rightMargin"><number>24</number></property>
+           <property name="bottomMargin"><number>24</number></property>
+           <item><widget class="QLabel" name="alerts_title"><property name="text"><string>Security Alerts</string></property></widget></item>
+           <item><widget class="QTableView" name="alert_view"/></item>
+          </layout>
+         </widget>
+         <widget class="QWidget" name="page_honeypot">
+          <layout class="QVBoxLayout" name="honey_layout">
+           <property name="spacing"><number>12</number></property>
+           <property name="leftMargin"><number>24</number></property>
+           <property name="topMargin"><number>24</number></property>
+           <property name="rightMargin"><number>24</number></property>
+           <property name="bottomMargin"><number>24</number></property>
+           <item><widget class="QLabel" name="honey_title"><property name="text"><string>Honeypot</string></property></widget></item>
+           <item><widget class="QTableView" name="honey_view"/></item>
+          </layout>
+         </widget>
+         <widget class="QWidget" name="page_network">
+          <layout class="QVBoxLayout" name="network_layout">
+           <property name="spacing"><number>12</number></property>
+           <property name="leftMargin"><number>24</number></property>
+           <property name="topMargin"><number>24</number></property>
+           <property name="rightMargin"><number>24</number></property>
+           <property name="bottomMargin"><number>24</number></property>
+           <item>
+            <layout class="QHBoxLayout" name="network_header_layout">
+             <item><widget class="QLabel" name="network_title"><property name="text"><string>Network</string></property></widget></item>
+             <item><spacer name="network_spacer"><property name="orientation"><enum>Qt::Horizontal</enum></property></spacer></item>
+             <item><widget class="QPushButton" name="refresh_network"><property name="text"><string>Refresh</string></property></widget></item>
+            </layout>
+           </item>
+           <item><widget class="QLabel" name="local_ip_label"><property name="text"><string>Local Interfaces</string></property></widget></item>
+           <item>
+            <widget class="QTableWidget" name="local_ip_table">
+             <property name="columnCount"><number>2</number></property>
+             <property name="editTriggers"><set>QAbstractItemView::NoEditTriggers</set></property>
+             <property name="selectionMode"><enum>QAbstractItemView::SingleSelection</enum></property>
+             <property name="selectionBehavior"><enum>QAbstractItemView::SelectRows</enum></property>
+             <attribute name="horizontalHeaderVisible"><bool>true</bool></attribute>
+             <column><property name="text"><string>Interface</string></property></column>
+             <column><property name="text"><string>IP Address</string></property></column>
+            </widget>
+           </item>
+           <item><widget class="QLabel" name="arp_label"><property name="text"><string>ARP Cache</string></property></widget></item>
+           <item>
+            <widget class="QTableWidget" name="arp_table">
+             <property name="columnCount"><number>2</number></property>
+             <property name="editTriggers"><set>QAbstractItemView::NoEditTriggers</set></property>
+             <property name="selectionMode"><enum>QAbstractItemView::SingleSelection</enum></property>
+             <property name="selectionBehavior"><enum>QAbstractItemView::SelectRows</enum></property>
+             <attribute name="horizontalHeaderVisible"><bool>true</bool></attribute>
+             <column><property name="text"><string>IP Address</string></property></column>
+             <column><property name="text"><string>MAC Address</string></property></column>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QStatusBar" name="statusbar">
+   <widget class="QLabel" name="status_label"><property name="text"><string>Ready</string></property></widget>
+  </widget>
+ </widget>
+ <resources/>
+</ui>

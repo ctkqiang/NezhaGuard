@@ -6,6 +6,7 @@
 
 namespace Nezha::Core {
     Arena::Arena(std::size_t block_size) : block_size_(block_size ? block_size : 4096) {
+        // 4096 = 最小一页
         add_block(block_size_);
     }
 
@@ -37,6 +38,7 @@ namespace Nezha::Core {
     }
 
     void *Arena::allocate(std::size_t n, std::size_t align) {
+        // 对齐填充: (ptr + (align-1)) & ~(align-1) 向上取整到 align 倍数
         std::size_t aligned = (head_ + (align - 1)) & ~(align - 1);
         if (aligned + n > blocks_[cur_].size) {
             if (cur_ + 1 < blocks_.size() && n <= blocks_[cur_ + 1].size) {

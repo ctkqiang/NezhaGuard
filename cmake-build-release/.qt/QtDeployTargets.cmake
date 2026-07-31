@@ -1,0 +1,2 @@
+set(__QT_DEPLOY_TARGET_NezhaGuard_FILE /Users/johnmelodyme/Documents/ctkqiang/NezhaGuard/cmake-build-release/NezhaGuard)
+set(__QT_DEPLOY_TARGET_NezhaGuard_TYPE EXECUTABLE)

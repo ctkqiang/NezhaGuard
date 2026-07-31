@@ -216,7 +216,7 @@ namespace Nezha::Core {
                 a.level = Severity::Warn;
                 a.score = 40.0;
                 a.ts_ns = now;
-                a.detail = arena.intern("服务器内部错误");
+                a.detail = arena.intern("5xx 服务端错误");
                 a.src_ip = arena.intern(e.src.to_string());
                 cb(a);
                 return;
@@ -236,7 +236,7 @@ namespace Nezha::Core {
             a.score = std::min(95.0, 50.0 + entry.count * 0.1);
             a.ts_ns = now;
             a.count = entry.count;
-            a.detail = arena.intern("异常高频访问");
+            a.detail = arena.intern("高频访问");
             a.src_ip = arena.intern(e.src.to_string());
             cb(a);
         }

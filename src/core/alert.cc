@@ -69,20 +69,17 @@ namespace Nezha::Core {
 
         std::string msg;
         msg.reserve(256);
-        msg += "[";
         msg += attack_type_cstr(dk.type);
-        msg += "] IP=";
+        msg += "  ";
         msg += dk.ip;
-        msg += " count=";
+        msg += "  x";
         msg += std::to_string(dk.count);
-        msg += " score=";
-        msg += score_buf;
         if (!dk.detail.empty()) {
-            msg += " 详情=";
+            msg += "  ";
             msg += dk.detail;
         }
 
-        logger.log(lv, "安全告警: {}", msg);
+        logger.log(lv, "{}", msg);
 
         if (callback_) {
             Alert a{};

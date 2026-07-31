@@ -2,6 +2,9 @@ cmake_minimum_required(VERSION 4.3)
 project(NezhaGuard)
 
 set(CMAKE_CXX_STANDARD 26)
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTOUIC ON)
+set(CMAKE_AUTORCC ON)
 
 add_executable(NezhaGuard
         main.cc
@@ -28,9 +31,30 @@ add_executable(NezhaGuard
         src/core/alert.h
         src/model/request.h
         src/model/severity.h
+        src/core/net_util.cc
+        src/core/net_util.h
+        src/service/database_helper.cc
+        src/service/database_helper.h
+        src/views/monitor.cc
+        src/views/monitor.h
+        src/views/monitor.ui
+        src/views/log_model.cc
+        src/views/log_model.h
+        src/views/gui_sink.cc
+        src/views/gui_sink.h
+        src/contants.h
 )
 
 target_include_directories(NezhaGuard PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+
+# Qt6 Homebrew 路径 (Apple Silicon / Intel)
+set(CMAKE_PREFIX_PATH
+    /opt/homebrew/opt/qt
+    /usr/local/opt/qt
+    ${CMAKE_PREFIX_PATH}
+)
+
+find_package(Qt6 REQUIRED COMPONENTS Widgets)
 
 find_library(PCAP_LIB pcap REQUIRED
     PATHS /opt/homebrew/lib /usr/local/lib /usr/lib
@@ -39,4 +63,4 @@ find_path(PCAP_INCLUDE_DIR pcap.h REQUIRED
     PATHS /opt/homebrew/include /usr/local/include /usr/include
 )
 target_include_directories(NezhaGuard PRIVATE ${PCAP_INCLUDE_DIR})
-target_link_libraries(NezhaGuard PRIVATE ${PCAP_LIB})
+target_link_libraries(NezhaGuard PRIVATE ${PCAP_LIB} Qt6::Widgets)

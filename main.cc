@@ -7,6 +7,7 @@
 #include <iostream>
 #include <thread>
 
+#include "src/contants.h"
 #include "src/core/alert.h"
 #include "src/core/arena.h"
 #include "src/core/capture.h"
@@ -15,6 +16,7 @@
 #include "src/core/event.h"
 #include "src/core/honeypot.h"
 #include "src/core/ipaddr.h"
+#include "src/core/net_util.h"
 #include "src/core/log_watcher.h"
 #include "src/utilities/logger.h"
 
@@ -24,40 +26,40 @@ static Core::PacketCapture *g_cap = nullptr;
 static volatile bool g_running = true;
 
 static void on_signal(int) {
-    NZ_WARN("收到退出信号，正在停止…");
+    NZ_WARN("正在关闭…");
     g_running = false;
-
     if (g_cap) g_cap->stop();
 }
 
-int main() {
+// =============================================================================
+// CLI 模式 (原有控制台逻辑)
+// =============================================================================
+static int run_cli_mode() {
     Core::HoneypotListener honeypot;
 
     Log::init_default("logs/nezha.log", Log::Level::Info);
-    NZ_INFO("哪吒网络安全 SIEM 系统启动");
+    NZ_INFO("SIEM 引擎已启动");
+    Core::dump_network_info();
 
     Core::Arena arena(128 * 1024);
     Core::AttackDetector detector;
     Core::AlertManager alerter;
-
     alerter.set_dedup_window(120);
 
     alerter.set_callback([&](const Core::Alert &a) {
         if (a.level >= Severity::Error && a.count >= 5) {
-            NZ_WARN("[聚合告警] {} 共检测 {} 次, 威胁评分={:.0f}",
+            NZ_WARN("聚合告警: {}  {} 次  score={:.0f}",
                     attack_type_cstr(a.type), a.count, a.score);
         }
     });
 
-
     Core::PacketCapture cap;
     if (cap.open("en0", 65535, true, 1000)) {
-        NZ_INFO("网络采集: en0 已打开");
+        NZ_INFO("抓包引擎已启动: en0");
         cap.set_filter("tcp or udp or icmp");
     } else {
-        NZ_WARN("网络采集: en0 打开失败 (需要 root), 仅运行日志/蜜罐模式");
+        NZ_WARN("抓包引擎启动失败 (需 root 权限)");
     }
-
     g_cap = &cap;
 
     const Core::HoneyPort honeypots[] = {
@@ -74,14 +76,11 @@ int main() {
 
     honeypot.start(arena, [&](const Core::event &e) {
         detector.analyze(e, arena, [&](const Core::Alert &a) { alerter.submit(a); });
-
         if (Log::Logger::instance().enabled(Log::Level::Debug)) {
-            NZ_DEBUG("[蜜罐] {}:{} → {}",
-                     e.src.to_string(), e.sport, e.dport);
+            NZ_DEBUG("[蜜罐] {}:{} → {}", e.src.to_string(), e.sport, e.dport);
         }
     });
-    NZ_INFO("蜜罐: {} 个端口已启动", sizeof(honeypots) / sizeof(honeypots[0]));
-
+    NZ_INFO("蜜罐引擎已启动: {} 端口", sizeof(honeypots) / sizeof(honeypots[0]));
 
     Core::LogWatcher log_watcher;
     const char *log_paths[] = {
@@ -90,16 +89,13 @@ int main() {
         "/var/log/auth.log",
         "/var/log/syslog",
     };
-
     for (const char *path: log_paths) {
         log_watcher.add_source({path, EventSource::Log, 0});
     }
-
     log_watcher.start(arena, [&](const Core::event &e) {
         detector.analyze(e, arena, [&](const Core::Alert &a) { alerter.submit(a); });
     });
-
-    NZ_INFO("日志监控: {} 个源已启动", sizeof(log_paths) / sizeof(log_paths[0]));
+    NZ_INFO("日志引擎已启动: {} 监控源", sizeof(log_paths) / sizeof(log_paths[0]));
 
     std::signal(SIGINT, on_signal);
     std::signal(SIGTERM, on_signal);
@@ -108,9 +104,7 @@ int main() {
         cap.start([&](const std::uint8_t *raw, std::size_t len, const timeval &ts) {
             Core::event e{};
             if (!Core::ProtocolDecoder::decode(raw, len, ts, arena, e)) return;
-
             detector.analyze(e, arena, [&](const Core::Alert &a) { alerter.submit(a); });
-
             static Nanos last_flush = 0;
             if (e.ts_ns - last_flush > 30'000'000'000ULL) {
                 alerter.flush();
@@ -125,15 +119,179 @@ int main() {
         }
     }
 
-    NZ_INFO("正在停止所有模块…");
-
+    NZ_INFO("正在停止所有引擎…");
     honeypot.stop();
     log_watcher.stop();
     alerter.flush();
-
     Log::Logger::instance().flush();
-
-    NZ_INFO("哪吒 SIEM 已停止，共处理 {} 条告警", alerter.total_alerts());
-
+    NZ_INFO("SIEM 已停止  共处理 {} 条告警", alerter.total_alerts());
     return 0;
+}
+
+
+
+#include <QApplication>
+#include <QTimer>
+#include <QString>
+
+#include "src/views/monitor.h"
+#include "src/views/gui_sink.h"
+#include "src/views/log_model.h"
+
+static int run_gui_mode(int argc, char *argv[]) {
+    QApplication app(argc, argv);
+    app.setApplicationName(QStringLiteral("哪吒网络安全 SIEM"));
+    app.setApplicationVersion(
+        QString::fromLatin1(Configuration::ApplicationConstants::ApplicationVersion));
+
+    Log::init_default("logs/nezha.log", Log::Level::Info);
+    NZ_INFO("哪吒网络安全 SIEM 系统启动 (GUI 模式)");
+    Core::dump_network_info();
+
+    monitor window;
+    window.init_models();
+    window.show();
+
+    // 注册 GUI 日志 sink
+    if (auto sink = window.gui_sink()) {
+        Log::Logger::instance().add_sink(sink);
+    }
+
+    Core::Arena arena(128 * 1024);
+    Core::AttackDetector detector;
+    Core::AlertManager alerter;
+    alerter.set_dedup_window(120);
+
+    alerter.set_callback([&](const Core::Alert &a) {
+        if (a.level >= Severity::Error && a.count >= 5) {
+            NZ_WARN("聚合告警: {}  {} 次  score={:.0f}",
+                    attack_type_cstr(a.type), a.count, a.score);
+        }
+        QMetaObject::invokeMethod(&window, [&, a]() {
+            window.append_alert(
+                QString::fromStdString(std::to_string(a.ts_ns)),
+                QString::fromUtf8(attack_type_cstr(a.type)),
+                QString::fromUtf8(a.src_ip.data(), static_cast<int>(a.src_ip.size())),
+                static_cast<int>(a.count),
+                a.score,
+                [](Severity s) -> QString {
+                    switch (s) {
+                        case Severity::Critical: return QStringLiteral("Critical");
+                        case Severity::Error: return QStringLiteral("Error");
+                        case Severity::Warn: return QStringLiteral("Warn");
+                        default: return QStringLiteral("Info");
+                    }
+                }(a.level));
+        }, Qt::QueuedConnection);
+    });
+
+    Core::HoneypotListener honeypot;
+    const Core::HoneyPort honeypots[] = {
+        {.port = 22, .proto = PROTO_TCP, .service = "SSH"},
+        {.port = 23, .proto = PROTO_TCP, .service = "Telnet"},
+        {.port = 3306, .proto = PROTO_TCP, .service = "MySQL"},
+        {.port = 6379, .proto = PROTO_TCP, .service = "Redis"},
+        {.port = 27017, .proto = PROTO_TCP, .service = "MongoDB"},
+        {.port = 5432, .proto = PROTO_TCP, .service = "PostgreSQL"},
+        {.port = 8080, .proto = PROTO_TCP, .service = "HTTP-Alt"},
+        {.port = 8443, .proto = PROTO_TCP, .service = "HTTPS-Alt"},
+    };
+    for (auto &hp: honeypots) honeypot.add_port(hp);
+
+    std::thread honey_thread([&]() {
+        honeypot.start(arena, [&](const Core::event &e) {
+            detector.analyze(e, arena, [&](const Core::Alert &a) { alerter.submit(a); });
+            QMetaObject::invokeMethod(&window, [&, e]() {
+                const Core::HoneyPort *hp = nullptr;
+                for (auto &h: honeypots)
+                    if (h.port == e.dport) {
+                        hp = &h;
+                        break;
+                    }
+                window.append_honeypot(
+                    QString::number(e.ts_ns),
+                    QString::fromStdString(e.src.to_string()),
+                    e.sport, e.dport,
+                    hp ? QString::fromUtf8(hp->service) : QStringLiteral("?"));
+            }, Qt::QueuedConnection);
+        });
+    });
+    NZ_INFO("蜜罐引擎已启动: {} 端口", sizeof(honeypots) / sizeof(honeypots[0]));
+
+    Core::LogWatcher log_watcher;
+    const char *log_paths[] = {
+        "/var/log/nginx/access.log",
+        "/var/log/apache2/access.log",
+        "/var/log/auth.log",
+        "/var/log/syslog",
+    };
+    for (const char *path: log_paths) {
+        log_watcher.add_source({path, EventSource::Log, 0});
+    }
+
+    std::thread log_thread([&]() {
+        log_watcher.start(arena, [&](const Core::event &e) {
+            detector.analyze(e, arena, [&](const Core::Alert &a) { alerter.submit(a); });
+        });
+    });
+    NZ_INFO("日志引擎已启动: {} 监控源", sizeof(log_paths) / sizeof(log_paths[0]));
+
+    Core::PacketCapture cap;
+    std::thread cap_thread;
+    if (cap.open("en0", 65535, true, 1000)) {
+        NZ_INFO("抓包引擎已启动: en0");
+        cap.set_filter("tcp or udp or icmp");
+        g_cap = &cap;
+        cap_thread = std::thread([&]() {
+            cap.start([&](const std::uint8_t *raw, std::size_t len, const timeval &ts) {
+                Core::event e{};
+                if (!Core::ProtocolDecoder::decode(raw, len, ts, arena, e)) return;
+                detector.analyze(e, arena, [&](const Core::Alert &a) { alerter.submit(a); });
+                static Nanos last_flush = 0;
+                if (e.ts_ns - last_flush > 30'000'000'000ULL) {
+                    alerter.flush();
+                    last_flush = e.ts_ns;
+                }
+            });
+        });
+    } else {
+        NZ_WARN("抓包引擎启动失败 (需 root 权限)");
+    }
+
+    // 定时刷新告警 + 更新统计
+    QTimer *flush_timer = new QTimer(&window);
+    QObject::connect(flush_timer, &QTimer::timeout, [&]() {
+        alerter.flush();
+        window.update_stats(window.log_model()->total(), alerter.total_alerts());
+    });
+    flush_timer->start(1000);
+
+    // 信号 → 优雅退出
+    std::signal(SIGINT, [](int) { QApplication::quit(); });
+    std::signal(SIGTERM, [](int) { QApplication::quit(); });
+
+    int ret = app.exec();
+
+    NZ_INFO("正在停止所有引擎…");
+    g_running = false;
+    if (g_cap) g_cap->stop();
+    if (cap_thread.joinable()) cap_thread.join();
+    honeypot.stop();
+    if (honey_thread.joinable()) honey_thread.join();
+    log_watcher.stop();
+    if (log_thread.joinable()) log_thread.join();
+    alerter.flush();
+    Log::Logger::instance().flush();
+    NZ_INFO("SIEM 已停止  共处理 {} 条告警", alerter.total_alerts());
+
+    return ret;
+}
+
+
+int main(int argc, char *argv[]) {
+
+    if (Configuration::ApplicationConstants::ShowGui) {
+        return run_gui_mode(argc, argv);
+    }
+    return run_cli_mode();
 }
