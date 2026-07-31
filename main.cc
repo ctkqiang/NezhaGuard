@@ -40,7 +40,7 @@ static void on_signal(int) {
 static int run_cli_mode() {
     Core::HoneypotListener honeypot;
 
-    Log::init_default("logs/nezha.log", Log::Level::Debug);
+    Log::init_default("logs/nezha.log", Log::Level::Info);
     Database::DatabaseHelper::InitializeQuarantineDatabase();
     Core::TorChecker tor_checker;
     tor_checker.initialize();
@@ -177,6 +177,7 @@ static int run_cli_mode() {
 
 
 #include <QApplication>
+#include <QIcon>
 #include <QTimer>
 #include <QString>
 
@@ -189,19 +190,23 @@ static int run_gui_mode(int argc, char *argv[]) {
     app.setApplicationName(QStringLiteral("哪吒网络安全 SIEM"));
     app.setApplicationVersion(
         QString::fromLatin1(Configuration::ApplicationConstants::ApplicationVersion));
+    app.setWindowIcon(QIcon(QStringLiteral("src/views/app_icon.svg")));
+    qputenv("QT_LOGGING_RULES", "qt.*=false");
 
-    Log::init_default("logs/nezha.log", Log::Level::Debug);
+    Log::init_default("logs/nezha.log", Log::Level::Info);
     Database::DatabaseHelper::InitializeQuarantineDatabase();
     Core::TorChecker tor_checker;
     tor_checker.initialize();
-    NZ_INFO("══════════════════════════════════════════════════");
     NZ_INFO("  哪吒网络安全 SIEM 系统 {} [蓝队模式]",
-            Configuration::ApplicationConstants::ApplicationVersion);
+            Configuration::ApplicationConstants::ApplicationVersion
+    );
+
     NZ_INFO("  隔离阈值: {} 次  |  Tor 节点: {}  |  历史隔离: {} 条",
             Configuration::ApplicationConstants::AnomaliesQuarantineThreshold,
             tor_checker.total_nodes(),
-            Database::DatabaseHelper::GetQuarantineList().size());
-    NZ_INFO("══════════════════════════════════════════════════");
+            Database::DatabaseHelper::GetQuarantineList().size()
+    );
+
     Core::dump_network_info();
 
     monitor window;
@@ -366,6 +371,11 @@ static int run_gui_mode(int argc, char *argv[]) {
 
 
 int main(int argc, char *argv[]) {
+    for (int i = 1; i < argc; ++i) {
+        if (std::strcmp(argv[i], "-v") == 0 || std::strcmp(argv[i], "--verbose") == 0)
+            Log::Logger::instance().set_level(Log::Level::Debug);
+    }
+
     if (Configuration::ApplicationConstants::ShowGui) {
         return run_gui_mode(argc, argv);
     }

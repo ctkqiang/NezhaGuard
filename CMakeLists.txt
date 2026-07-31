@@ -6,7 +6,9 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTORCC ON)
 
-add_executable(NezhaGuard
+add_compile_definitions($<$<CONFIG:Debug>:NEZHAGUARD_DEBUG>)
+
+add_executable(NezhaGuard MACOSX_BUNDLE
         main.cc
         src/utilities/logger.cc
         src/utilities/logger.h
@@ -35,6 +37,8 @@ add_executable(NezhaGuard
         src/core/net_util.h
         src/core/tor_checker.cc
         src/core/tor_checker.h
+        src/core/geo_ip.cc
+        src/core/geo_ip.h
         src/service/database_helper.cc
         src/service/database_helper.h
         src/views/monitor.cc
@@ -44,10 +48,28 @@ add_executable(NezhaGuard
         src/views/log_model.h
         src/views/gui_sink.cc
         src/views/gui_sink.h
+        src/views/app_icon.svg
         src/contants.h
 )
 
 target_include_directories(NezhaGuard PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+
+set_target_properties(NezhaGuard PROPERTIES
+    MACOSX_BUNDLE_BUNDLE_NAME "哪吒网络安全 SIEM"
+    MACOSX_BUNDLE_BUNDLE_VERSION "0.0.1"
+    MACOSX_BUNDLE_SHORT_VERSION_STRING "0.0.1"
+    MACOSX_BUNDLE_ICON_FILE "app_icon.icns"
+    MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/src/Info.plist"
+)
+
+set_source_files_properties("${CMAKE_CURRENT_SOURCE_DIR}/src/views/app_icon.icns" PROPERTIES
+    MACOSX_PACKAGE_LOCATION "Resources"
+)
+
+target_sources(NezhaGuard PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/views/app_icon.icns"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/Info.plist"
+)
 
 # Qt6 Homebrew 路径 (Apple Silicon / Intel)
 set(CMAKE_PREFIX_PATH

@@ -8,8 +8,10 @@
 #include <QComboBox>
 #include <QDateTime>
 #include <QHeaderView>
+#include <QIcon>
 #include <QLabel>
 #include <QRegularExpression>
+#include "../core/geo_ip.h"
 #include "../core/ipaddr.h"
 #include <QListWidget>
 #include <QPainter>
@@ -135,6 +137,7 @@ public:
 monitor::monitor(QWidget *parent) : QMainWindow(parent), ui(new Ui::monitor) {
     ui->setupUi(this);
     setAttribute(Qt::WA_QuitOnClose, true);
+    setWindowIcon(QIcon(QStringLiteral("src/views/app_icon.svg")));
     start_time_ = QTime::currentTime();
 
 #if QT_VERSION >= QT_VERSION_CHECK(6, 5, 0)
@@ -440,13 +443,32 @@ void monitor::show_log_detail(const QModelIndex &idx) {
         std::string ip_std = ip.toStdString();
         Nezha::IPAddress::ipaddr addr;
         Nezha::IPAddress::ipaddr::parse(ip_std, addr);
-
-        detail += QStringLiteral("── IP: %1 ──\n").arg(ip);
+        auto geo = Nezha::Core::GeoIP::lookup(ip_std);
         std::string host = Nezha::IPAddress::ipaddr::ResolveHostname(ip_std);
+
+        detail += QStringLiteral("═══ IP: %1 ═══\n").arg(ip);
         if (!host.empty() && host != ip_std)
             detail += QStringLiteral("  主机名: %1\n").arg(QString::fromStdString(host));
-        detail += QStringLiteral("  内网: %1\n").arg(addr.is_private() ? QStringLiteral("是") : QStringLiteral("否"));
-        detail += QStringLiteral("  回环: %1\n").arg(addr.is_loopback() ? QStringLiteral("是") : QStringLiteral("否"));
+        detail += QStringLiteral("  内网: %1  回环: %2\n")
+            .arg(addr.is_private() ? QStringLiteral("是") : QStringLiteral("否"))
+            .arg(addr.is_loopback() ? QStringLiteral("是") : QStringLiteral("否"));
+
+        if (geo.valid) {
+            detail += QStringLiteral("  国家: %1 (%2)\n")
+                .arg(QString::fromStdString(geo.country), QString::fromStdString(geo.country_code));
+            if (!geo.region.empty())
+                detail += QStringLiteral("  地区: %1\n").arg(QString::fromStdString(geo.region));
+            if (!geo.city.empty())
+                detail += QStringLiteral("  城市: %1\n").arg(QString::fromStdString(geo.city));
+            if (geo.lat != 0.0 || geo.lon != 0.0)
+                detail += QStringLiteral("  坐标: %.4f, %.4f\n").arg(geo.lat).arg(geo.lon);
+            if (!geo.isp.empty())
+                detail += QStringLiteral("  ISP: %1\n").arg(QString::fromStdString(geo.isp));
+            if (!geo.org.empty() && geo.org != geo.isp)
+                detail += QStringLiteral("  组织: %1\n").arg(QString::fromStdString(geo.org));
+            if (!geo.timezone.empty())
+                detail += QStringLiteral("  时区: %1\n").arg(QString::fromStdString(geo.timezone));
+        }
         detail += QStringLiteral("\n");
     }
 
