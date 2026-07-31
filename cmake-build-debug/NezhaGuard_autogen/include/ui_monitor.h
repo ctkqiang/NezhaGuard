@@ -81,7 +81,7 @@ public:
     QHBoxLayout *alerts_header_layout;
     QLabel *alerts_title;
     QLabel *alert_stats_label;
-    QSpacerItem *spacerItem;
+    QSpacerItem *alerts_hdr_spacer;
     QLabel *alert_filter_label;
     QComboBox *alert_severity_filter;
     QTableView *alert_view;
@@ -91,19 +91,21 @@ public:
     QHBoxLayout *honey_header_layout;
     QLabel *honey_title;
     QLabel *honey_stats_label;
-    QSpacerItem *spacerItem1;
+    QSpacerItem *honey_hdr_spacer;
     QTableView *honey_view;
     QTextEdit *honey_detail;
     QWidget *page_network;
     QVBoxLayout *network_layout;
     QHBoxLayout *network_header_layout;
     QLabel *network_title;
-    QSpacerItem *network_spacer;
+    QSpacerItem *network_hdr_spacer;
     QPushButton *refresh_network;
     QLabel *local_ip_label;
     QTableWidget *local_ip_table;
     QLabel *arp_label;
     QTableWidget *arp_table;
+    QLabel *quarantine_label;
+    QTableWidget *quarantine_table;
     QStatusBar *statusbar;
     QLabel *status_label;
 
@@ -123,9 +125,8 @@ public:
         header->setMinimumSize(QSize(0, 48));
         header->setMaximumSize(QSize(16777215, 48));
         header_layout = new QHBoxLayout(header);
-        header_layout->setSpacing(8);
         header_layout->setObjectName("header_layout");
-        header_layout->setContentsMargins(16, 0, 16, 0);
+        header_layout->setContentsMargins(16, -1, 16, -1);
         app_title = new QLabel(header);
         app_title->setObjectName("app_title");
 
@@ -165,7 +166,7 @@ public:
         sidebar->setObjectName("sidebar");
         sidebar->setMinimumSize(QSize(200, 0));
         sidebar->setMaximumSize(QSize(200, 16777215));
-        sidebar->setFrameShape(QFrame::Shape::NoFrame);
+        sidebar->setFrameShape(QFrame::NoFrame);
 
         body_layout->addWidget(sidebar);
 
@@ -186,7 +187,7 @@ public:
         cards_layout->setObjectName("cards_layout");
         card_logs = new QFrame(page_dashboard);
         card_logs->setObjectName("card_logs");
-        card_logs->setFrameShape(QFrame::Shape::StyledPanel);
+        card_logs->setFrameShape(QFrame::StyledPanel);
         card_logs_layout = new QVBoxLayout(card_logs);
         card_logs_layout->setObjectName("card_logs_layout");
         card_logs_value = new QLabel(card_logs);
@@ -204,7 +205,7 @@ public:
 
         card_alerts = new QFrame(page_dashboard);
         card_alerts->setObjectName("card_alerts");
-        card_alerts->setFrameShape(QFrame::Shape::StyledPanel);
+        card_alerts->setFrameShape(QFrame::StyledPanel);
         card_alerts_layout = new QVBoxLayout(card_alerts);
         card_alerts_layout->setObjectName("card_alerts_layout");
         card_alerts_value = new QLabel(card_alerts);
@@ -222,7 +223,7 @@ public:
 
         card_threats = new QFrame(page_dashboard);
         card_threats->setObjectName("card_threats");
-        card_threats->setFrameShape(QFrame::Shape::StyledPanel);
+        card_threats->setFrameShape(QFrame::StyledPanel);
         card_threats_layout = new QVBoxLayout(card_threats);
         card_threats_layout->setObjectName("card_threats_layout");
         card_threats_value = new QLabel(card_threats);
@@ -240,7 +241,7 @@ public:
 
         card_uptime = new QFrame(page_dashboard);
         card_uptime->setObjectName("card_uptime");
-        card_uptime->setFrameShape(QFrame::Shape::StyledPanel);
+        card_uptime->setFrameShape(QFrame::StyledPanel);
         card_uptime_layout = new QVBoxLayout(card_uptime);
         card_uptime_layout->setObjectName("card_uptime_layout");
         card_uptime_value = new QLabel(card_uptime);
@@ -331,9 +332,9 @@ public:
 
         alerts_header_layout->addWidget(alert_stats_label);
 
-        spacerItem = new QSpacerItem(0, 0, QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Minimum);
+        alerts_hdr_spacer = new QSpacerItem(0, 0, QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Minimum);
 
-        alerts_header_layout->addItem(spacerItem);
+        alerts_header_layout->addItem(alerts_hdr_spacer);
 
         alert_filter_label = new QLabel(page_alerts);
         alert_filter_label->setObjectName("alert_filter_label");
@@ -361,6 +362,7 @@ public:
         alert_detail = new QTextEdit(page_alerts);
         alert_detail->setObjectName("alert_detail");
         alert_detail->setReadOnly(true);
+        alert_detail->setMaximumHeight(80);
 
         alerts_layout->addWidget(alert_detail);
 
@@ -383,9 +385,9 @@ public:
 
         honey_header_layout->addWidget(honey_stats_label);
 
-        spacerItem1 = new QSpacerItem(0, 0, QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Minimum);
+        honey_hdr_spacer = new QSpacerItem(0, 0, QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Minimum);
 
-        honey_header_layout->addItem(spacerItem1);
+        honey_header_layout->addItem(honey_hdr_spacer);
 
 
         honey_layout->addLayout(honey_header_layout);
@@ -398,6 +400,7 @@ public:
         honey_detail = new QTextEdit(page_honeypot);
         honey_detail->setObjectName("honey_detail");
         honey_detail->setReadOnly(true);
+        honey_detail->setMaximumHeight(80);
 
         honey_layout->addWidget(honey_detail);
 
@@ -405,7 +408,7 @@ public:
         page_network = new QWidget();
         page_network->setObjectName("page_network");
         network_layout = new QVBoxLayout(page_network);
-        network_layout->setSpacing(12);
+        network_layout->setSpacing(8);
         network_layout->setObjectName("network_layout");
         network_layout->setContentsMargins(24, 24, 24, 24);
         network_header_layout = new QHBoxLayout();
@@ -415,9 +418,9 @@ public:
 
         network_header_layout->addWidget(network_title);
 
-        network_spacer = new QSpacerItem(0, 0, QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Minimum);
+        network_hdr_spacer = new QSpacerItem(0, 0, QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Minimum);
 
-        network_header_layout->addItem(network_spacer);
+        network_header_layout->addItem(network_hdr_spacer);
 
         refresh_network = new QPushButton(page_network);
         refresh_network->setObjectName("refresh_network");
@@ -440,10 +443,10 @@ public:
         QTableWidgetItem *__qtablewidgetitem1 = new QTableWidgetItem();
         local_ip_table->setHorizontalHeaderItem(1, __qtablewidgetitem1);
         local_ip_table->setObjectName("local_ip_table");
-        local_ip_table->setEditTriggers(QAbstractItemView::EditTrigger::NoEditTriggers);
-        local_ip_table->setSelectionMode(QAbstractItemView::SelectionMode::SingleSelection);
-        local_ip_table->setSelectionBehavior(QAbstractItemView::SelectionBehavior::SelectRows);
         local_ip_table->setColumnCount(2);
+        local_ip_table->setEditTriggers(QAbstractItemView::NoEditTriggers);
+        local_ip_table->setSelectionMode(QAbstractItemView::SingleSelection);
+        local_ip_table->setSelectionBehavior(QAbstractItemView::SelectRows);
         local_ip_table->horizontalHeader()->setVisible(true);
 
         network_layout->addWidget(local_ip_table);
@@ -461,13 +464,36 @@ public:
         QTableWidgetItem *__qtablewidgetitem3 = new QTableWidgetItem();
         arp_table->setHorizontalHeaderItem(1, __qtablewidgetitem3);
         arp_table->setObjectName("arp_table");
-        arp_table->setEditTriggers(QAbstractItemView::EditTrigger::NoEditTriggers);
-        arp_table->setSelectionMode(QAbstractItemView::SelectionMode::SingleSelection);
-        arp_table->setSelectionBehavior(QAbstractItemView::SelectionBehavior::SelectRows);
         arp_table->setColumnCount(2);
+        arp_table->setEditTriggers(QAbstractItemView::NoEditTriggers);
+        arp_table->setSelectionMode(QAbstractItemView::SingleSelection);
+        arp_table->setSelectionBehavior(QAbstractItemView::SelectRows);
         arp_table->horizontalHeader()->setVisible(true);
 
         network_layout->addWidget(arp_table);
+
+        quarantine_label = new QLabel(page_network);
+        quarantine_label->setObjectName("quarantine_label");
+
+        network_layout->addWidget(quarantine_label);
+
+        quarantine_table = new QTableWidget(page_network);
+        if (quarantine_table->columnCount() < 3)
+            quarantine_table->setColumnCount(3);
+        QTableWidgetItem *__qtablewidgetitem4 = new QTableWidgetItem();
+        quarantine_table->setHorizontalHeaderItem(0, __qtablewidgetitem4);
+        QTableWidgetItem *__qtablewidgetitem5 = new QTableWidgetItem();
+        quarantine_table->setHorizontalHeaderItem(1, __qtablewidgetitem5);
+        QTableWidgetItem *__qtablewidgetitem6 = new QTableWidgetItem();
+        quarantine_table->setHorizontalHeaderItem(2, __qtablewidgetitem6);
+        quarantine_table->setObjectName("quarantine_table");
+        quarantine_table->setColumnCount(3);
+        quarantine_table->setEditTriggers(QAbstractItemView::NoEditTriggers);
+        quarantine_table->setSelectionMode(QAbstractItemView::SingleSelection);
+        quarantine_table->setSelectionBehavior(QAbstractItemView::SelectRows);
+        quarantine_table->horizontalHeader()->setVisible(true);
+
+        network_layout->addWidget(quarantine_table);
 
         pages->addWidget(page_network);
 
@@ -481,7 +507,6 @@ public:
         statusbar->setObjectName("statusbar");
         status_label = new QLabel(statusbar);
         status_label->setObjectName("status_label");
-        status_label->setGeometry(QRect(0, 0, 100, 30));
         monitor->setStatusBar(statusbar);
 
         retranslateUi(monitor);
@@ -492,10 +517,7 @@ public:
     void retranslateUi(QMainWindow *monitor)
     {
         monitor->setWindowTitle(QCoreApplication::translate("monitor", "\345\223\252\345\220\222\347\275\221\347\273\234\345\256\211\345\205\250 SIEM", nullptr));
-        app_title->setStyleSheet(QCoreApplication::translate("monitor", "font-size:15px;font-weight:bold;", nullptr));
         app_title->setText(QCoreApplication::translate("monitor", "\345\223\252\345\220\222\347\275\221\347\273\234\345\256\211\345\205\250 SIEM", nullptr));
-        clock_label->setText(QString());
-        status_dot->setText(QString());
         status_text->setText(QCoreApplication::translate("monitor", "\350\277\220\350\241\214\344\270\255", nullptr));
         dash_title->setText(QCoreApplication::translate("monitor", "\344\273\252\350\241\250\347\233\230\346\246\202\350\247\210", nullptr));
         card_logs_value->setText(QCoreApplication::translate("monitor", "0", nullptr));
@@ -503,7 +525,7 @@ public:
         card_alerts_value->setText(QCoreApplication::translate("monitor", "0", nullptr));
         card_alerts_label->setText(QCoreApplication::translate("monitor", "\345\256\211\345\205\250\345\221\212\350\255\246", nullptr));
         card_threats_value->setText(QCoreApplication::translate("monitor", "0", nullptr));
-        card_threats_label->setText(QCoreApplication::translate("monitor", "\346\264\273\350\267\203\345\250\201\350\203\201", nullptr));
+        card_threats_label->setText(QCoreApplication::translate("monitor", "\345\267\262\351\232\224\347\246\273IP", nullptr));
         card_uptime_value->setText(QCoreApplication::translate("monitor", "00:00", nullptr));
         card_uptime_label->setText(QCoreApplication::translate("monitor", "\350\277\220\350\241\214\346\227\266\351\227\264", nullptr));
         recent_alerts_label->setText(QCoreApplication::translate("monitor", "\346\234\200\350\277\221\345\221\212\350\255\246", nullptr));
@@ -518,7 +540,6 @@ public:
         level_filter->setItemText(6, QCoreApplication::translate("monitor", "Critical", nullptr));
 
         alerts_title->setText(QCoreApplication::translate("monitor", "\345\256\211\345\205\250\345\221\212\350\255\246", nullptr));
-        alert_stats_label->setText(QString());
         alert_filter_label->setText(QCoreApplication::translate("monitor", "\344\270\245\351\207\215\347\272\247\345\210\253", nullptr));
         alert_severity_filter->setItemText(0, QCoreApplication::translate("monitor", "\345\205\250\351\203\250", nullptr));
         alert_severity_filter->setItemText(1, QCoreApplication::translate("monitor", "CRIT", nullptr));
@@ -528,7 +549,6 @@ public:
 
         alert_detail->setPlaceholderText(QCoreApplication::translate("monitor", "\351\200\211\346\213\251\345\221\212\350\255\246\346\237\245\347\234\213\350\257\246\346\203\205\342\200\246", nullptr));
         honey_title->setText(QCoreApplication::translate("monitor", "\350\234\234\347\275\220\347\233\221\346\216\247", nullptr));
-        honey_stats_label->setText(QString());
         honey_detail->setPlaceholderText(QCoreApplication::translate("monitor", "\351\200\211\346\213\251\350\277\236\346\216\245\346\237\245\347\234\213\350\257\246\346\203\205\342\200\246", nullptr));
         network_title->setText(QCoreApplication::translate("monitor", "\347\275\221\347\273\234\344\277\241\346\201\257", nullptr));
         refresh_network->setText(QCoreApplication::translate("monitor", "\345\210\267\346\226\260", nullptr));
@@ -542,6 +562,13 @@ public:
         ___qtablewidgetitem2->setText(QCoreApplication::translate("monitor", "IP \345\234\260\345\235\200", nullptr));
         QTableWidgetItem *___qtablewidgetitem3 = arp_table->horizontalHeaderItem(1);
         ___qtablewidgetitem3->setText(QCoreApplication::translate("monitor", "MAC \345\234\260\345\235\200", nullptr));
+        quarantine_label->setText(QCoreApplication::translate("monitor", "\351\232\224\347\246\273\345\210\227\350\241\250", nullptr));
+        QTableWidgetItem *___qtablewidgetitem4 = quarantine_table->horizontalHeaderItem(0);
+        ___qtablewidgetitem4->setText(QCoreApplication::translate("monitor", "IP \345\234\260\345\235\200", nullptr));
+        QTableWidgetItem *___qtablewidgetitem5 = quarantine_table->horizontalHeaderItem(1);
+        ___qtablewidgetitem5->setText(QCoreApplication::translate("monitor", "\351\232\224\347\246\273\345\216\237\345\233\240", nullptr));
+        QTableWidgetItem *___qtablewidgetitem6 = quarantine_table->horizontalHeaderItem(2);
+        ___qtablewidgetitem6->setText(QCoreApplication::translate("monitor", "\345\250\201\350\203\201\350\257\204\345\210\206", nullptr));
         status_label->setText(QCoreApplication::translate("monitor", "\345\260\261\347\273\252", nullptr));
     } // retranslateUi
 

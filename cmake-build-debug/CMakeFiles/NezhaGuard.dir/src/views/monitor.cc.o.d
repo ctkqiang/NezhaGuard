@@ -1296,6 +1296,7 @@ CMakeFiles/NezhaGuard.dir/src/views/monitor.cc.o: \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qvector.h \
   /Users/johnmelodyme/Documents/ctkqiang/NezhaGuard/src/views/gui_sink.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/QObject \
+  /Users/johnmelodyme/Documents/ctkqiang/NezhaGuard/src/views/../service/database_helper.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/QDateTime \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/QPainter \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qpainter.h \

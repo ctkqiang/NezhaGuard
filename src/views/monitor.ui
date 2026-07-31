@@ -2,668 +2,79 @@
 <ui version="4.0">
  <class>monitor</class>
  <widget class="QMainWindow" name="monitor">
-  <property name="geometry">
-   <rect>
-    <x>0</x>
-    <y>0</y>
-    <width>1280</width>
-    <height>860</height>
-   </rect>
-  </property>
-  <property name="windowTitle">
-   <string>哪吒网络安全 SIEM</string>
-  </property>
+  <property name="geometry"><rect><x>0</x><y>0</y><width>1280</width><height>860</height></rect></property>
+  <property name="windowTitle"><string>哪吒网络安全 SIEM</string></property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="root_layout">
-    <property name="spacing">
-     <number>0</number>
-    </property>
-    <property name="leftMargin">
-     <number>0</number>
-    </property>
-    <property name="topMargin">
-     <number>0</number>
-    </property>
-    <property name="rightMargin">
-     <number>0</number>
-    </property>
-    <property name="bottomMargin">
-     <number>0</number>
-    </property>
+    <property name="spacing"><number>0</number></property>
+    <property name="leftMargin"><number>0</number></property><property name="topMargin"><number>0</number></property>
+    <property name="rightMargin"><number>0</number></property><property name="bottomMargin"><number>0</number></property>
     <item>
      <widget class="QWidget" name="header" native="true">
-      <property name="minimumSize">
-       <size>
-        <width>0</width>
-        <height>48</height>
-       </size>
-      </property>
-      <property name="maximumSize">
-       <size>
-        <width>16777215</width>
-        <height>48</height>
-       </size>
-      </property>
+      <property name="minimumSize"><size><width>0</width><height>48</height></size></property>
+      <property name="maximumSize"><size><width>16777215</width><height>48</height></size></property>
       <layout class="QHBoxLayout" name="header_layout">
-       <property name="spacing">
-        <number>8</number>
-       </property>
-       <property name="leftMargin">
-        <number>16</number>
-       </property>
-       <property name="topMargin">
-        <number>0</number>
-       </property>
-       <property name="rightMargin">
-        <number>16</number>
-       </property>
-       <property name="bottomMargin">
-        <number>0</number>
-       </property>
-       <item>
-        <widget class="QLabel" name="app_title">
-         <property name="styleSheet">
-          <string>font-size:15px;font-weight:bold;</string>
-         </property>
-         <property name="text">
-          <string>哪吒网络安全 SIEM</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <spacer name="header_spacer">
-         <property name="orientation">
-          <enum>Qt::Orientation::Horizontal</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>0</width>
-           <height>0</height>
-          </size>
-         </property>
-        </spacer>
-       </item>
-       <item>
-        <widget class="QLabel" name="clock_label">
-         <property name="text">
-          <string/>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLabel" name="status_dot">
-         <property name="minimumSize">
-          <size>
-           <width>8</width>
-           <height>8</height>
-          </size>
-         </property>
-         <property name="maximumSize">
-          <size>
-           <width>8</width>
-           <height>8</height>
-          </size>
-         </property>
-         <property name="text">
-          <string/>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLabel" name="status_text">
-         <property name="text">
-          <string>运行中</string>
-         </property>
-        </widget>
-       </item>
+       <property name="leftMargin"><number>16</number></property><property name="rightMargin"><number>16</number></property>
+       <item><widget class="QLabel" name="app_title"><property name="text"><string>哪吒网络安全 SIEM</string></property></widget></item>
+       <item><spacer name="header_spacer"><property name="orientation"><enum>Qt::Horizontal</enum></property></spacer></item>
+       <item><widget class="QLabel" name="clock_label"/></item>
+       <item><widget class="QLabel" name="status_dot"><property name="minimumSize"><size><width>8</width><height>8</height></size></property><property name="maximumSize"><size><width>8</width><height>8</height></size></property></widget></item>
+       <item><widget class="QLabel" name="status_text"><property name="text"><string>运行中</string></property></widget></item>
       </layout>
      </widget>
     </item>
     <item>
      <widget class="QWidget" name="body" native="true">
       <layout class="QHBoxLayout" name="body_layout">
-       <property name="spacing">
-        <number>0</number>
-       </property>
-       <property name="leftMargin">
-        <number>0</number>
-       </property>
-       <property name="topMargin">
-        <number>0</number>
-       </property>
-       <property name="rightMargin">
-        <number>0</number>
-       </property>
-       <property name="bottomMargin">
-        <number>0</number>
-       </property>
-       <item>
-        <widget class="QListWidget" name="sidebar">
-         <property name="minimumSize">
-          <size>
-           <width>200</width>
-           <height>0</height>
-          </size>
-         </property>
-         <property name="maximumSize">
-          <size>
-           <width>200</width>
-           <height>16777215</height>
-          </size>
-         </property>
-         <property name="frameShape">
-          <enum>QFrame::Shape::NoFrame</enum>
-         </property>
-        </widget>
-       </item>
+       <property name="spacing"><number>0</number></property>
+       <property name="leftMargin"><number>0</number></property><property name="topMargin"><number>0</number></property>
+       <property name="rightMargin"><number>0</number></property><property name="bottomMargin"><number>0</number></property>
+       <item><widget class="QListWidget" name="sidebar"><property name="minimumSize"><size><width>200</width><height>0</height></size></property><property name="maximumSize"><size><width>200</width><height>16777215</height></size></property><property name="frameShape"><enum>QFrame::NoFrame</enum></property></widget></item>
        <item>
         <widget class="QStackedWidget" name="pages">
          <widget class="QWidget" name="page_dashboard">
-          <layout class="QVBoxLayout" name="dash_layout">
-           <property name="spacing">
-            <number>16</number>
-           </property>
-           <property name="leftMargin">
-            <number>24</number>
-           </property>
-           <property name="topMargin">
-            <number>24</number>
-           </property>
-           <property name="rightMargin">
-            <number>24</number>
-           </property>
-           <property name="bottomMargin">
-            <number>24</number>
-           </property>
-           <item>
-            <widget class="QLabel" name="dash_title">
-             <property name="text">
-              <string>仪表盘概览</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <layout class="QHBoxLayout" name="cards_layout">
-             <item>
-              <widget class="QFrame" name="card_logs">
-               <property name="frameShape">
-                <enum>QFrame::Shape::StyledPanel</enum>
-               </property>
-               <layout class="QVBoxLayout" name="card_logs_layout">
-                <item>
-                 <widget class="QLabel" name="card_logs_value">
-                  <property name="text">
-                   <string>0</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QLabel" name="card_logs_label">
-                  <property name="text">
-                   <string>日志总数</string>
-                  </property>
-                 </widget>
-                </item>
-               </layout>
-              </widget>
-             </item>
-             <item>
-              <widget class="QFrame" name="card_alerts">
-               <property name="frameShape">
-                <enum>QFrame::Shape::StyledPanel</enum>
-               </property>
-               <layout class="QVBoxLayout" name="card_alerts_layout">
-                <item>
-                 <widget class="QLabel" name="card_alerts_value">
-                  <property name="text">
-                   <string>0</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QLabel" name="card_alerts_label">
-                  <property name="text">
-                   <string>安全告警</string>
-                  </property>
-                 </widget>
-                </item>
-               </layout>
-              </widget>
-             </item>
-             <item>
-              <widget class="QFrame" name="card_threats">
-               <property name="frameShape">
-                <enum>QFrame::Shape::StyledPanel</enum>
-               </property>
-               <layout class="QVBoxLayout" name="card_threats_layout">
-                <item>
-                 <widget class="QLabel" name="card_threats_value">
-                  <property name="text">
-                   <string>0</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QLabel" name="card_threats_label">
-                  <property name="text">
-                   <string>活跃威胁</string>
-                  </property>
-                 </widget>
-                </item>
-               </layout>
-              </widget>
-             </item>
-             <item>
-              <widget class="QFrame" name="card_uptime">
-               <property name="frameShape">
-                <enum>QFrame::Shape::StyledPanel</enum>
-               </property>
-               <layout class="QVBoxLayout" name="card_uptime_layout">
-                <item>
-                 <widget class="QLabel" name="card_uptime_value">
-                  <property name="text">
-                   <string>00:00</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QLabel" name="card_uptime_label">
-                  <property name="text">
-                   <string>运行时间</string>
-                  </property>
-                 </widget>
-                </item>
-               </layout>
-              </widget>
-             </item>
-            </layout>
-           </item>
-           <item>
-            <widget class="QLabel" name="recent_alerts_label">
-             <property name="text">
-              <string>最近告警</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QTableView" name="recent_alerts_view"/>
-           </item>
+          <layout class="QVBoxLayout" name="dash_layout"><property name="spacing"><number>16</number></property><property name="leftMargin"><number>24</number></property><property name="topMargin"><number>24</number></property><property name="rightMargin"><number>24</number></property><property name="bottomMargin"><number>24</number></property>
+           <item><widget class="QLabel" name="dash_title"><property name="text"><string>仪表盘概览</string></property></widget></item>
+           <item><layout class="QHBoxLayout" name="cards_layout">
+            <item><widget class="QFrame" name="card_logs"><property name="frameShape"><enum>QFrame::StyledPanel</enum></property><layout class="QVBoxLayout" name="card_logs_layout"><item><widget class="QLabel" name="card_logs_value"><property name="text"><string>0</string></property></widget></item><item><widget class="QLabel" name="card_logs_label"><property name="text"><string>日志总数</string></property></widget></item></layout></widget></item>
+            <item><widget class="QFrame" name="card_alerts"><property name="frameShape"><enum>QFrame::StyledPanel</enum></property><layout class="QVBoxLayout" name="card_alerts_layout"><item><widget class="QLabel" name="card_alerts_value"><property name="text"><string>0</string></property></widget></item><item><widget class="QLabel" name="card_alerts_label"><property name="text"><string>安全告警</string></property></widget></item></layout></widget></item>
+            <item><widget class="QFrame" name="card_threats"><property name="frameShape"><enum>QFrame::StyledPanel</enum></property><layout class="QVBoxLayout" name="card_threats_layout"><item><widget class="QLabel" name="card_threats_value"><property name="text"><string>0</string></property></widget></item><item><widget class="QLabel" name="card_threats_label"><property name="text"><string>已隔离IP</string></property></widget></item></layout></widget></item>
+            <item><widget class="QFrame" name="card_uptime"><property name="frameShape"><enum>QFrame::StyledPanel</enum></property><layout class="QVBoxLayout" name="card_uptime_layout"><item><widget class="QLabel" name="card_uptime_value"><property name="text"><string>00:00</string></property></widget></item><item><widget class="QLabel" name="card_uptime_label"><property name="text"><string>运行时间</string></property></widget></item></layout></widget></item>
+           </layout></item>
+           <item><widget class="QLabel" name="recent_alerts_label"><property name="text"><string>最近告警</string></property></widget></item>
+           <item><widget class="QTableView" name="recent_alerts_view"/></item>
           </layout>
          </widget>
          <widget class="QWidget" name="page_logs">
-          <layout class="QVBoxLayout" name="logs_layout">
-           <property name="spacing">
-            <number>12</number>
-           </property>
-           <property name="leftMargin">
-            <number>24</number>
-           </property>
-           <property name="topMargin">
-            <number>24</number>
-           </property>
-           <property name="rightMargin">
-            <number>24</number>
-           </property>
-           <property name="bottomMargin">
-            <number>24</number>
-           </property>
-           <item>
-            <widget class="QLabel" name="logs_title">
-             <property name="text">
-              <string>日志监控</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <layout class="QHBoxLayout" name="logs_filter_layout">
-             <item>
-              <widget class="QLabel" name="logs_filter_label">
-               <property name="text">
-                <string>日志级别</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QComboBox" name="level_filter">
-               <item>
-                <property name="text">
-                 <string>全部</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>Trace</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>Debug</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>Info</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>Warn</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>Error</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>Critical</string>
-                </property>
-               </item>
-              </widget>
-             </item>
-             <item>
-              <spacer name="logs_spacer">
-               <property name="orientation">
-                <enum>Qt::Orientation::Horizontal</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>0</width>
-                 <height>0</height>
-                </size>
-               </property>
-              </spacer>
-             </item>
-            </layout>
-           </item>
-           <item>
-            <widget class="QTableView" name="log_view"/>
-           </item>
+          <layout class="QVBoxLayout" name="logs_layout"><property name="spacing"><number>12</number></property><property name="leftMargin"><number>24</number></property><property name="topMargin"><number>24</number></property><property name="rightMargin"><number>24</number></property><property name="bottomMargin"><number>24</number></property>
+           <item><widget class="QLabel" name="logs_title"><property name="text"><string>日志监控</string></property></widget></item>
+           <item><layout class="QHBoxLayout" name="logs_filter_layout"><item><widget class="QLabel" name="logs_filter_label"><property name="text"><string>日志级别</string></property></widget></item><item><widget class="QComboBox" name="level_filter"><item><property name="text"><string>全部</string></property></item><item><property name="text"><string>Trace</string></property></item><item><property name="text"><string>Debug</string></property></item><item><property name="text"><string>Info</string></property></item><item><property name="text"><string>Warn</string></property></item><item><property name="text"><string>Error</string></property></item><item><property name="text"><string>Critical</string></property></item></widget></item><item><spacer name="logs_spacer"><property name="orientation"><enum>Qt::Horizontal</enum></property></spacer></item></layout></item>
+           <item><widget class="QTableView" name="log_view"/></item>
           </layout>
          </widget>
          <widget class="QWidget" name="page_alerts">
-          <layout class="QVBoxLayout" name="alerts_layout">
-           <property name="spacing">
-            <number>8</number>
-           </property>
-           <property name="leftMargin">
-            <number>24</number>
-           </property>
-           <property name="topMargin">
-            <number>24</number>
-           </property>
-           <property name="rightMargin">
-            <number>24</number>
-           </property>
-           <property name="bottomMargin">
-            <number>24</number>
-           </property>
-           <item>
-            <layout class="QHBoxLayout" name="alerts_header_layout">
-             <item>
-              <widget class="QLabel" name="alerts_title">
-               <property name="text">
-                <string>安全告警</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QLabel" name="alert_stats_label">
-               <property name="text">
-                <string/>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <spacer>
-               <property name="orientation">
-                <enum>Qt::Orientation::Horizontal</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>0</width>
-                 <height>0</height>
-                </size>
-               </property>
-              </spacer>
-             </item>
-             <item>
-              <widget class="QLabel" name="alert_filter_label">
-               <property name="text">
-                <string>严重级别</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QComboBox" name="alert_severity_filter">
-               <item>
-                <property name="text">
-                 <string>全部</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>CRIT</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>ERROR</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>WARN</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>INFO</string>
-                </property>
-               </item>
-              </widget>
-             </item>
-            </layout>
-           </item>
-           <item>
-            <widget class="QTableView" name="alert_view"/>
-           </item>
-           <item>
-            <widget class="QTextEdit" name="alert_detail">
-             <property name="readOnly">
-              <bool>true</bool>
-             </property>
-             <property name="placeholderText">
-              <string>选择告警查看详情…</string>
-             </property>
-            </widget>
-           </item>
+          <layout class="QVBoxLayout" name="alerts_layout"><property name="spacing"><number>8</number></property><property name="leftMargin"><number>24</number></property><property name="topMargin"><number>24</number></property><property name="rightMargin"><number>24</number></property><property name="bottomMargin"><number>24</number></property>
+           <item><layout class="QHBoxLayout" name="alerts_header_layout"><item><widget class="QLabel" name="alerts_title"><property name="text"><string>安全告警</string></property></widget></item><item><widget class="QLabel" name="alert_stats_label"/></item><item><spacer name="alerts_hdr_spacer"><property name="orientation"><enum>Qt::Horizontal</enum></property></spacer></item><item><widget class="QLabel" name="alert_filter_label"><property name="text"><string>严重级别</string></property></widget></item><item><widget class="QComboBox" name="alert_severity_filter"><item><property name="text"><string>全部</string></property></item><item><property name="text"><string>CRIT</string></property></item><item><property name="text"><string>ERROR</string></property></item><item><property name="text"><string>WARN</string></property></item><item><property name="text"><string>INFO</string></property></item></widget></item></layout></item>
+           <item><widget class="QTableView" name="alert_view"/></item>
+           <item><widget class="QTextEdit" name="alert_detail"><property name="readOnly"><bool>true</bool></property><property name="maximumHeight"><number>80</number></property><property name="placeholderText"><string>选择告警查看详情…</string></property></widget></item>
           </layout>
          </widget>
          <widget class="QWidget" name="page_honeypot">
-          <layout class="QVBoxLayout" name="honey_layout">
-           <property name="spacing">
-            <number>8</number>
-           </property>
-           <property name="leftMargin">
-            <number>24</number>
-           </property>
-           <property name="topMargin">
-            <number>24</number>
-           </property>
-           <property name="rightMargin">
-            <number>24</number>
-           </property>
-           <property name="bottomMargin">
-            <number>24</number>
-           </property>
-           <item>
-            <layout class="QHBoxLayout" name="honey_header_layout">
-             <item>
-              <widget class="QLabel" name="honey_title">
-               <property name="text">
-                <string>蜜罐监控</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QLabel" name="honey_stats_label">
-               <property name="text">
-                <string/>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <spacer>
-               <property name="orientation">
-                <enum>Qt::Orientation::Horizontal</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>0</width>
-                 <height>0</height>
-                </size>
-               </property>
-              </spacer>
-             </item>
-            </layout>
-           </item>
-           <item>
-            <widget class="QTableView" name="honey_view"/>
-           </item>
-           <item>
-            <widget class="QTextEdit" name="honey_detail">
-             <property name="readOnly">
-              <bool>true</bool>
-             </property>
-             <property name="placeholderText">
-              <string>选择连接查看详情…</string>
-             </property>
-            </widget>
-           </item>
+          <layout class="QVBoxLayout" name="honey_layout"><property name="spacing"><number>8</number></property><property name="leftMargin"><number>24</number></property><property name="topMargin"><number>24</number></property><property name="rightMargin"><number>24</number></property><property name="bottomMargin"><number>24</number></property>
+           <item><layout class="QHBoxLayout" name="honey_header_layout"><item><widget class="QLabel" name="honey_title"><property name="text"><string>蜜罐监控</string></property></widget></item><item><widget class="QLabel" name="honey_stats_label"/></item><item><spacer name="honey_hdr_spacer"><property name="orientation"><enum>Qt::Horizontal</enum></property></spacer></item></layout></item>
+           <item><widget class="QTableView" name="honey_view"/></item>
+           <item><widget class="QTextEdit" name="honey_detail"><property name="readOnly"><bool>true</bool></property><property name="maximumHeight"><number>80</number></property><property name="placeholderText"><string>选择连接查看详情…</string></property></widget></item>
           </layout>
          </widget>
          <widget class="QWidget" name="page_network">
-          <layout class="QVBoxLayout" name="network_layout">
-           <property name="spacing">
-            <number>12</number>
-           </property>
-           <property name="leftMargin">
-            <number>24</number>
-           </property>
-           <property name="topMargin">
-            <number>24</number>
-           </property>
-           <property name="rightMargin">
-            <number>24</number>
-           </property>
-           <property name="bottomMargin">
-            <number>24</number>
-           </property>
-           <item>
-            <layout class="QHBoxLayout" name="network_header_layout">
-             <item>
-              <widget class="QLabel" name="network_title">
-               <property name="text">
-                <string>网络信息</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <spacer name="network_spacer">
-               <property name="orientation">
-                <enum>Qt::Orientation::Horizontal</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>0</width>
-                 <height>0</height>
-                </size>
-               </property>
-              </spacer>
-             </item>
-             <item>
-              <widget class="QPushButton" name="refresh_network">
-               <property name="text">
-                <string>刷新</string>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </item>
-           <item>
-            <widget class="QLabel" name="local_ip_label">
-             <property name="text">
-              <string>本地接口</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QTableWidget" name="local_ip_table">
-             <property name="editTriggers">
-              <set>QAbstractItemView::EditTrigger::NoEditTriggers</set>
-             </property>
-             <property name="selectionMode">
-              <enum>QAbstractItemView::SelectionMode::SingleSelection</enum>
-             </property>
-             <property name="selectionBehavior">
-              <enum>QAbstractItemView::SelectionBehavior::SelectRows</enum>
-             </property>
-             <property name="columnCount">
-              <number>2</number>
-             </property>
-             <attribute name="horizontalHeaderVisible">
-              <bool>true</bool>
-             </attribute>
-             <column>
-              <property name="text">
-               <string>接口名称</string>
-              </property>
-             </column>
-             <column>
-              <property name="text">
-               <string>IP 地址</string>
-              </property>
-             </column>
-            </widget>
-           </item>
-           <item>
-            <widget class="QLabel" name="arp_label">
-             <property name="text">
-              <string>ARP 缓存表</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QTableWidget" name="arp_table">
-             <property name="editTriggers">
-              <set>QAbstractItemView::EditTrigger::NoEditTriggers</set>
-             </property>
-             <property name="selectionMode">
-              <enum>QAbstractItemView::SelectionMode::SingleSelection</enum>
-             </property>
-             <property name="selectionBehavior">
-              <enum>QAbstractItemView::SelectionBehavior::SelectRows</enum>
-             </property>
-             <property name="columnCount">
-              <number>2</number>
-             </property>
-             <attribute name="horizontalHeaderVisible">
-              <bool>true</bool>
-             </attribute>
-             <column>
-              <property name="text">
-               <string>IP 地址</string>
-              </property>
-             </column>
-             <column>
-              <property name="text">
-               <string>MAC 地址</string>
-              </property>
-             </column>
-            </widget>
-           </item>
+          <layout class="QVBoxLayout" name="network_layout"><property name="spacing"><number>8</number></property><property name="leftMargin"><number>24</number></property><property name="topMargin"><number>24</number></property><property name="rightMargin"><number>24</number></property><property name="bottomMargin"><number>24</number></property>
+           <item><layout class="QHBoxLayout" name="network_header_layout"><item><widget class="QLabel" name="network_title"><property name="text"><string>网络信息</string></property></widget></item><item><spacer name="network_hdr_spacer"><property name="orientation"><enum>Qt::Horizontal</enum></property></spacer></item><item><widget class="QPushButton" name="refresh_network"><property name="text"><string>刷新</string></property></widget></item></layout></item>
+           <item><widget class="QLabel" name="local_ip_label"><property name="text"><string>本地接口</string></property></widget></item>
+           <item><widget class="QTableWidget" name="local_ip_table"><property name="columnCount"><number>2</number></property><property name="editTriggers"><set>QAbstractItemView::NoEditTriggers</set></property><property name="selectionMode"><enum>QAbstractItemView::SingleSelection</enum></property><property name="selectionBehavior"><enum>QAbstractItemView::SelectRows</enum></property><attribute name="horizontalHeaderVisible"><bool>true</bool></attribute><column><property name="text"><string>接口名称</string></property></column><column><property name="text"><string>IP 地址</string></property></column></widget></item>
+           <item><widget class="QLabel" name="arp_label"><property name="text"><string>ARP 缓存表</string></property></widget></item>
+           <item><widget class="QTableWidget" name="arp_table"><property name="columnCount"><number>2</number></property><property name="editTriggers"><set>QAbstractItemView::NoEditTriggers</set></property><property name="selectionMode"><enum>QAbstractItemView::SingleSelection</enum></property><property name="selectionBehavior"><enum>QAbstractItemView::SelectRows</enum></property><attribute name="horizontalHeaderVisible"><bool>true</bool></attribute><column><property name="text"><string>IP 地址</string></property></column><column><property name="text"><string>MAC 地址</string></property></column></widget></item>
+           <item><widget class="QLabel" name="quarantine_label"><property name="text"><string>隔离列表</string></property></widget></item>
+           <item><widget class="QTableWidget" name="quarantine_table"><property name="columnCount"><number>3</number></property><property name="editTriggers"><set>QAbstractItemView::NoEditTriggers</set></property><property name="selectionMode"><enum>QAbstractItemView::SingleSelection</enum></property><property name="selectionBehavior"><enum>QAbstractItemView::SelectRows</enum></property><attribute name="horizontalHeaderVisible"><bool>true</bool></attribute><column><property name="text"><string>IP 地址</string></property></column><column><property name="text"><string>隔离原因</string></property></column><column><property name="text"><string>威胁评分</string></property></column></widget></item>
           </layout>
          </widget>
         </widget>
@@ -673,22 +84,7 @@
     </item>
    </layout>
   </widget>
-  <widget class="QStatusBar" name="statusbar">
-   <widget class="QLabel" name="status_label">
-    <property name="geometry">
-     <rect>
-      <x>0</x>
-      <y>0</y>
-      <width>100</width>
-      <height>30</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>就绪</string>
-    </property>
-   </widget>
-  </widget>
+  <widget class="QStatusBar" name="statusbar"><widget class="QLabel" name="status_label"><property name="text"><string>就绪</string></property></widget></widget>
  </widget>
  <resources/>
- <connections/>
 </ui>

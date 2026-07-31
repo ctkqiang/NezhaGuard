@@ -2,6 +2,7 @@
 #include "ui_monitor.h"
 #include "log_model.h"
 #include "gui_sink.h"
+#include "../service/database_helper.h"
 
 #include <QApplication>
 #include <QComboBox>
@@ -364,16 +365,20 @@ void monitor::init_models() {
 
     setup_network_table(ui->local_ip_table);
     setup_network_table(ui->arp_table);
+    setup_network_table(ui->quarantine_table);
     connect(ui->refresh_network, &QPushButton::clicked, this, &monitor::refresh_network_info);
     refresh_network_info();
 }
 
 void monitor::update_stats(int log_count, int alert_count) {
     ui->app_title->setText(QStringLiteral("哪吒网络安全 SIEM"));
+    int qcount = static_cast<int>(Nezha::Database::DatabaseHelper::GetQuarantineList().size());
     ui->status_label->setText(
-        QStringLiteral("运行中  |  日志 %1  |  告警 %2").arg(log_count).arg(alert_count));
+        QStringLiteral("运行中  |  日志 %1  |  告警 %2  |  已隔离 %3")
+            .arg(log_count).arg(alert_count).arg(qcount));
     ui->card_logs_value->setText(QString::number(log_count));
     ui->card_alerts_value->setText(QString::number(alert_count));
+    ui->card_threats_value->setText(QString::number(qcount));
 
     int secs = start_time_.secsTo(QTime::currentTime());
     int h = secs / 3600, m = (secs % 3600) / 60, s = secs % 60;
@@ -536,4 +541,30 @@ void monitor::refresh_arp_table() {
 void monitor::refresh_network_info() {
     refresh_local_ips();
     refresh_arp_table();
+    refresh_quarantine_list();
+}
+
+void monitor::refresh_quarantine_list() {
+    auto list = Nezha::Database::DatabaseHelper::GetQuarantineList();
+    ui->card_threats_value->setText(QString::number(static_cast<int>(list.size())));
+
+    auto *t = ui->quarantine_table;
+    t->setRowCount(0);
+    t->setHorizontalHeaderLabels({QStringLiteral("IP 地址"), QStringLiteral("隔离原因"), QStringLiteral("威胁评分")});
+    QFont mf(QStringLiteral("Menlo"), 10);
+    mf.setStyleHint(QFont::Monospace);
+    for (const auto &r : list) {
+        int row = t->rowCount(); t->insertRow(row);
+        auto *ip = new QTableWidgetItem(QString::fromStdString(r.ip_address));
+        ip->setFont(mf); ip->setForeground(QColor("#f85149"));
+        auto *reason = new QTableWidgetItem(QString::fromStdString(r.reason));
+        reason->setForeground(QColor("#d29922"));
+        auto *score = new QTableWidgetItem(QString::number(r.threat_score, 'f', 0));
+        score->setForeground(QColor("#8c8c8c"));
+        t->setItem(row, 0, ip);
+        t->setItem(row, 1, reason);
+        t->setItem(row, 2, score);
+    }
+    t->resizeColumnToContents(0);
+    t->horizontalHeader()->setStretchLastSection(true);
 }

@@ -41,7 +41,12 @@ static int run_cli_mode() {
 
     Log::init_default("logs/nezha.log", Log::Level::Debug);
     Database::DatabaseHelper::InitializeQuarantineDatabase();
-    NZ_INFO("SIEM 引擎已启动");
+    NZ_INFO("══════════════════════════════════════════");
+    NZ_INFO("  哪吒网络安全 SIEM 系统 v{}",
+           Configuration::ApplicationConstants::ApplicationVersion);
+    NZ_INFO("  隔离阈值: {} 次异常请求",
+           Configuration::ApplicationConstants::AnomaliesQuarantineThreshold);
+    NZ_INFO("══════════════════════════════════════════");
     Core::dump_network_info();
 
     Core::Arena arena(128 * 1024);
@@ -137,7 +142,10 @@ static int run_cli_mode() {
     log_watcher.stop();
     alerter.flush();
     Log::Logger::instance().flush();
-    NZ_INFO("SIEM 已停止  共处理 {} 条告警", alerter.total_alerts());
+    NZ_INFO("══════════════════════════════════════════");
+    NZ_INFO("  SIEM 已停止");
+    NZ_INFO("  总告警数: {}", alerter.total_alerts());
+    NZ_INFO("══════════════════════════════════════════");
     return 0;
 }
 

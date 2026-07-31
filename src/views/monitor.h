@@ -57,6 +57,7 @@ private:
     void setup_network_table(QTableWidget *table);
     void refresh_local_ips();
     void refresh_arp_table();
+    void refresh_quarantine_list();
 
     Ui::monitor *ui;
     LogModel *log_model_;
