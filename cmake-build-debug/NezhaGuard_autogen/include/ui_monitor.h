@@ -165,7 +165,7 @@ public:
         sidebar->setObjectName("sidebar");
         sidebar->setMinimumSize(QSize(200, 0));
         sidebar->setMaximumSize(QSize(200, 16777215));
-        sidebar->setFrameShape(QFrame::NoFrame);
+        sidebar->setFrameShape(QFrame::Shape::NoFrame);
 
         body_layout->addWidget(sidebar);
 
@@ -186,7 +186,7 @@ public:
         cards_layout->setObjectName("cards_layout");
         card_logs = new QFrame(page_dashboard);
         card_logs->setObjectName("card_logs");
-        card_logs->setFrameShape(QFrame::StyledPanel);
+        card_logs->setFrameShape(QFrame::Shape::StyledPanel);
         card_logs_layout = new QVBoxLayout(card_logs);
         card_logs_layout->setObjectName("card_logs_layout");
         card_logs_value = new QLabel(card_logs);
@@ -204,7 +204,7 @@ public:
 
         card_alerts = new QFrame(page_dashboard);
         card_alerts->setObjectName("card_alerts");
-        card_alerts->setFrameShape(QFrame::StyledPanel);
+        card_alerts->setFrameShape(QFrame::Shape::StyledPanel);
         card_alerts_layout = new QVBoxLayout(card_alerts);
         card_alerts_layout->setObjectName("card_alerts_layout");
         card_alerts_value = new QLabel(card_alerts);
@@ -222,7 +222,7 @@ public:
 
         card_threats = new QFrame(page_dashboard);
         card_threats->setObjectName("card_threats");
-        card_threats->setFrameShape(QFrame::StyledPanel);
+        card_threats->setFrameShape(QFrame::Shape::StyledPanel);
         card_threats_layout = new QVBoxLayout(card_threats);
         card_threats_layout->setObjectName("card_threats_layout");
         card_threats_value = new QLabel(card_threats);
@@ -240,7 +240,7 @@ public:
 
         card_uptime = new QFrame(page_dashboard);
         card_uptime->setObjectName("card_uptime");
-        card_uptime->setFrameShape(QFrame::StyledPanel);
+        card_uptime->setFrameShape(QFrame::Shape::StyledPanel);
         card_uptime_layout = new QVBoxLayout(card_uptime);
         card_uptime_layout->setObjectName("card_uptime_layout");
         card_uptime_value = new QLabel(card_uptime);
@@ -361,7 +361,6 @@ public:
         alert_detail = new QTextEdit(page_alerts);
         alert_detail->setObjectName("alert_detail");
         alert_detail->setReadOnly(true);
-        alert_detail->setMaximumHeight(80);
 
         alerts_layout->addWidget(alert_detail);
 
@@ -399,7 +398,6 @@ public:
         honey_detail = new QTextEdit(page_honeypot);
         honey_detail->setObjectName("honey_detail");
         honey_detail->setReadOnly(true);
-        honey_detail->setMaximumHeight(100);
 
         honey_layout->addWidget(honey_detail);
 
@@ -442,10 +440,10 @@ public:
         QTableWidgetItem *__qtablewidgetitem1 = new QTableWidgetItem();
         local_ip_table->setHorizontalHeaderItem(1, __qtablewidgetitem1);
         local_ip_table->setObjectName("local_ip_table");
+        local_ip_table->setEditTriggers(QAbstractItemView::EditTrigger::NoEditTriggers);
+        local_ip_table->setSelectionMode(QAbstractItemView::SelectionMode::SingleSelection);
+        local_ip_table->setSelectionBehavior(QAbstractItemView::SelectionBehavior::SelectRows);
         local_ip_table->setColumnCount(2);
-        local_ip_table->setEditTriggers(QAbstractItemView::NoEditTriggers);
-        local_ip_table->setSelectionMode(QAbstractItemView::SingleSelection);
-        local_ip_table->setSelectionBehavior(QAbstractItemView::SelectRows);
         local_ip_table->horizontalHeader()->setVisible(true);
 
         network_layout->addWidget(local_ip_table);
@@ -463,10 +461,10 @@ public:
         QTableWidgetItem *__qtablewidgetitem3 = new QTableWidgetItem();
         arp_table->setHorizontalHeaderItem(1, __qtablewidgetitem3);
         arp_table->setObjectName("arp_table");
+        arp_table->setEditTriggers(QAbstractItemView::EditTrigger::NoEditTriggers);
+        arp_table->setSelectionMode(QAbstractItemView::SelectionMode::SingleSelection);
+        arp_table->setSelectionBehavior(QAbstractItemView::SelectionBehavior::SelectRows);
         arp_table->setColumnCount(2);
-        arp_table->setEditTriggers(QAbstractItemView::NoEditTriggers);
-        arp_table->setSelectionMode(QAbstractItemView::SingleSelection);
-        arp_table->setSelectionBehavior(QAbstractItemView::SelectRows);
         arp_table->horizontalHeader()->setVisible(true);
 
         network_layout->addWidget(arp_table);
@@ -483,6 +481,7 @@ public:
         statusbar->setObjectName("statusbar");
         status_label = new QLabel(statusbar);
         status_label->setObjectName("status_label");
+        status_label->setGeometry(QRect(0, 0, 100, 30));
         monitor->setStatusBar(statusbar);
 
         retranslateUi(monitor);
@@ -493,8 +492,8 @@ public:
     void retranslateUi(QMainWindow *monitor)
     {
         monitor->setWindowTitle(QCoreApplication::translate("monitor", "\345\223\252\345\220\222\347\275\221\347\273\234\345\256\211\345\205\250 SIEM", nullptr));
-        app_title->setText(QCoreApplication::translate("monitor", "\345\223\252\345\220\222\347\275\221\347\273\234\345\256\211\345\205\250 SIEM", nullptr));
         app_title->setStyleSheet(QCoreApplication::translate("monitor", "font-size:15px;font-weight:bold;", nullptr));
+        app_title->setText(QCoreApplication::translate("monitor", "\345\223\252\345\220\222\347\275\221\347\273\234\345\256\211\345\205\250 SIEM", nullptr));
         clock_label->setText(QString());
         status_dot->setText(QString());
         status_text->setText(QCoreApplication::translate("monitor", "\350\277\220\350\241\214\344\270\255", nullptr));

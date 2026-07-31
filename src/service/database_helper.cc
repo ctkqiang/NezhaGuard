@@ -4,11 +4,13 @@
 #include <iostream>
 #include <mutex>
 #include <sqlite3.h>
+#include <unordered_set>
 
 namespace Nezha::Database {
     namespace {
         sqlite3 *g_quarantine_db = nullptr;
         std::mutex g_db_mutex;
+        std::unordered_set<std::string> g_quarantine_cache;
 
         constexpr const char *kQuarantineDBPath = "nezha_quarantine.db";
 
@@ -49,6 +51,16 @@ namespace Nezha::Database {
                 std::cerr << "[DatabaseHelper] 创建隔离表失败: " << err << '\n';
                 sqlite3_free(err);
             }
+
+            const char *loadSQL = "SELECT ip_address FROM quarantine;";
+            sqlite3_stmt *stmt = nullptr;
+            if (sqlite3_prepare_v2(g_quarantine_db, loadSQL, -1, &stmt, nullptr) == SQLITE_OK) {
+                while (sqlite3_step(stmt) == SQLITE_ROW) {
+                    g_quarantine_cache.insert(
+                        reinterpret_cast<const char *>(sqlite3_column_text(stmt, 0)));
+                }
+                sqlite3_finalize(stmt);
+            }
         }
     }
 
@@ -79,6 +91,7 @@ namespace Nezha::Database {
             std::cerr << "[DatabaseHelper] 隔离IP写入失败: "
                       << sqlite3_errmsg(g_quarantine_db) << '\n';
         } else {
+            g_quarantine_cache.insert(ip);
             std::cout << "[DatabaseHelper] IP已隔离: " << ip
                       << " 原因: " << reason << '\n';
         }
@@ -86,24 +99,16 @@ namespace Nezha::Database {
     }
 
     bool DatabaseHelper::IsIPQuarantined(const std::string &ip) {
-        std::lock_guard<std::mutex> lock(g_db_mutex);
-        EnsureDB();
-        if (!g_quarantine_db) return false;
-
-        sqlite3_stmt *stmt = nullptr;
-        if (sqlite3_prepare_v2(g_quarantine_db, kSelectOneSQL, -1, &stmt, nullptr) != SQLITE_OK)
-            return false;
-
-        sqlite3_bind_text(stmt, 1, ip.c_str(), -1, SQLITE_TRANSIENT);
-        bool quarantined = false;
-        if (sqlite3_step(stmt) == SQLITE_ROW)
-            quarantined = sqlite3_column_int(stmt, 0) > 0;
-        sqlite3_finalize(stmt);
-        return quarantined;
+        {
+            std::lock_guard<std::mutex> lock(g_db_mutex);
+            if (g_quarantine_cache.count(ip)) return true;
+        }
+        return false;
     }
 
     void DatabaseHelper::RemoveQuarantine(const std::string &ip) {
         std::lock_guard<std::mutex> lock(g_db_mutex);
+        g_quarantine_cache.erase(ip);
         EnsureDB();
         if (!g_quarantine_db) return;
 

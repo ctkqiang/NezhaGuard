@@ -830,6 +830,7 @@ CMakeFiles/NezhaGuard.dir/main.cc.o: \
   /Users/johnmelodyme/Documents/ctkqiang/NezhaGuard/src/core/honeypot.h \
   /Users/johnmelodyme/Documents/ctkqiang/NezhaGuard/src/core/net_util.h \
   /Users/johnmelodyme/Documents/ctkqiang/NezhaGuard/src/core/log_watcher.h \
+  /Users/johnmelodyme/Documents/ctkqiang/NezhaGuard/src/service/database_helper.h \
   /Users/johnmelodyme/Documents/ctkqiang/NezhaGuard/src/utilities/logger.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/source_location \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/cstdarg \

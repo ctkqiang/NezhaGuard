@@ -19,6 +19,7 @@
 #include "src/core/ipaddr.h"
 #include "src/core/net_util.h"
 #include "src/core/log_watcher.h"
+#include "src/service/database_helper.h"
 #include "src/utilities/logger.h"
 
 using namespace Nezha;
@@ -39,6 +40,7 @@ static int run_cli_mode() {
     Core::HoneypotListener honeypot;
 
     Log::init_default("logs/nezha.log", Log::Level::Debug);
+    Database::DatabaseHelper::InitializeQuarantineDatabase();
     NZ_INFO("SIEM 引擎已启动");
     Core::dump_network_info();
 
@@ -106,6 +108,10 @@ static int run_cli_mode() {
         cap.start([&](const std::uint8_t *raw, std::size_t len, const timeval &ts) {
             Core::event e{};
             if (!Core::ProtocolDecoder::decode(raw, len, ts, arena, e)) return;
+            if (Database::DatabaseHelper::IsIPQuarantined(e.src.to_string())) {
+                NZ_WARN("已隔离 IP 被拦截: {}", e.src.to_string());
+                return;
+            }
             detector.analyze(e, arena, [&](const Core::Alert &a) { alerter.submit(a); });
             if (e.proto == PROTO_ICMP)
                 NZ_DEBUG("ICMP {} -> {}", e.src.to_string(), e.dst.to_string());
@@ -262,6 +268,10 @@ static int run_gui_mode(int argc, char *argv[]) {
             cap.start([&](const std::uint8_t *raw, std::size_t len, const timeval &ts) {
                 Core::event e{};
                 if (!Core::ProtocolDecoder::decode(raw, len, ts, arena, e)) return;
+                if (Database::DatabaseHelper::IsIPQuarantined(e.src.to_string())) {
+                    NZ_WARN("已隔离 IP 被拦截: {}", e.src.to_string());
+                    return;
+                }
                 detector.analyze(e, arena, [&](const Core::Alert &a) { alerter.submit(a); });
                 if (e.proto == PROTO_ICMP)
                     NZ_DEBUG("ICMP {} -> {}", e.src.to_string(), e.dst.to_string());

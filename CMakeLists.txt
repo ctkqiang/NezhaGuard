@@ -63,4 +63,13 @@ find_path(PCAP_INCLUDE_DIR pcap.h REQUIRED
     PATHS /opt/homebrew/include /usr/local/include /usr/include
 )
 target_include_directories(NezhaGuard PRIVATE ${PCAP_INCLUDE_DIR})
-target_link_libraries(NezhaGuard PRIVATE ${PCAP_LIB} Qt6::Widgets)
+
+find_library(SQLITE3_LIB sqlite3 REQUIRED
+    PATHS /opt/homebrew/lib /usr/local/lib /usr/lib
+)
+find_path(SQLITE3_INCLUDE_DIR sqlite3.h REQUIRED
+    PATHS /opt/homebrew/opt/sqlite/include /opt/homebrew/Cellar/sqlite/3.53.3/include
+          /opt/homebrew/include /usr/local/include /usr/include
+)
+target_include_directories(NezhaGuard PRIVATE ${SQLITE3_INCLUDE_DIR})
+target_link_libraries(NezhaGuard PRIVATE ${PCAP_LIB} Qt6::Widgets ${SQLITE3_LIB})

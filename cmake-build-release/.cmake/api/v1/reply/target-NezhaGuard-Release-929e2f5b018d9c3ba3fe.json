@@ -48,7 +48,7 @@
 			{
 				"command" : 1,
 				"file" : 0,
-				"line" : 66,
+				"line" : 75,
 				"parent" : 0
 			},
 			{
@@ -322,11 +322,11 @@
 	"dependencies" : 
 	[
 		{
-			"backtrace" : 0,
-			"id" : "NezhaGuard_autogen::@6890427a1f51a3e7e1df"
+			"id" : "NezhaGuard_autogen_timestamp_deps::@6890427a1f51a3e7e1df"
 		},
 		{
-			"id" : "NezhaGuard_autogen_timestamp_deps::@6890427a1f51a3e7e1df"
+			"backtrace" : 0,
+			"id" : "NezhaGuard_autogen::@6890427a1f51a3e7e1df"
 		}
 	],
 	"id" : "NezhaGuard::@6890427a1f51a3e7e1df",
@@ -358,6 +358,11 @@
 			{
 				"backtrace" : 2,
 				"fragment" : "/opt/homebrew/opt/qt/lib/QtWidgets.framework/Versions/A/QtWidgets",
+				"role" : "libraries"
+			},
+			{
+				"backtrace" : 2,
+				"fragment" : "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib/libsqlite3.tbd",
 				"role" : "libraries"
 			},
 			{
@@ -417,6 +422,10 @@
 		{
 			"backtrace" : 2,
 			"id" : "Qt6::Widgets::@6890427a1f51a3e7e1df"
+		},
+		{
+			"backtrace" : 2,
+			"fragment" : "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib/libsqlite3.tbd"
 		}
 	],
 	"name" : "NezhaGuard",
@@ -424,17 +433,17 @@
 	"orderDependencies" : 
 	[
 		{
-			"backtrace" : 0,
-			"id" : "NezhaGuard_autogen::@6890427a1f51a3e7e1df"
+			"id" : "Qt6::moc::@6890427a1f51a3e7e1df"
+		},
+		{
+			"id" : "Qt6::uic::@6890427a1f51a3e7e1df"
 		},
 		{
 			"id" : "NezhaGuard_autogen_timestamp_deps::@6890427a1f51a3e7e1df"
 		},
 		{
-			"id" : "Qt6::moc::@6890427a1f51a3e7e1df"
-		},
-		{
-			"id" : "Qt6::uic::@6890427a1f51a3e7e1df"
+			"backtrace" : 0,
+			"id" : "NezhaGuard_autogen::@6890427a1f51a3e7e1df"
 		}
 	],
 	"paths" : 

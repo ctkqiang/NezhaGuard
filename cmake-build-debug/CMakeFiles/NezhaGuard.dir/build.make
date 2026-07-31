@@ -353,6 +353,7 @@ NezhaGuard: CMakeFiles/NezhaGuard.dir/src/views/gui_sink.cc.o
 NezhaGuard: CMakeFiles/NezhaGuard.dir/build.make
 NezhaGuard: /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib/libpcap.tbd
 NezhaGuard: /opt/homebrew/opt/qt/lib/QtWidgets.framework/Versions/A/QtWidgets
+NezhaGuard: /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib/libsqlite3.tbd
 NezhaGuard: /opt/homebrew/opt/qt/lib/QtGui.framework/Versions/A/QtGui
 NezhaGuard: /opt/homebrew/opt/qt/lib/QtCore.framework/Versions/A/QtCore
 NezhaGuard: CMakeFiles/NezhaGuard.dir/link.txt

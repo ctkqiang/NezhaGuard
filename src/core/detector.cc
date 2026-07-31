@@ -4,6 +4,8 @@
 
 #include "detector.h"
 #include "arena.h"
+#include "../contants.h"
+#include "../service/database_helper.h"
 #include <algorithm>
 #include <cstring>
 
@@ -247,6 +249,16 @@ namespace Nezha::Core {
                 a.detail = arena.intern("ICMP Ping 洪流");
                 a.src_ip = arena.intern(e.src.to_string());
                 cb(a);
+            }
+
+            constexpr auto kThreshold = Configuration::ApplicationConstants::AnomaliesQuarantineThreshold;
+            if (entry.count >= static_cast<uint32_t>(kThreshold)) {
+                std::string ip = e.src.to_string();
+                if (!Database::DatabaseHelper::IsIPQuarantined(ip)) {
+                    double qscore = std::min(95.0, 40.0 + entry.count * 0.8);
+                    Database::DatabaseHelper::QuarantineIP(
+                        ip, "ICMP 异常流量超过阈值", qscore);
+                }
             }
         } else if (entry.count > 100 && entry.count % 50 == 0) {
             Alert a{};

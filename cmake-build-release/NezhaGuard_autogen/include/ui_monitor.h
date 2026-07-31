@@ -88,8 +88,12 @@ public:
     QTextEdit *alert_detail;
     QWidget *page_honeypot;
     QVBoxLayout *honey_layout;
+    QHBoxLayout *honey_header_layout;
     QLabel *honey_title;
+    QLabel *honey_stats_label;
+    QSpacerItem *spacerItem1;
     QTableView *honey_view;
+    QTextEdit *honey_detail;
     QWidget *page_network;
     QVBoxLayout *network_layout;
     QHBoxLayout *network_header_layout;
@@ -107,7 +111,7 @@ public:
     {
         if (monitor->objectName().isEmpty())
             monitor->setObjectName("monitor");
-        monitor->resize(800, 860);
+        monitor->resize(1280, 860);
         centralwidget = new QWidget(monitor);
         centralwidget->setObjectName("centralwidget");
         root_layout = new QVBoxLayout(centralwidget);
@@ -365,18 +369,39 @@ public:
         page_honeypot = new QWidget();
         page_honeypot->setObjectName("page_honeypot");
         honey_layout = new QVBoxLayout(page_honeypot);
-        honey_layout->setSpacing(12);
+        honey_layout->setSpacing(8);
         honey_layout->setObjectName("honey_layout");
         honey_layout->setContentsMargins(24, 24, 24, 24);
+        honey_header_layout = new QHBoxLayout();
+        honey_header_layout->setObjectName("honey_header_layout");
         honey_title = new QLabel(page_honeypot);
         honey_title->setObjectName("honey_title");
 
-        honey_layout->addWidget(honey_title);
+        honey_header_layout->addWidget(honey_title);
+
+        honey_stats_label = new QLabel(page_honeypot);
+        honey_stats_label->setObjectName("honey_stats_label");
+
+        honey_header_layout->addWidget(honey_stats_label);
+
+        spacerItem1 = new QSpacerItem(0, 0, QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Minimum);
+
+        honey_header_layout->addItem(spacerItem1);
+
+
+        honey_layout->addLayout(honey_header_layout);
 
         honey_view = new QTableView(page_honeypot);
         honey_view->setObjectName("honey_view");
 
         honey_layout->addWidget(honey_view);
+
+        honey_detail = new QTextEdit(page_honeypot);
+        honey_detail->setObjectName("honey_detail");
+        honey_detail->setReadOnly(true);
+        honey_detail->setMaximumHeight(100);
+
+        honey_layout->addWidget(honey_detail);
 
         pages->addWidget(page_honeypot);
         page_network = new QWidget();
@@ -504,6 +529,8 @@ public:
 
         alert_detail->setPlaceholderText(QCoreApplication::translate("monitor", "\351\200\211\346\213\251\345\221\212\350\255\246\346\237\245\347\234\213\350\257\246\346\203\205\342\200\246", nullptr));
         honey_title->setText(QCoreApplication::translate("monitor", "\350\234\234\347\275\220\347\233\221\346\216\247", nullptr));
+        honey_stats_label->setText(QString());
+        honey_detail->setPlaceholderText(QCoreApplication::translate("monitor", "\351\200\211\346\213\251\350\277\236\346\216\245\346\237\245\347\234\213\350\257\246\346\203\205\342\200\246", nullptr));
         network_title->setText(QCoreApplication::translate("monitor", "\347\275\221\347\273\234\344\277\241\346\201\257", nullptr));
         refresh_network->setText(QCoreApplication::translate("monitor", "\345\210\267\346\226\260", nullptr));
         local_ip_label->setText(QCoreApplication::translate("monitor", "\346\234\254\345\234\260\346\216\245\345\217\243", nullptr));

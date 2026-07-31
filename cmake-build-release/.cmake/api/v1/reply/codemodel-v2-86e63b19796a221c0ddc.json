@@ -844,14 +844,14 @@
 				{
 					"directoryIndex" : 0,
 					"id" : "NezhaGuard::@6890427a1f51a3e7e1df",
-					"jsonFile" : "target-NezhaGuard-Release-660c84f0c60cf673b60b.json",
+					"jsonFile" : "target-NezhaGuard-Release-929e2f5b018d9c3ba3fe.json",
 					"name" : "NezhaGuard",
 					"projectIndex" : 0
 				},
 				{
 					"directoryIndex" : 0,
 					"id" : "NezhaGuard_autogen::@6890427a1f51a3e7e1df",
-					"jsonFile" : "target-NezhaGuard_autogen-Release-99146ad8da428877fd83.json",
+					"jsonFile" : "target-NezhaGuard_autogen-Release-a906fd88a9f23a572025.json",
 					"name" : "NezhaGuard_autogen",
 					"projectIndex" : 0
 				},

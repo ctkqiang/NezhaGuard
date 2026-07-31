@@ -64,6 +64,7 @@ template <> constexpr inline auto monitor::qt_create_metaobjectdata<qt_meta_tag_
         "show_alert_detail",
         "QModelIndex",
         "idx",
+        "show_honey_detail",
         "refresh_network_info",
         "update_clock",
         "sync_theme"
@@ -100,12 +101,16 @@ template <> constexpr inline auto monitor::qt_create_metaobjectdata<qt_meta_tag_
         QtMocHelpers::SlotData<void(const QModelIndex &)>(23, 2, QMC::AccessPrivate, QMetaType::Void, {{
             { 0x80000000 | 24, 25 },
         }}),
+        // Slot 'show_honey_detail'
+        QtMocHelpers::SlotData<void(const QModelIndex &)>(26, 2, QMC::AccessPrivate, QMetaType::Void, {{
+            { 0x80000000 | 24, 25 },
+        }}),
         // Slot 'refresh_network_info'
-        QtMocHelpers::SlotData<void()>(26, 2, QMC::AccessPrivate, QMetaType::Void),
-        // Slot 'update_clock'
         QtMocHelpers::SlotData<void()>(27, 2, QMC::AccessPrivate, QMetaType::Void),
-        // Slot 'sync_theme'
+        // Slot 'update_clock'
         QtMocHelpers::SlotData<void()>(28, 2, QMC::AccessPrivate, QMetaType::Void),
+        // Slot 'sync_theme'
+        QtMocHelpers::SlotData<void()>(29, 2, QMC::AccessPrivate, QMetaType::Void),
     };
     QtMocHelpers::UintData qt_properties {
     };
@@ -136,9 +141,10 @@ void monitor::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, voi
         case 4: _t->apply_log_filter((*reinterpret_cast<std::add_pointer_t<int>>(_a[1]))); break;
         case 5: _t->filter_alert_severity((*reinterpret_cast<std::add_pointer_t<int>>(_a[1]))); break;
         case 6: _t->show_alert_detail((*reinterpret_cast<std::add_pointer_t<QModelIndex>>(_a[1]))); break;
-        case 7: _t->refresh_network_info(); break;
-        case 8: _t->update_clock(); break;
-        case 9: _t->sync_theme(); break;
+        case 7: _t->show_honey_detail((*reinterpret_cast<std::add_pointer_t<QModelIndex>>(_a[1]))); break;
+        case 8: _t->refresh_network_info(); break;
+        case 9: _t->update_clock(); break;
+        case 10: _t->sync_theme(); break;
         default: ;
         }
     }
@@ -163,14 +169,14 @@ int monitor::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
     if (_id < 0)
         return _id;
     if (_c == QMetaObject::InvokeMetaMethod) {
-        if (_id < 10)
+        if (_id < 11)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 10;
+        _id -= 11;
     }
     if (_c == QMetaObject::RegisterMethodArgumentMetaType) {
-        if (_id < 10)
+        if (_id < 11)
             *reinterpret_cast<QMetaType *>(_a[0]) = QMetaType();
-        _id -= 10;
+        _id -= 11;
     }
     return _id;
 }
