@@ -773,26 +773,240 @@ docker-compose down
 
 ### 9.4 Kubernetes (DaemonSet)
 
-```bash
-kubectl apply -k k8s/
+NezhaGuard 以 **DaemonSet** 形态部署于 Kubernetes 集群，每个 Linux 节点运行一个 SIEM Pod，通过 `hostNetwork: true` 直接监听节点物理网卡。
+
+#### 9.4.1 部署架构
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│                    Kubernetes Cluster                         │
+│                                                              │
+│  ┌─ Worker Node 1 ──────────────────────────────────────┐    │
+│  │  ┌──────────────────────────────────────────────┐    │    │
+│  │  │         NezhaGuard Pod (DaemonSet)            │    │    │
+│  │  │  hostNetwork: true  privileged: true          │    │    │
+│  │  │  ┌──────┐ ┌──────┐ ┌────────┐ ┌──────────┐  │    │    │
+│  │  │  │pcap  │ │honey │ │logwatch│ │ detector │  │    │    │
+│  │  │  │eth0  │ │:22.. │ │/var/log│ │  85+sig  │  │    │    │
+│  │  │  └──────┘ └──────┘ └────────┘ └────┬─────┘  │    │    │
+│  │  │                                   │        │    │    │
+│  │  │  ┌────────────────────────────────▼──────┐ │    │    │
+│  │  │  │  quarantine.db (hostPath persistent)   │ │    │    │
+│  │  │  └───────────────────────────────────────┘ │    │    │
+│  │  └──────────────────────────────────────────────┘    │    │
+│  └──────────────────────────────────────────────────────┘    │
+│                                                              │
+│  ┌─ Worker Node 2 ──────────────────────────────────────┐    │
+│  │  ┌──────────────────────────────────────────────┐    │    │
+│  │  │         NezhaGuard Pod (DaemonSet)            │    │    │
+│  │  │           ... (同上, 独立实例)                  │    │    │
+│  │  └──────────────────────────────────────────────┘    │    │
+│  └──────────────────────────────────────────────────────┘    │
+│                                                              │
+│  ┌─ Control Plane ──────────────────────────────────────┐   │
+│  │  ┌──────────────────────────────────────────────┐    │    │
+│  │  │         NezhaGuard Pod (tolerated)            │    │    │
+│  │  └──────────────────────────────────────────────┘    │    │
+│  └──────────────────────────────────────────────────────┘    │
+└──────────────────────────────────────────────────────────────┘
 ```
 
-**K8s 资源清单** (`k8s/`):
+#### 9.4.2 一键部署
 
-| 资源 | 文件 | 说明 |
+```bash
+# 通过 Kustomize 部署所有资源
+kubectl apply -k k8s/
+
+# 验证 DaemonSet 状态
+kubectl -n nezhaguard get ds,po,svc
+
+# 查看某个 Pod 日志
+kubectl -n nezhaguard logs -l app=nezhaguard --tail=50 -f
+
+# 卸载
+kubectl delete -k k8s/
+```
+
+#### 9.4.3 资源配置清单
+
+**Namespace** (`namespace.yaml`) — 逻辑隔离：
+
+```yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: nezhaguard
+  labels:
+    app.kubernetes.io/name: nezhaguard
+    app.kubernetes.io/part-of: siem
+```
+
+**ConfigMap** (`configmap.yaml`) — 运行时配置注入：
+
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nezhaguard-config
+  namespace: nezhaguard
+data:
+  NEZHA_SHOW_GUI: "0"                              # CLI 无头模式
+  NEZHA_INTERFACE: "eth0"                          # 监听网卡
+  NEZHA_LOG_LEVEL: "Info"                          # 日志级别
+  NEZHA_QUARANTINE_DB: "/app/data/nezha_quarantine.db"
+  NEZHA_TOR_CACHE: "/app/data/tor_nodes.cache"
+  NEZHA_LOG_PATH: "/app/logs/nezha.log"
+```
+
+**RBAC** (`rbac.yaml`) — 最小权限原则：
+
+| 资源 | 权限 | 用途 |
 |------|------|------|
-| `Namespace` | `namespace.yaml` | `nezhaguard` 命名空间 |
-| `ServiceAccount` + `ClusterRole` + `ClusterRoleBinding` | `rbac.yaml` | `hostNetwork` + `NET_RAW` capability |
-| `ConfigMap` | `configmap.yaml` | `NEZHA_SHOW_GUI=0`, 网卡配置 |
-| `DaemonSet` | `daemonset.yaml` | 每个节点一个 Pod, `hostNetwork: true` |
-| `Service` | `service.yaml` | ClusterIP 服务 |
-| `Kustomization` | `kustomization.yaml` | 聚合所有资源 |
+| `nodes`, `pods`, `services`, `endpoints` | `get`, `list`, `watch` | 集群拓扑感知 |
+| `nodes/proxy` | `get` | Kubelet 指标采集 |
 
-**DaemonSet 特性**:
-- 每个节点运行一个 SIEM 实例
-- `hostNetwork: true` 直接访问节点网卡
-- `containers[].securityContext.capabilities.add: [NET_RAW, NET_ADMIN]`
-- `tolerations` 允许调度到所有节点 (包括 control plane)
+```yaml
+# ServiceAccount + ClusterRole + ClusterRoleBinding
+# ClusterRole 仅授予只读 API 访问，不授予 secrets/configmaps/pod-exec
+```
+
+**DaemonSet** (`daemonset.yaml`) — 核心工作负载：
+
+| 配置项 | 值 | 说明 |
+|--------|-----|------|
+| `hostNetwork` | `true` | 直接使用节点网络栈，监听物理网卡 |
+| `hostPID` | `true` | 访问宿主机进程信息 (网络诊断) |
+| `privileged` | `true` | 原始套接字 + sysctl 权限 |
+| `capabilities` | `NET_RAW`, `NET_ADMIN`, `SYS_ADMIN`, `SYS_PTRACE` | 抓包/ARP/路由/进程追踪 |
+| `tolerations` | `operator: Exists` | 允许调度到所有节点 (含 Control Plane) |
+| `nodeAffinity` | `kubernetes.io/os: linux` | 仅 Linux 节点 (libpcap 依赖) |
+
+**资源限制**:
+
+| 资源 | Request | Limit | 依据 |
+|------|---------|-------|------|
+| CPU | 100m | 1000m | 单核包处理 ~55K pps 需 ~200m, 突发留余量 |
+| Memory | 128Mi | 512Mi | 正常 ~25MB, 512Mi 为极端日志洪峰留余量 |
+
+**存储卷**:
+
+| 卷 | 类型 | 挂载路径 | 用途 |
+|----|------|----------|------|
+| `data` | `hostPath` (DirectoryOrCreate) | `/app/data` | SQLite 隔离库 + Tor 缓存, 节点级持久化 |
+| `logs` | `hostPath` (DirectoryOrCreate) | `/app/logs` | NezhaGuard 自身日志 |
+| `host-logs` | `hostPath` (Directory, readOnly) | `/var/log` | 宿主机系统日志 (ngx/apache/auth/syslog) |
+
+**健康探针**:
+
+| 探针 | 类型 | 命令 | 初始延迟 | 间隔 |
+|------|------|------|----------|------|
+| `livenessProbe` | exec | `pgrep NezhaGuard` | 30s | 30s |
+| `readinessProbe` | exec | `pgrep NezhaGuard` | 10s | 10s |
+
+**Service** (`service.yaml`) — 无头服务 (Headless)：
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: nezhaguard
+  namespace: nezhaguard
+spec:
+  clusterIP: None          # Headless — 直接返回 Pod IP
+  selector:
+    app: nezhaguard
+  ports:
+    - name: metrics
+      port: 9090
+      targetPort: 9090
+```
+
+使用 `clusterIP: None` 的 Headless Service，DNS 查询 `nezhaguard.nezhaguard.svc.cluster.local` 返回所有 Pod IP，供 Prometheus 等服务发现。
+
+**Kustomization** (`kustomization.yaml`) — 声明式聚合：
+
+```yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: nezhaguard
+
+resources:
+  - namespace.yaml
+  - configmap.yaml
+  - rbac.yaml
+  - daemonset.yaml
+  - service.yaml
+
+commonLabels:
+  app.kubernetes.io/part-of: nezhaguard-siem
+
+images:
+  - name: nezhaguard
+    newTag: latest
+```
+
+#### 9.4.4 运维操作
+
+```bash
+# 查看所有节点上的 NezhaGuard Pod 状态
+kubectl -n nezhaguard get pods -o wide
+
+# 查看隔离列表 (从任意 Pod 执行)
+kubectl -n nezhaguard exec -it ds/nezhaguard -- \
+  sqlite3 /app/data/nezha_quarantine.db "SELECT * FROM quarantine;"
+
+# 查看实时日志 (所有 Pod)
+kubectl -n nezhaguard logs -l app=nezhaguard --tail=100 -f --prefix
+
+# 手动触发 Tor 节点列表刷新
+kubectl -n nezhaguard exec -it ds/nezhaguard -- \
+  kill -USR1 $(pgrep NezhaGuard)
+
+# 扩容/缩容 (DaemonSet 自动跟随节点数, 无需手动)
+kubectl -n nezhaguard get nodes --show-labels
+
+# 回滚
+kubectl -n nezhaguard rollout undo ds/nezhaguard
+```
+
+#### 9.4.5 网络策略 (可选)
+
+```yaml
+# 限制 NezhaGuard Pod 仅允许必要的出站流量
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: nezhaguard-egress
+  namespace: nezhaguard
+spec:
+  podSelector:
+    matchLabels:
+      app: nezhaguard
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              - 169.254.169.254/32   # 阻断云 Metadata API
+      ports:
+        - protocol: TCP
+          port: 443                 # Tor 列表 + GeoIP API
+        - protocol: UDP
+          port: 53                  # DNS 解析
+```
+
+#### 9.4.6 Prometheus 指标暴露 (规划)
+
+| 指标名 | 类型 | 说明 |
+|--------|------|------|
+| `nezha_packets_total` | Counter | 已处理包总数 |
+| `nezha_alerts_total` | Counter | 告警总数 (按 severity 分 label) |
+| `nezha_quarantined_ips` | Gauge | 当前隔离 IP 数 |
+| `nezha_tor_nodes` | Gauge | Tor 出口节点数 |
+| `nezha_throughput_bytes` | Gauge | 流量吞吐 (bytes/s) |
+| `nezha_honeypot_connections` | Counter | 蜜罐连接数 (按 port 分 label) |
 
 ---
 
@@ -1048,9 +1262,77 @@ cat data/tor_exits.cache | wc -l
 (perf) 签名匹配改用 Aho-Corasick 算法
 ```
 
----
+### 15.6 PlantUML 架构图生成
 
-## 16. 项目结构
+项目使用 **PlantUML** 描述系统架构、数据流和部署拓扑。所有源文件位于 `docs/UML/`，导出 PNG 存放于 `docs/images/`。
+
+#### 图表清单
+
+| 源文件 | 说明 | 类型 |
+|--------|------|------|
+| `architecture.puml` | 系统整体架构 (组件 + 连接关系) | Component Diagram |
+| `detection_flow.puml` | 攻击检测流水线 (数据源 → 解码 → 检测 → 告警) | Activity Diagram |
+| `startup_sequence.puml` | 引擎启动时序 (main → pcap → honeypot → logwatcher) | Sequence Diagram |
+| `quarantine_flow.puml` | 隔离与主动响应流程 (拦截 → 阻断 → 持久化) | Activity Diagram |
+| `gui_data_flow.puml` | GUI 数据流 (Capture → GuiSink → LogModel → Delegate) | Component Diagram |
+| `k8s_deployment.puml` | Kubernetes DaemonSet 部署架构 (Pod/Node/存储/外部服务) | Deployment Diagram |
+
+#### 环境安装
+
+```bash
+# macOS
+brew install plantuml
+
+# Linux (Ubuntu/Debian)
+sudo apt-get install -y plantuml
+
+# 验证
+plantuml -version
+# PlantUML version 1.2024.xx
+```
+
+#### 生成图表
+
+```bash
+# 生成全部 PNG (输出到 docs/images/)
+plantuml -tpng docs/UML/*.puml -o ../images/
+
+# 生成 SVG (矢量, 无损缩放)
+plantuml -tsvg docs/UML/*.puml -o ../images/
+
+# 仅生成指定图表
+plantuml -tpng docs/UML/k8s_deployment.puml -o ../images/
+
+# 监听模式 (文件变更自动重新生成)
+plantuml -tpng -w docs/UML/ -o ../images/
+```
+
+#### 输出文件对照
+
+| 源文件 | 输出 PNG | 输出 SVG |
+|--------|----------|----------|
+| `architecture.puml` | `docs/images/architecture.png` | `docs/images/architecture.svg` |
+| `detection_flow.puml` | `docs/images/detection_flow.png` | `docs/images/detection_flow.svg` |
+| `startup_sequence.puml` | `docs/images/startup_sequence.png` | `docs/images/startup_sequence.svg` |
+| `quarantine_flow.puml` | `docs/images/quarantine_flow.png` | `docs/images/quarantine_flow.svg` |
+| `gui_data_flow.puml` | `docs/images/gui_data_flow.png` | `docs/images/gui_data_flow.svg` |
+| `k8s_deployment.puml` | `docs/images/k8s_deployment.png` | `docs/images/k8s_deployment.svg` |
+
+#### PlantUML 预览技巧
+
+```bash
+# VS Code 插件: PlantUML (jebbs.plantuml)
+# 安装后 Alt+D 实时预览 .puml 文件
+
+# JetBrains CLion/IDEA: PlantUML integration 插件
+# 安装后 .puml 文件自动渲染
+
+# 在线预览 (无需安装)
+open https://www.plantuml.com/plantuml/uml/
+# 将 .puml 内容粘贴到编辑器即可
+```
+
+
 
 ```
 NezhaGuard/
@@ -1062,6 +1344,12 @@ NezhaGuard/
 ├── .dockerignore                    # Docker 忽略文件
 │
 ├── k8s/                             # Kubernetes DaemonSet 部署
+│   ├── namespace.yaml               # nezhaguard 命名空间 (逻辑隔离)
+│   ├── configmap.yaml               # 运行时环境变量注入
+│   ├── rbac.yaml                    # ServiceAccount + ClusterRole + CRB (最小权限)
+│   ├── daemonset.yaml               # DaemonSet: hostNetwork, privileged, probes
+│   ├── service.yaml                 # Headless Service (Prometheus 服务发现)
+│   └── kustomization.yaml           # Kustomize 聚合 + commonLabels + image tag
 │   ├── namespace.yaml               # nezhaguard 命名空间
 │   ├── rbac.yaml                    # ServiceAccount + ClusterRole + CRB
 │   ├── configmap.yaml               # 环境变量配置
@@ -1079,7 +1367,8 @@ NezhaGuard/
 │   │   ├── detection_flow.puml      # 检测流程图
 │   │   ├── quarantine_flow.puml     # 隔离与主动响应流程图
 │   │   ├── startup_sequence.puml    # 启动时序图
-│   │   └── gui_data_flow.puml       # GUI 数据流图
+│   │   ├── gui_data_flow.puml       # GUI 数据流图
+│   │   └── k8s_deployment.puml      # K8s DaemonSet 部署架构图
 │   └── images/                      # 导出的 PNG / 中文标注图
 │
 ├── src/
@@ -1129,6 +1418,3 @@ NezhaGuard/
 
 Copyright © 2026 钟智强. All rights reserved.
 
----
-
-> **哪吒 (Nezha)** — 中国神话中的少年战神，脚踩风火轮，手持乾坤圈，象征对网络安全威胁的主动出击与快速响应。

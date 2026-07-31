@@ -1,0 +1,81 @@
+@startuml K8s部署架构
+!theme plain
+skinparam backgroundColor #FEFEFE
+skinparam roundCorner 12
+skinparam fontName PingFang SC
+
+title NezhaGuard Kubernetes DaemonSet 部署架构
+
+package "Kubernetes Cluster" {
+
+  node "Control Plane" {
+    component "API Server" as api
+    component "Scheduler" as sched
+    component "Controller Manager" as cm
+  }
+
+  node "Worker Node 1" as wn1 {
+    rectangle "NezhaGuard Pod" as pod1 {
+      component "libpcap\n(hostNetwork: eth0)" as pcap1
+      component "Honeypot\n(:22 :3306 :6379...)" as honey1
+      component "LogWatcher\n(/var/log)" as log1
+      component "Detector\n(85+ signatures)" as det1
+      component "Quarantine\n(SQLite)" as q1
+
+      pcap1 --> det1 : raw packets
+      honey1 --> det1 : connection events
+      log1 --> det1 : log lines
+      det1 --> q1 : block IP
+    }
+
+    database "hostPath\n/var/lib/nezhaguard/data" as data1
+    database "hostPath\n/var/lib/nezhaguard/logs" as logs1
+    database "hostPath (ro)\n/var/log" as hostlog1
+
+    pod1 --> data1 : persist
+    pod1 --> logs1 : persist
+    pod1 --> hostlog1 : read
+  }
+
+  node "Worker Node 2" as wn2 {
+    rectangle "NezhaGuard Pod" as pod2 {
+      component "... (独立实例)" as pod2d
+    }
+    database "hostPath\n/var/lib/nezhaguard/data" as data2
+    pod2 --> data2
+  }
+
+  node "Worker Node N" as wnn {
+    rectangle "NezhaGuard Pod" as podn {
+      component "... (独立实例)" as podnd
+    }
+    database "hostPath\n/var/lib/nezhaguard/data" as datan
+    podn --> datan
+  }
+
+  cloud "External" {
+    component "Tor Project\ncheck.torproject.org" as tor
+    component "ip-api.com\nGeoIP Service" as geo
+    component "Attackers" as atk
+  }
+
+  atk --> pod1 : malicious traffic
+  pod1 --> tor : fetch exit nodes (3600s)
+  pod1 --> geo : async GeoIP query
+}
+
+component "Prometheus" as prom {
+  component "metrics scrape\n:9090" as scrape
+}
+
+pod1 --> scrape : metrics
+pod2 --> scrape
+podn --> scrape
+
+component "kubectl" as kube {
+  component "kubectl apply -k k8s/" as apply
+}
+
+apply ..> api : deploy
+
+@enduml
