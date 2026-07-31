@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nezhaguard-config
+  namespace: nezhaguard
+  labels:
+    app: nezhaguard
+data:
+  NEZHA_SHOW_GUI: "0"
+  NEZHA_INTERFACE: "eth0"
+  NEZHA_LOG_LEVEL: "Info"
+  NEZHA_QUARANTINE_DB: "/app/data/nezha_quarantine.db"
+  NEZHA_TOR_CACHE: "/app/data/tor_nodes.cache"
+  NEZHA_LOG_PATH: "/app/logs/nezha.log"

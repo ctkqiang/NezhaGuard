@@ -1,0 +1,14 @@
+cmake-build-debug/
+cmake-build-release/
+build/
+.git/
+.idea/
+.vscode/
+logs/
+data/
+*.app
+.gitignore
+.gitattributes
+docs/
+*.md
+!README.md

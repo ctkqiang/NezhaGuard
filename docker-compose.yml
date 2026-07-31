@@ -1,0 +1,23 @@
+version: "3.9"
+
+services:
+  nezhaguard:
+    build: .
+    image: nezhaguard:latest
+    container_name: nezhaguard
+    hostname: nezhaguard-siem
+    restart: unless-stopped
+    network_mode: host
+    privileged: true
+    cap_add:
+      - NET_RAW
+      - NET_ADMIN
+      - SYS_ADMIN
+    environment:
+      - NEZHA_SHOW_GUI=0
+      - NEZHA_INTERFACE=eth0
+    volumes:
+      - ./logs:/app/logs
+      - ./data:/app/data
+      - /var/log:/var/log:ro
+    command: ["-v"]

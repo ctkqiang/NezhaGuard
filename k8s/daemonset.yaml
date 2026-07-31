@@ -1,0 +1,92 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: nezhaguard
+  namespace: nezhaguard
+  labels:
+    app: nezhaguard
+    app.kubernetes.io/name: nezhaguard
+    app.kubernetes.io/part-of: siem
+spec:
+  selector:
+    matchLabels:
+      app: nezhaguard
+  template:
+    metadata:
+      labels:
+        app: nezhaguard
+    spec:
+      hostNetwork: true
+      hostPID: true
+      serviceAccountName: nezhaguard
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: nezhaguard
+          image: nezhaguard:latest
+          imagePullPolicy: IfNotPresent
+          command: ["/app/NezhaGuard"]
+          args: ["-v"]
+          envFrom:
+            - configMapRef:
+                name: nezhaguard-config
+          securityContext:
+            privileged: true
+            capabilities:
+              add:
+                - NET_RAW
+                - NET_ADMIN
+                - SYS_ADMIN
+                - SYS_PTRACE
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "1000m"
+          volumeMounts:
+            - name: data
+              mountPath: /app/data
+            - name: logs
+              mountPath: /app/logs
+            - name: host-logs
+              mountPath: /var/log
+              readOnly: true
+          livenessProbe:
+            exec:
+              command:
+                - pgrep
+                - NezhaGuard
+            initialDelaySeconds: 30
+            periodSeconds: 30
+          readinessProbe:
+            exec:
+              command:
+                - pgrep
+                - NezhaGuard
+            initialDelaySeconds: 10
+            periodSeconds: 10
+      volumes:
+        - name: data
+          hostPath:
+            path: /var/lib/nezhaguard/data
+            type: DirectoryOrCreate
+        - name: logs
+          hostPath:
+            path: /var/lib/nezhaguard/logs
+            type: DirectoryOrCreate
+        - name: host-logs
+          hostPath:
+            path: /var/log
+            type: Directory
+      tolerations:
+        - operator: Exists
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: kubernetes.io/os
+                    operator: In
+                    values:
+                      - linux
