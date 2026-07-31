@@ -63,3 +63,11 @@ void LogModel::append(const QString &timestamp, const QString &level, const QStr
     entries_.append(std::move(e));
     endInsertRows();
 }
+
+void LogModel::clear() {
+    if (entries_.isEmpty()) return;
+    beginRemoveRows(QModelIndex(), 0, entries_.size() - 1);
+    entries_.clear();
+    total_ = 0;
+    endRemoveRows();
+}

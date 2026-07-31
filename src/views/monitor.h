@@ -13,6 +13,7 @@
 class LogModel;
 class GuiSink;
 class QSortFilterProxyModel;
+class QLineEdit;
 class QListWidgetItem;
 class QTableWidget;
 class QTimer;
@@ -49,6 +50,9 @@ private slots:
     void refresh_network_info();
     void update_clock();
     void sync_theme();
+    void on_log_search_changed(const QString &text);
+    void clear_logs();
+    void update_sparkline();
 
 private:
     void apply_theme(bool dark);
@@ -71,6 +75,11 @@ private:
     QStyledItemDelegate *alert_delegate_;
     QStyledItemDelegate *recent_delegate_;
     QStyledItemDelegate *honey_delegate_;
+    QSortFilterProxyModel *log_search_proxy_ = nullptr;
+    QTimer *sparkline_timer_ = nullptr;
+    QFrame *sparkline_widget_ = nullptr;
+    QList<int> sparkline_data_;
+    int sparkline_pending_ = 0;
     bool dark_mode_ = true;
     QTime start_time_;
 };

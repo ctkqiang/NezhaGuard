@@ -5,16 +5,21 @@
 #include "../service/database_helper.h"
 
 #include <QApplication>
+#include <QClipboard>
 #include <QComboBox>
 #include <QDateTime>
 #include <QHeaderView>
 #include <QLabel>
+#include <QLineEdit>
+#include <QMenu>
 #include <QRegularExpression>
+#include <QShortcut>
 #include <QtConcurrent>
 #include "../core/geo_ip.h"
 #include "../core/ipaddr.h"
 #include <QListWidget>
 #include <QPainter>
+#include <QPainterPath>
 #include <QPropertyAnimation>
 #include <QPushButton>
 #include <QSortFilterProxyModel>
@@ -41,6 +46,74 @@
 #include <vector>
 
 namespace {
+
+class SparklineWidget : public QFrame {
+public:
+    using QFrame::QFrame;
+    void set_data(const QList<int> &d) { data_ = d; update(); }
+    bool dark = true;
+protected:
+    void paintEvent(QPaintEvent *) override {
+        QPainter p(this);
+        p.setRenderHint(QPainter::Antialiasing);
+        QColor bg = dark ? QColor("#0d2129") : QColor("#ffffff");
+        QColor ln = dark ? QColor("#39c5bb") : QColor("#00bcd4");
+        QColor fg = dark ? QColor("#4dd0e1") : QColor("#00838f");
+        QColor gr = dark ? QColor("#1a3a44") : QColor("#b2ebf2");
+        p.setBrush(bg);
+        p.setPen(Qt::NoPen);
+        p.drawRoundedRect(rect(), 10, 10);
+        if (data_.isEmpty()) {
+            p.setPen(fg);
+            p.setFont(QFont(QStringLiteral("PingFang SC"), 11));
+            p.drawText(rect(), Qt::AlignCenter, QStringLiteral("等待数据..."));
+            return;
+        }
+        int n = data_.size();
+        int maxv = *std::max_element(data_.begin(), data_.end());
+        if (maxv == 0) maxv = 1;
+        QRect r = rect().adjusted(12, 16, -12, -28);
+        double w = static_cast<double>(r.width()) / (n - 1);
+        double h = static_cast<double>(r.height());
+        // grid lines
+        p.setPen(QPen(gr, 0.5, Qt::DotLine));
+        for (int i = 1; i <= 3; ++i)
+            p.drawLine(QPointF(r.left(), r.top() + h * i / 4), QPointF(r.right(), r.top() + h * i / 4));
+        // fill area under curve
+        QPainterPath fill;
+        fill.moveTo(r.left(), r.bottom());
+        for (int i = 0; i < n; ++i)
+            fill.lineTo(QPointF(r.left() + w * i, r.bottom() - (data_[i] * h / maxv)));
+        fill.lineTo(r.right(), r.bottom());
+        fill.closeSubpath();
+        QColor fc = ln; fc.setAlpha(25);
+        p.setPen(Qt::NoPen);
+        p.setBrush(fc);
+        p.drawPath(fill);
+        // line
+        QPen pen(ln, 1.8);
+        p.setPen(pen);
+        for (int i = 1; i < n; ++i) {
+            p.drawLine(QPointF(r.left() + w * (i - 1), r.bottom() - (data_[i - 1] * h / maxv)),
+                       QPointF(r.left() + w * i,     r.bottom() - (data_[i] * h / maxv)));
+        }
+        // dots
+        for (int i = 1; i < n; i += 3) {
+            p.setBrush(ln);
+            p.setPen(Qt::NoPen);
+            p.drawEllipse(QPointF(r.left() + w * i, r.bottom() - (data_[i] * h / maxv)), 2.5, 2.5);
+        }
+        // label
+        p.setPen(fg);
+        p.setFont(QFont(QStringLiteral("PingFang SC"), 9));
+        p.drawText(QRect(r.left(), r.bottom() + 4, r.width(), 20), Qt::AlignLeft | Qt::AlignVCenter,
+                   QStringLiteral("事件速率 (%1s)").arg(n));
+        p.drawText(QRect(r.left(), r.bottom() + 4, r.width(), 20), Qt::AlignRight | Qt::AlignVCenter,
+                   QStringLiteral("峰值: %1").arg(maxv));
+    }
+private:
+    QList<int> data_;
+};
 
 class LogDelegate : public QStyledItemDelegate {
 public:
@@ -169,6 +242,28 @@ monitor::monitor(QWidget *parent) : QMainWindow(parent), ui(new Ui::monitor) {
     pulse2->setLoopCount(-1);
     pulse->start();
     pulse2->start();
+
+    // keyboard shortcuts
+    auto *fcs = new QShortcut(QKeySequence(QStringLiteral("Ctrl+F")), this);
+    connect(fcs, &QShortcut::activated, this, [this]() {
+        ui->pages->setCurrentWidget(ui->page_logs);
+        ui->sidebar->setCurrentRow(1);
+        ui->log_search_box->setFocus();
+    });
+    auto *cls = new QShortcut(QKeySequence(QStringLiteral("Ctrl+L")), this);
+    connect(cls, &QShortcut::activated, this, &monitor::clear_logs);
+    for (int k = 1; k <= 5; ++k) {
+        auto *sc = new QShortcut(QKeySequence(QStringLiteral("Ctrl+%1").arg(k)), this);
+        connect(sc, &QShortcut::activated, this, [this, k]() {
+            ui->sidebar->setCurrentRow(k - 1);
+            ui->pages->setCurrentIndex(k - 1);
+        });
+    }
+
+    // sparkline timer
+    sparkline_timer_ = new QTimer(this);
+    connect(sparkline_timer_, &QTimer::timeout, this, &monitor::update_sparkline);
+    sparkline_timer_->start(1000);
 }
 
 monitor::~monitor() { delete ui; }
@@ -190,6 +285,7 @@ void monitor::apply_theme(bool dark) {
     if (alert_delegate_) static_cast<AlertDelegate *>(alert_delegate_)->dark = dark;
     if (recent_delegate_) static_cast<AlertDelegate *>(recent_delegate_)->dark = dark;
     if (honey_delegate_) static_cast<LogDelegate *>(honey_delegate_)->dark = dark;
+    if (sparkline_widget_) static_cast<SparklineWidget *>(sparkline_widget_)->dark = dark;
 
     if (dark) {
         setStyleSheet(QStringLiteral(R"(
@@ -335,6 +431,15 @@ void monitor::init_models() {
     connect(ui->level_filter, QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, &monitor::apply_log_filter);
 
+    // search proxy for logs (text search on top of level filter)
+    log_search_proxy_ = new QSortFilterProxyModel(this);
+    log_search_proxy_->setSourceModel(log_proxy_);
+    log_search_proxy_->setFilterRole(LogModel::MessageRole);
+    log_search_proxy_->setFilterCaseSensitivity(Qt::CaseInsensitive);
+    ui->log_view->setModel(log_search_proxy_);
+    connect(ui->log_search_box, &QLineEdit::textChanged, this, &monitor::on_log_search_changed);
+    connect(ui->log_clear_btn, &QPushButton::clicked, this, &monitor::clear_logs);
+
     alert_model_ = new LogModel(this);
     alert_proxy_ = new QSortFilterProxyModel(this);
     alert_proxy_->setSourceModel(alert_model_);
@@ -376,6 +481,90 @@ void monitor::init_models() {
     setup_network_table(ui->quarantine_table);
     connect(ui->refresh_network, &QPushButton::clicked, this, &monitor::refresh_network_info);
     refresh_network_info();
+
+    // replace sparkline_frame placeholder with SparklineWidget
+    sparkline_widget_ = new SparklineWidget();
+    static_cast<SparklineWidget *>(sparkline_widget_)->dark = dark_mode_;
+    sparkline_widget_->setObjectName(QStringLiteral("sparkline_widget"));
+    if (ui->sparkline_frame->layout()) {
+        delete ui->sparkline_frame->layout();
+    }
+    auto *vbl = new QVBoxLayout(ui->sparkline_frame);
+    vbl->setContentsMargins(0, 0, 0, 0);
+    vbl->addWidget(sparkline_widget_);
+
+    // context menus for tables
+    auto build_log_ctx = [this](const QPoint &pos, QTableView *view, QSortFilterProxyModel *proxy) {
+        QModelIndex idx = view->indexAt(pos);
+        if (!idx.isValid()) return;
+        QMenu menu(this);
+        QAction *cpy = menu.addAction(QStringLiteral("复制内容"));
+        QAction *geo = menu.addAction(QStringLiteral("查询 GeoIP"));
+        QAction *qip = menu.addAction(QStringLiteral("隔离此 IP"));
+        QAction *act = menu.exec(view->viewport()->mapToGlobal(pos));
+        if (!act) return;
+        QString msg = proxy ? proxy->data(idx.siblingAtColumn(2), LogModel::MessageRole).toString()
+                         : idx.data(LogModel::MessageRole).toString();
+        QRegularExpression ipr(R"((\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}))");
+        QString ip = ipr.match(msg).captured(1);
+        if (act == cpy) {
+            QApplication::clipboard()->setText(msg);
+        } else if (act == geo && !ip.isEmpty()) {
+            show_log_detail(idx);
+        } else if (act == qip && !ip.isEmpty()) {
+            Nezha::Database::DatabaseHelper::QuarantineIP(ip.toStdString(), QStringLiteral("手动隔离").toStdString(), 50.0);
+            refresh_quarantine_list();
+        }
+    };
+
+    ui->log_view->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(ui->log_view, &QTableView::customContextMenuRequested, this,
+            [this, build_log_ctx](const QPoint &p) { build_log_ctx(p, ui->log_view, log_search_proxy_); });
+
+    ui->alert_view->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(ui->alert_view, &QTableView::customContextMenuRequested, this,
+            [this, build_log_ctx](const QPoint &p) { build_log_ctx(p, ui->alert_view, alert_proxy_); });
+
+    ui->honey_view->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(ui->honey_view, &QTableView::customContextMenuRequested, this,
+            [this](const QPoint &pos) {
+        QModelIndex idx = ui->honey_view->indexAt(pos);
+        if (!idx.isValid()) return;
+        QMenu menu(this);
+        QAction *cpy = menu.addAction(QStringLiteral("复制内容"));
+        QAction *qip = menu.addAction(QStringLiteral("隔离来源 IP"));
+        QAction *act = menu.exec(ui->honey_view->viewport()->mapToGlobal(pos));
+        if (!act) return;
+        QString msg = idx.data(LogModel::MessageRole).toString();
+        if (act == cpy) {
+            QApplication::clipboard()->setText(msg);
+        } else if (act == qip) {
+            QRegularExpression ipr(R"((\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}))");
+            QString ip = ipr.match(msg).captured(1);
+            if (!ip.isEmpty()) {
+                Nezha::Database::DatabaseHelper::QuarantineIP(ip.toStdString(), QStringLiteral("蜜罐手动隔离").toStdString(), 75.0);
+                refresh_quarantine_list();
+            }
+        }
+    });
+
+    // network table context menu - quarantine IP on right click
+    ui->quarantine_table->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(ui->quarantine_table, &QTableWidget::customContextMenuRequested, this,
+            [this](const QPoint &pos) {
+        auto *item = ui->quarantine_table->itemAt(pos);
+        if (!item) return;
+        QString ip = ui->quarantine_table->item(item->row(), 0)->text();
+        QMenu menu(this);
+        QAction *cpy = menu.addAction(QStringLiteral("复制 IP"));
+        QAction *unq = menu.addAction(QStringLiteral("取消隔离"));
+        QAction *act = menu.exec(ui->quarantine_table->viewport()->mapToGlobal(pos));
+        if (act == cpy) QApplication::clipboard()->setText(ip);
+        else if (act == unq) {
+            Nezha::Database::DatabaseHelper::RemoveQuarantine(ip.toStdString());
+            refresh_quarantine_list();
+        }
+    });
 
     apply_theme(dark_mode_);
 }
@@ -667,4 +856,32 @@ void monitor::refresh_quarantine_list() {
     }
     t->resizeColumnToContents(0);
     t->horizontalHeader()->setStretchLastSection(true);
+}
+
+void monitor::on_log_search_changed(const QString &text) {
+    if (!log_search_proxy_) return;
+    log_search_proxy_->setFilterFixedString(text);
+}
+
+void monitor::clear_logs() {
+    if (log_model_) log_model_->clear();
+    if (alert_model_) alert_model_->clear();
+    if (honey_model_) honey_model_->clear();
+    ui->card_logs_value->setText(QStringLiteral("0"));
+    ui->card_alerts_value->setText(QStringLiteral("0"));
+    ui->log_detail->clear();
+    ui->alert_detail->clear();
+    ui->honey_detail->clear();
+}
+
+void monitor::update_sparkline() {
+    int cur = log_model_ ? log_model_->total() : 0;
+    static int last = 0;
+    int delta = cur - last;
+    if (delta < 0) delta = 0;
+    last = cur;
+    sparkline_data_.append(delta);
+    if (sparkline_data_.size() > 60)
+        sparkline_data_.removeFirst();
+    if (sparkline_widget_) static_cast<SparklineWidget *>(sparkline_widget_)->set_data(sparkline_data_);
 }
