@@ -156,6 +156,7 @@
              <attribute name="verticalHeaderVisible"><bool>false</bool></attribute>
             </widget>
            </item>
+           <item><widget class="QTextEdit" name="log_detail"><property name="readOnly"><bool>true</bool></property><property name="maximumHeight"><number>120</number></property><property name="placeholderText"><string>选择日志条目查看详情…</string></property></widget></item>
           </layout>
          </widget>
          <!-- ============ 安全告警 ============ -->

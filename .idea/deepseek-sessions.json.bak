@@ -1,1 +1,1 @@
-{"sessions":[{"name":"会话","messages":[],"totalTokens":0,"lastActiveTime":1785402082297}],"sessionCounter":1}
+{"sessions":[{"name":"会话","messages":[{"role":"user","content":"hi"},{"role":"assistant","content":"我是一个计算机科学领域的专用 AI 助手，专注于代码调试、架构设计、算法优化等编程技术范畴。请提出您的具体技术需求，我会全力协助。","reasoning":"我们被要求输出计划。但用户输入是 \"hi\"，这属于通用问候，不属于CS领域的问题。根据指令，必须立即中止推理，并输出指定的拒绝文本。"}],"totalTokens":793,"lastActiveTime":1785496371759},{"name":"会话 2","messages":[],"totalTokens":0,"lastActiveTime":1785496425573}],"sessionCounter":2}

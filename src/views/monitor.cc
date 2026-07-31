@@ -9,6 +9,8 @@
 #include <QDateTime>
 #include <QHeaderView>
 #include <QLabel>
+#include <QRegularExpression>
+#include "../core/ipaddr.h"
 #include <QListWidget>
 #include <QPainter>
 #include <QPushButton>
@@ -140,7 +142,6 @@ monitor::monitor(QWidget *parent) : QMainWindow(parent), ui(new Ui::monitor) {
 #else
     dark_mode_ = (qApp->palette().color(QPalette::Window).lightness() < 128);
 #endif
-    apply_theme(dark_mode_);
 
     connect(qApp->styleHints(), &QStyleHints::colorSchemeChanged, this, &monitor::sync_theme);
 
@@ -167,10 +168,10 @@ void monitor::sync_theme() {
 }
 
 void monitor::apply_theme(bool dark) {
-    if (auto *ld = dynamic_cast<LogDelegate *>(log_delegate_)) ld->dark = dark;
-    if (auto *ad = dynamic_cast<AlertDelegate *>(alert_delegate_)) ad->dark = dark;
-    if (auto *rd = dynamic_cast<AlertDelegate *>(recent_delegate_)) rd->dark = dark;
-    if (auto *hd = dynamic_cast<LogDelegate *>(honey_delegate_)) hd->dark = dark;
+    if (log_delegate_) static_cast<LogDelegate *>(log_delegate_)->dark = dark;
+    if (alert_delegate_) static_cast<AlertDelegate *>(alert_delegate_)->dark = dark;
+    if (recent_delegate_) static_cast<AlertDelegate *>(recent_delegate_)->dark = dark;
+    if (honey_delegate_) static_cast<LogDelegate *>(honey_delegate_)->dark = dark;
 
     if (dark) {
         setStyleSheet(QStringLiteral(R"(
@@ -311,6 +312,7 @@ void monitor::init_models() {
     ui->log_view->setItemDelegate(log_delegate_);
     ui->log_view->horizontalHeader()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
     ui->log_view->horizontalHeader()->setSectionResizeMode(2, QHeaderView::Stretch);
+    connect(ui->log_view, &QTableView::clicked, this, &monitor::show_log_detail);
 
     connect(ui->level_filter, QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, &monitor::apply_log_filter);
@@ -356,6 +358,8 @@ void monitor::init_models() {
     setup_network_table(ui->quarantine_table);
     connect(ui->refresh_network, &QPushButton::clicked, this, &monitor::refresh_network_info);
     refresh_network_info();
+
+    apply_theme(dark_mode_);
 }
 
 void monitor::update_stats(int log_count, int alert_count) {
@@ -409,6 +413,44 @@ void monitor::apply_log_filter(int index) {
 void monitor::filter_alert_severity(int index) {
     if (!alert_proxy_) return;
     alert_proxy_->setFilterFixedString(index == 0 ? QString() : ui->alert_severity_filter->currentText());
+}
+
+void monitor::show_log_detail(const QModelIndex &idx) {
+    if (!idx.isValid()) return;
+    QString tm = idx.data(LogModel::TimestampRole).toString();
+    QString lv = idx.data(LogModel::LevelRole).toString();
+    QString msg = idx.data(LogModel::MessageRole).toString();
+
+    QRegularExpression ip_re(R"((\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}))");
+    QStringList ips;
+    auto it = ip_re.globalMatch(msg);
+    while (it.hasNext()) {
+        auto m = it.next();
+        QString ip = m.captured(1);
+        if (!ips.contains(ip)) ips.append(ip);
+    }
+
+    QString detail;
+    detail += QStringLiteral("━━━ 日志详情 ━━━\n\n");
+    detail += QStringLiteral("时间: %1\n").arg(tm);
+    detail += QStringLiteral("级别: %1\n").arg(lv);
+    detail += QStringLiteral("内容: %1\n\n").arg(msg);
+
+    for (const auto &ip : ips) {
+        std::string ip_std = ip.toStdString();
+        Nezha::IPAddress::ipaddr addr;
+        Nezha::IPAddress::ipaddr::parse(ip_std, addr);
+
+        detail += QStringLiteral("── IP: %1 ──\n").arg(ip);
+        std::string host = Nezha::IPAddress::ipaddr::ResolveHostname(ip_std);
+        if (!host.empty() && host != ip_std)
+            detail += QStringLiteral("  主机名: %1\n").arg(QString::fromStdString(host));
+        detail += QStringLiteral("  内网: %1\n").arg(addr.is_private() ? QStringLiteral("是") : QStringLiteral("否"));
+        detail += QStringLiteral("  回环: %1\n").arg(addr.is_loopback() ? QStringLiteral("是") : QStringLiteral("否"));
+        detail += QStringLiteral("\n");
+    }
+
+    ui->log_detail->setPlainText(detail);
 }
 
 void monitor::show_alert_detail(const QModelIndex &idx) {

@@ -43,6 +43,7 @@ public slots:
 private slots:
     void apply_log_filter(int index);
     void filter_alert_severity(int index);
+    void show_log_detail(const QModelIndex &idx);
     void show_alert_detail(const QModelIndex &idx);
     void show_honey_detail(const QModelIndex &idx);
     void refresh_network_info();

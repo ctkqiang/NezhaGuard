@@ -47,10 +47,10 @@ static int run_cli_mode() {
     auto qlist = Database::DatabaseHelper::GetQuarantineList();
     NZ_INFO("══════════════════════════════════════════════════");
     NZ_INFO("  哪吒网络安全 SIEM 系统 {} [蓝队模式]",
-           Configuration::ApplicationConstants::ApplicationVersion);
+            Configuration::ApplicationConstants::ApplicationVersion);
     NZ_INFO("  隔离阈值: {} 次  |  历史隔离记录: {} 条",
-           Configuration::ApplicationConstants::AnomaliesQuarantineThreshold,
-           qlist.size());
+            Configuration::ApplicationConstants::AnomaliesQuarantineThreshold,
+            qlist.size());
     NZ_INFO("══════════════════════════════════════════════════");
     Core::dump_network_info();
 
@@ -65,10 +65,10 @@ static int run_cli_mode() {
             std::string host = IPAddress::ipaddr::ResolveHostname(ip);
             if (host != ip)
                 NZ_WARN("[聚合] {}  {} ({}), {} 次, 评分 {:.0f}",
-                        attack_type_cstr(a.type), ip, host, a.count, a.score);
+                    attack_type_cstr(a.type), ip, host, a.count, a.score);
             else
                 NZ_WARN("[聚合] {}  {}, {} 次, 评分 {:.0f}",
-                        attack_type_cstr(a.type), ip, a.count, a.score);
+                    attack_type_cstr(a.type), ip, a.count, a.score);
         }
     });
 
@@ -134,15 +134,15 @@ static int run_cli_mode() {
             detector.analyze(e, arena, [&](const Core::Alert &a) { alerter.submit(a); });
             if (e.proto == PROTO_ICMP)
                 NZ_DEBUG("[ICMP] {} → {}  len={}",
-                         e.src.to_string(), e.dst.to_string(), len);
+                     e.src.to_string(), e.dst.to_string(), len);
             else if (e.proto == PROTO_TCP)
                 NZ_TRACE("[TCP] {}:{} → {}:{}  len={}",
-                         e.src.to_string(), e.sport,
-                         e.dst.to_string(), e.dport, len);
+                     e.src.to_string(), e.sport,
+                     e.dst.to_string(), e.dport, len);
             else
                 NZ_TRACE("[UDP] {}:{} → {}:{}  len={}",
-                         e.src.to_string(), e.sport,
-                         e.dst.to_string(), e.dport, len);
+                     e.src.to_string(), e.sport,
+                     e.dst.to_string(), e.dport, len);
             static Nanos last_flush = 0;
             if (e.ts_ns - last_flush > 30'000'000'000ULL) {
                 alerter.flush();
@@ -165,16 +165,15 @@ static int run_cli_mode() {
     auto final_qlist = Database::DatabaseHelper::GetQuarantineList();
     NZ_INFO("══════════════════════════════════════════════════");
     NZ_INFO("  SIEM 已停止  |  本次告警: {}  |  隔离 IP: {}",
-           alerter.total_alerts(), final_qlist.size());
+            alerter.total_alerts(), final_qlist.size());
     if (!final_qlist.empty()) {
         NZ_INFO("  ── 隔离列表 ──");
-        for (const auto &r : final_qlist)
+        for (const auto &r: final_qlist)
             NZ_INFO("    {}  [{}]  score={:.0f}", r.ip_address, r.reason, r.threat_score);
     }
     NZ_INFO("══════════════════════════════════════════════════");
     return 0;
 }
-
 
 
 #include <QApplication>
@@ -197,11 +196,11 @@ static int run_gui_mode(int argc, char *argv[]) {
     tor_checker.initialize();
     NZ_INFO("══════════════════════════════════════════════════");
     NZ_INFO("  哪吒网络安全 SIEM 系统 {} [蓝队模式]",
-           Configuration::ApplicationConstants::ApplicationVersion);
+            Configuration::ApplicationConstants::ApplicationVersion);
     NZ_INFO("  隔离阈值: {} 次  |  Tor 节点: {}  |  历史隔离: {} 条",
-           Configuration::ApplicationConstants::AnomaliesQuarantineThreshold,
-           tor_checker.total_nodes(),
-           Database::DatabaseHelper::GetQuarantineList().size());
+            Configuration::ApplicationConstants::AnomaliesQuarantineThreshold,
+            tor_checker.total_nodes(),
+            Database::DatabaseHelper::GetQuarantineList().size());
     NZ_INFO("══════════════════════════════════════════════════");
     Core::dump_network_info();
 
@@ -209,10 +208,8 @@ static int run_gui_mode(int argc, char *argv[]) {
     window.init_models();
     window.show();
 
-    // 注册 GUI 日志 sink
-    if (auto sink = window.gui_sink()) {
-        Log::Logger::instance().add_sink(sink);
-    }
+    if (auto sink = window.gui_sink()) Log::Logger::instance().add_sink(sink);
+
 
     Core::Arena arena(128 * 1024);
     Core::AttackDetector detector;
@@ -225,10 +222,10 @@ static int run_gui_mode(int argc, char *argv[]) {
             std::string host = IPAddress::ipaddr::ResolveHostname(ip);
             if (host != ip)
                 NZ_WARN("[聚合] {}  {} ({}), {} 次, 评分 {:.0f}",
-                        attack_type_cstr(a.type), ip, host, a.count, a.score);
+                    attack_type_cstr(a.type), ip, host, a.count, a.score);
             else
                 NZ_WARN("[聚合] {}  {}, {} 次, 评分 {:.0f}",
-                        attack_type_cstr(a.type), ip, a.count, a.score);
+                    attack_type_cstr(a.type), ip, a.count, a.score);
         }
         uint64_t ts_ns = a.ts_ns;
         std::string type_str = attack_type_cstr(a.type);
@@ -238,9 +235,9 @@ static int run_gui_mode(int argc, char *argv[]) {
         QString sev = [](Severity s) -> QString {
             switch (s) {
                 case Severity::Critical: return QStringLiteral("CRIT");
-                case Severity::Error:    return QStringLiteral("ERROR");
-                case Severity::Warn:     return QStringLiteral("WARN");
-                default:                 return QStringLiteral("INFO");
+                case Severity::Error: return QStringLiteral("ERROR");
+                case Severity::Warn: return QStringLiteral("WARN");
+                default: return QStringLiteral("INFO");
             }
         }(a.level);
 
@@ -326,7 +323,7 @@ static int run_gui_mode(int argc, char *argv[]) {
                     NZ_DEBUG("ICMP {} -> {}", e.src.to_string(), e.dst.to_string());
                 else
                     NZ_TRACE("{} {}:{} -> :{}", e.proto == PROTO_TCP ? "TCP" : "UDP",
-                             e.src.to_string(), e.sport, e.dport);
+                         e.src.to_string(), e.sport, e.dport);
                 static Nanos last_flush = 0;
                 if (e.ts_ns - last_flush > 30'000'000'000ULL) {
                     alerter.flush();
@@ -369,7 +366,6 @@ static int run_gui_mode(int argc, char *argv[]) {
 
 
 int main(int argc, char *argv[]) {
-
     if (Configuration::ApplicationConstants::ShowGui) {
         return run_gui_mode(argc, argv);
     }
