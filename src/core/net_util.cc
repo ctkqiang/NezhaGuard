@@ -7,15 +7,19 @@
 #include <arpa/inet.h>
 #include <ifaddrs.h>
 #include <net/if.h>
-#include <net/if_dl.h>
-#include <net/route.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
+#ifndef __linux__
+#include <net/if_dl.h>
+#include <net/route.h>
 #include <sys/sysctl.h>
+#endif
 
 #include <cstring>
 #include <format>
+#include <fstream>
 #include <set>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -80,6 +84,45 @@ namespace Nezha::Core {
         return true;
     }
 
+#ifdef __linux__
+    void dump_arp_table() {
+        std::ifstream arp("/proc/net/arp");
+        if (!arp.is_open()) {
+            NZ_WARN("无法读取 /proc/net/arp");
+            return;
+        }
+
+        auto local_ips = collect_local_ips();
+        std::set<std::string> seen;
+        std::string line;
+        int count = 0;
+
+        std::getline(arp, line); // skip header
+        while (std::getline(arp, line)) {
+            std::istringstream iss(line);
+            std::string ip, hw_type, flags, mac, mask, dev;
+            iss >> ip >> hw_type >> flags >> mac >> mask >> dev;
+            if (ip.empty() || mac.empty() || mac == "00:00:00:00:00:00") continue;
+            if (local_ips.count(ip)) continue;
+            std::string key = ip + "@" + mac;
+            if (seen.insert(key).second) {
+                NZ_DEBUG("ARP: {} @ {} ({})", ip, mac, dev);
+                ++count;
+            }
+        }
+        if (count == 0) NZ_INFO("ARP表: 无活跃远程条目");
+    }
+
+    static int count_arp_entries() {
+        std::ifstream arp("/proc/net/arp");
+        if (!arp.is_open()) return 0;
+        int n = 0;
+        std::string line;
+        std::getline(arp, line);
+        while (std::getline(arp, line)) ++n;
+        return n;
+    }
+#else
     void dump_arp_table() {
         int mib[6] = {CTL_NET, PF_ROUTE, 0, AF_INET, NET_RT_FLAGS, RTF_LLINFO};
         std::vector<char> buf;
@@ -194,6 +237,7 @@ namespace Nezha::Core {
         }
         return n;
     }
+#endif
 
     void dump_network_info() {
         NZ_INFO("  本地接口: {} 个  |  ARP 条目: {} 个",

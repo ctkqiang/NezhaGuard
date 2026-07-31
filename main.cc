@@ -4,6 +4,7 @@
 //
 
 #include <csignal>
+#include <cstdlib>
 #include <ctime>
 #include <iostream>
 #include <thread>
@@ -26,6 +27,16 @@
 #include "src/utilities/logger.h"
 
 using namespace Nezha;
+
+static const char* get_net_interface() {
+    const char* env = std::getenv("NEZHA_INTERFACE");
+    if (env && env[0] != '\0') return env;
+#ifdef __linux__
+    return "eth0";
+#else
+    return "en0";
+#endif
+}
 
 static Core::PacketCapture *g_cap = nullptr;
 static volatile bool g_running = true;
@@ -75,8 +86,8 @@ static int run_cli_mode() {
     });
 
     Core::PacketCapture cap;
-    if (cap.open("en0", 65535, true, 1000)) {
-        NZ_INFO("抓包引擎已启动: en0");
+    if (cap.open(get_net_interface(), 65535, true, 1000)) {
+        NZ_INFO("抓包引擎已启动: {}", get_net_interface());
         cap.set_filter("tcp or udp or icmp");
     } else {
         NZ_WARN("抓包引擎启动失败 (需 root 权限)");
@@ -320,8 +331,8 @@ static int run_gui_mode(int argc, char *argv[]) {
 
     Core::PacketCapture cap;
     std::thread cap_thread;
-    if (cap.open("en0", 65535, true, 1000)) {
-        NZ_INFO("抓包引擎已启动: en0");
+    if (cap.open(get_net_interface(), 65535, true, 1000)) {
+        NZ_INFO("抓包引擎已启动: {}", get_net_interface());
         cap.set_filter("tcp or udp or icmp");
         g_cap = &cap;
         cap_thread = std::thread([&]() {
@@ -394,7 +405,11 @@ int main(int argc, char *argv[]) {
             Log::Logger::instance().set_level(Log::Level::Debug);
     }
 
-    if (Configuration::ApplicationConstants::ShowGui) {
+    bool show_gui = Configuration::ApplicationConstants::ShowGui;
+    const char* gui_env = std::getenv("NEZHA_SHOW_GUI");
+    if (gui_env) show_gui = (std::strcmp(gui_env, "0") != 0 && std::strcmp(gui_env, "false") != 0);
+
+    if (show_gui) {
         return run_gui_mode(argc, argv);
     }
     return run_cli_mode();
