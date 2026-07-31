@@ -39,6 +39,8 @@ add_executable(NezhaGuard MACOSX_BUNDLE
         src/core/tor_checker.h
         src/core/geo_ip.cc
         src/core/geo_ip.h
+        src/core/active_response.cc
+        src/core/active_response.h
         src/service/database_helper.cc
         src/service/database_helper.h
         src/views/monitor.cc

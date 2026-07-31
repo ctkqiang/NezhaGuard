@@ -18,6 +18,7 @@
 #include "src/core/honeypot.h"
 #include "src/core/ipaddr.h"
 #include "src/core/net_util.h"
+#include "src/core/active_response.h"
 #include "src/core/tor_checker.h"
 #include "src/core/log_watcher.h"
 #include "src/service/database_helper.h"
@@ -125,6 +126,8 @@ static int run_cli_mode() {
             if (!Core::ProtocolDecoder::decode(raw, len, ts, arena, e)) return;
             if (Database::DatabaseHelper::IsIPQuarantined(e.src.to_string())) {
                 NZ_WARN("已隔离 IP 被拦截: {}", e.src.to_string());
+                Core::ActiveResponse::send_icmp_unreachable(
+                    e.dst.to_string(), e.src.to_string(), raw, len);
                 return;
             }
             if (tor_checker.is_tor_exit(e.src.to_string())) {
@@ -319,6 +322,8 @@ static int run_gui_mode(int argc, char *argv[]) {
                 if (!Core::ProtocolDecoder::decode(raw, len, ts, arena, e)) return;
                 if (Database::DatabaseHelper::IsIPQuarantined(e.src.to_string())) {
                     NZ_WARN("已隔离 IP 被拦截: {}", e.src.to_string());
+                    Core::ActiveResponse::send_icmp_unreachable(
+                        e.dst.to_string(), e.src.to_string(), raw, len);
                     return;
                 }
                 detector.analyze(e, arena, [&](const Core::Alert &a) { alerter.submit(a); });
