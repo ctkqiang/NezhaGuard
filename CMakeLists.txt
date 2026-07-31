@@ -33,6 +33,8 @@ add_executable(NezhaGuard
         src/model/severity.h
         src/core/net_util.cc
         src/core/net_util.h
+        src/core/tor_checker.cc
+        src/core/tor_checker.h
         src/service/database_helper.cc
         src/service/database_helper.h
         src/views/monitor.cc

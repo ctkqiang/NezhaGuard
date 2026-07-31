@@ -60,6 +60,7 @@ namespace Nezha::Core {
             case EventSource::Log: return "日志";
             case EventSource::Honeypot: return "蜜罐";
         }
+
         return "?";
     }
 

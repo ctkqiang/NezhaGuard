@@ -18,6 +18,7 @@
 #include "src/core/honeypot.h"
 #include "src/core/ipaddr.h"
 #include "src/core/net_util.h"
+#include "src/core/tor_checker.h"
 #include "src/core/log_watcher.h"
 #include "src/service/database_helper.h"
 #include "src/utilities/logger.h"
@@ -41,6 +42,8 @@ static int run_cli_mode() {
 
     Log::init_default("logs/nezha.log", Log::Level::Debug);
     Database::DatabaseHelper::InitializeQuarantineDatabase();
+    Core::TorChecker tor_checker;
+    tor_checker.initialize();
     auto qlist = Database::DatabaseHelper::GetQuarantineList();
     NZ_INFO("══════════════════════════════════════════════════");
     NZ_INFO("  哪吒网络安全 SIEM 系统 {} [蓝队模式]",
@@ -124,6 +127,10 @@ static int run_cli_mode() {
                 NZ_WARN("已隔离 IP 被拦截: {}", e.src.to_string());
                 return;
             }
+            if (tor_checker.is_tor_exit(e.src.to_string())) {
+                NZ_WARN("[Tor] 检测到 Tor 出口节点流量: {} → {}",
+                        e.src.to_string(), e.dst.to_string());
+            }
             detector.analyze(e, arena, [&](const Core::Alert &a) { alerter.submit(a); });
             if (e.proto == PROTO_ICMP)
                 NZ_DEBUG("[ICMP] {} → {}  len={}",
@@ -186,11 +193,14 @@ static int run_gui_mode(int argc, char *argv[]) {
 
     Log::init_default("logs/nezha.log", Log::Level::Debug);
     Database::DatabaseHelper::InitializeQuarantineDatabase();
+    Core::TorChecker tor_checker;
+    tor_checker.initialize();
     NZ_INFO("══════════════════════════════════════════════════");
     NZ_INFO("  哪吒网络安全 SIEM 系统 {} [蓝队模式]",
            Configuration::ApplicationConstants::ApplicationVersion);
-    NZ_INFO("  隔离阈值: {} 次  |  历史隔离记录: {} 条",
+    NZ_INFO("  隔离阈值: {} 次  |  Tor 节点: {}  |  历史隔离: {} 条",
            Configuration::ApplicationConstants::AnomaliesQuarantineThreshold,
+           tor_checker.total_nodes(),
            Database::DatabaseHelper::GetQuarantineList().size());
     NZ_INFO("══════════════════════════════════════════════════");
     Core::dump_network_info();
