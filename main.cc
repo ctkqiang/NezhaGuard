@@ -4,6 +4,7 @@
 //
 
 #include <csignal>
+#include <ctime>
 #include <iostream>
 #include <thread>
 
@@ -37,19 +38,20 @@ static void on_signal(int) {
 static int run_cli_mode() {
     Core::HoneypotListener honeypot;
 
-    Log::init_default("logs/nezha.log", Log::Level::Info);
+    Log::init_default("logs/nezha.log", Log::Level::Debug);
     NZ_INFO("SIEM 引擎已启动");
     Core::dump_network_info();
 
     Core::Arena arena(128 * 1024);
     Core::AttackDetector detector;
     Core::AlertManager alerter;
-    alerter.set_dedup_window(120);
+    alerter.set_dedup_window(10);
 
     alerter.set_callback([&](const Core::Alert &a) {
         if (a.level >= Severity::Error && a.count >= 5) {
-            NZ_WARN("聚合告警: {}  {} 次  score={:.0f}",
-                    attack_type_cstr(a.type), a.count, a.score);
+            NZ_WARN("聚合: {} | 来源 {} | 频次 {} | 评分 {:.0f}",
+                    attack_type_cstr(a.type),
+                    std::string(a.src_ip), a.count, a.score);
         }
     });
 
@@ -77,7 +79,7 @@ static int run_cli_mode() {
     honeypot.start(arena, [&](const Core::event &e) {
         detector.analyze(e, arena, [&](const Core::Alert &a) { alerter.submit(a); });
         if (Log::Logger::instance().enabled(Log::Level::Debug)) {
-            NZ_DEBUG("[蜜罐] {}:{} → {}", e.src.to_string(), e.sport, e.dport);
+            NZ_DEBUG("蜜罐连接 {}:{} → :{}", e.src.to_string(), e.sport, e.dport);
         }
     });
     NZ_INFO("蜜罐引擎已启动: {} 端口", sizeof(honeypots) / sizeof(honeypots[0]));
@@ -105,6 +107,11 @@ static int run_cli_mode() {
             Core::event e{};
             if (!Core::ProtocolDecoder::decode(raw, len, ts, arena, e)) return;
             detector.analyze(e, arena, [&](const Core::Alert &a) { alerter.submit(a); });
+            if (e.proto == PROTO_ICMP)
+                NZ_DEBUG("ICMP {} -> {}", e.src.to_string(), e.dst.to_string());
+            else
+                NZ_TRACE("{} {}:{} -> :{}", e.proto == PROTO_TCP ? "TCP" : "UDP",
+                         e.src.to_string(), e.sport, e.dport);
             static Nanos last_flush = 0;
             if (e.ts_ns - last_flush > 30'000'000'000ULL) {
                 alerter.flush();
@@ -144,8 +151,8 @@ static int run_gui_mode(int argc, char *argv[]) {
     app.setApplicationVersion(
         QString::fromLatin1(Configuration::ApplicationConstants::ApplicationVersion));
 
-    Log::init_default("logs/nezha.log", Log::Level::Info);
-    NZ_INFO("哪吒网络安全 SIEM 系统启动 (GUI 模式)");
+    Log::init_default("logs/nezha.log", Log::Level::Debug);
+    NZ_INFO("SIEM 引擎已启动 [GUI]");
     Core::dump_network_info();
 
     monitor window;
@@ -160,28 +167,37 @@ static int run_gui_mode(int argc, char *argv[]) {
     Core::Arena arena(128 * 1024);
     Core::AttackDetector detector;
     Core::AlertManager alerter;
-    alerter.set_dedup_window(120);
+    alerter.set_dedup_window(10);
 
     alerter.set_callback([&](const Core::Alert &a) {
         if (a.level >= Severity::Error && a.count >= 5) {
-            NZ_WARN("聚合告警: {}  {} 次  score={:.0f}",
-                    attack_type_cstr(a.type), a.count, a.score);
+            NZ_WARN("聚合: {} | 来源 {} | 频次 {} | 评分 {:.0f}",
+                    attack_type_cstr(a.type),
+                    std::string(a.src_ip), a.count, a.score);
         }
-        QMetaObject::invokeMethod(&window, [&, a]() {
-            window.append_alert(
-                QString::fromStdString(std::to_string(a.ts_ns)),
-                QString::fromUtf8(attack_type_cstr(a.type)),
-                QString::fromUtf8(a.src_ip.data(), static_cast<int>(a.src_ip.size())),
-                static_cast<int>(a.count),
-                a.score,
-                [](Severity s) -> QString {
-                    switch (s) {
-                        case Severity::Critical: return QStringLiteral("Critical");
-                        case Severity::Error: return QStringLiteral("Error");
-                        case Severity::Warn: return QStringLiteral("Warn");
-                        default: return QStringLiteral("Info");
-                    }
-                }(a.level));
+        uint64_t ts_ns = a.ts_ns;
+        std::string type_str = attack_type_cstr(a.type);
+        std::string ip_str(a.src_ip);
+        int cnt = static_cast<int>(a.count);
+        double sc = a.score;
+        QString sev = [](Severity s) -> QString {
+            switch (s) {
+                case Severity::Critical: return QStringLiteral("CRIT");
+                case Severity::Error:    return QStringLiteral("ERROR");
+                case Severity::Warn:     return QStringLiteral("WARN");
+                default:                 return QStringLiteral("INFO");
+            }
+        }(a.level);
+
+        QMetaObject::invokeMethod(&window, [window = &window, ts_ns, type_str, ip_str, cnt, sc, sev]() {
+            auto ns = static_cast<time_t>(ts_ns / 1'000'000'000ULL);
+            char ts[16];
+            std::strftime(ts, sizeof(ts), "%H:%M:%S", std::localtime(&ns));
+            window->append_alert(
+                QString::fromUtf8(ts),
+                QString::fromUtf8(type_str.c_str()),
+                QString::fromUtf8(ip_str.c_str()),
+                cnt, sc, sev);
         }, Qt::QueuedConnection);
     });
 
@@ -247,6 +263,11 @@ static int run_gui_mode(int argc, char *argv[]) {
                 Core::event e{};
                 if (!Core::ProtocolDecoder::decode(raw, len, ts, arena, e)) return;
                 detector.analyze(e, arena, [&](const Core::Alert &a) { alerter.submit(a); });
+                if (e.proto == PROTO_ICMP)
+                    NZ_DEBUG("ICMP {} -> {}", e.src.to_string(), e.dst.to_string());
+                else
+                    NZ_TRACE("{} {}:{} -> :{}", e.proto == PROTO_TCP ? "TCP" : "UDP",
+                             e.src.to_string(), e.sport, e.dport);
                 static Nanos last_flush = 0;
                 if (e.ts_ns - last_flush > 30'000'000'000ULL) {
                     alerter.flush();

@@ -3,8 +3,11 @@
 //
 
 #include "alert.h"
+#include "ipaddr.h"
 #include "../utilities/logger.h"
 #include <algorithm>
+#include <unordered_map>
+#include <mutex>
 
 namespace Nezha::Core {
 
@@ -67,19 +70,26 @@ namespace Nezha::Core {
         char score_buf[32];
         snprintf(score_buf, sizeof(score_buf), "%.0f", dk.max_score);
 
+        std::string host = IPAddress::ipaddr::ResolveHostname(dk.ip);
+        std::string display_ip = dk.ip;
+        if (host != dk.ip && !host.empty())
+            display_ip += " (" + host + ")";
+
         std::string msg;
         msg.reserve(256);
         msg += attack_type_cstr(dk.type);
-        msg += "  ";
-        msg += dk.ip;
-        msg += "  x";
+        msg += " | ";
+        msg += display_ip;
+        msg += " | 频次 ";
         msg += std::to_string(dk.count);
+        msg += " | 评分 ";
+        msg += score_buf;
         if (!dk.detail.empty()) {
-            msg += "  ";
+            msg += " | ";
             msg += dk.detail;
         }
 
-        logger.log(lv, "{}", msg);
+        logger.log(lv, "告警 — {}", msg);
 
         if (callback_) {
             Alert a{};
@@ -87,6 +97,7 @@ namespace Nezha::Core {
             a.level = dk.max_level;
             a.score = dk.max_score;
             a.count = dk.count;
+            a.src_ip = dk.ip;
             callback_(a);
         }
     }

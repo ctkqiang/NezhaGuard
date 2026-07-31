@@ -8341,6 +8341,7 @@ CMakeFiles/NezhaGuard.dir/src/core/ipaddr.cc.o: /Users/johnmelodyme/Documents/ct
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/malloc/_malloc_type.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/malloc/_ptrcheck.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/net/net_kev.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/netdb.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/netinet/in.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/netinet6/in6.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/runetype.h \
@@ -15310,7 +15311,9 @@ CMakeFiles/NezhaGuard.dir/src/views/monitor.cc.o: /Users/johnmelodyme/Documents/
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qrgb.h \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qrgba64.h \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qstylehints.h \
+  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qtextcursor.h \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qtextdocument.h \
+  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qtextformat.h \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qtextoption.h \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qtgui-config.h \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qtguiexports.h \
@@ -15335,6 +15338,7 @@ CMakeFiles/NezhaGuard.dir/src/views/monitor.cc.o: /Users/johnmelodyme/Documents/
   /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/QTableView \
   /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/QTableWidget \
   /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/QTableWidgetItem \
+  /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/QTextEdit \
   /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/QVBoxLayout \
   /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/QWidget \
   /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qabstractbutton.h \
@@ -15368,6 +15372,7 @@ CMakeFiles/NezhaGuard.dir/src/views/monitor.cc.o: /Users/johnmelodyme/Documents/
   /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qtableview.h \
   /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qtablewidget.h \
   /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qtabwidget.h \
+  /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qtextedit.h \
   /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qtwidgets-config.h \
   /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qtwidgetsexports.h \
   /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qtwidgetsglobal.h \
@@ -15385,6 +15390,8 @@ CMakeFiles/NezhaGuard.dir/src/views/monitor.cc.o: /Users/johnmelodyme/Documents/
 /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qcombobox.h:
 
 /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/QVBoxLayout:
+
+/opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/QTextEdit:
 
 /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/QTableWidgetItem:
 
@@ -17454,6 +17461,8 @@ NezhaGuard_autogen/Z3L7HTGYLD/moc_log_model.cpp:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__algorithm/ranges_reverse.h:
 
+/opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qtextedit.h:
+
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__algorithm/ranges_replace_copy_if.h:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__algorithm/ranges_remove_copy_if.h:
@@ -17733,6 +17742,8 @@ NezhaGuard_autogen/include/ui_monitor.h:
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__type_traits/remove_all_extents.h:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__algorithm/unique.h:
+
+/opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qtextcursor.h:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__numeric/inner_product.h:
 
@@ -18111,6 +18122,8 @@ NezhaGuard_autogen/mocs_compilation.cpp:
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_types/_uintmax_t.h:
 
 /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qlabel.h:
+
+/opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qtextformat.h:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__type_traits/remove_cv.h:
 

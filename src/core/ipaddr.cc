@@ -6,6 +6,7 @@
 
 #include <cstring>
 #include <arpa/inet.h>
+#include <netdb.h>
 
 
 namespace Nezha::IPAddress {
@@ -90,5 +91,18 @@ namespace Nezha::IPAddress {
             h *= 1099511628211ULL;
         }
         return static_cast<std::size_t>(h);
+    }
+
+    std::string ipaddr::ResolveHostname(const std::string &ip) {
+        struct sockaddr_in sa {};
+        sa.sin_family = AF_INET;
+        if (::inet_pton(AF_INET, ip.c_str(), &sa.sin_addr) != 1)
+            return ip;
+
+        char host[NI_MAXHOST] = {0};
+        int r = ::getnameinfo(reinterpret_cast<struct sockaddr *>(&sa), sizeof(sa),
+                              host, sizeof(host), nullptr, 0, NI_NAMEREQD);
+        if (r == 0) return host;
+        return ip;
     }
 }

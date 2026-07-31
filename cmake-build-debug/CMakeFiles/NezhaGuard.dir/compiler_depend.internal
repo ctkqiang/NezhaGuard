@@ -8351,6 +8351,7 @@ CMakeFiles/NezhaGuard.dir/src/core/ipaddr.cc.o
  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/malloc/_malloc_type.h
  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/malloc/_ptrcheck.h
  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/net/net_kev.h
+ /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/netdb.h
  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/netinet/in.h
  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/netinet6/in6.h
  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/runetype.h
@@ -15327,7 +15328,9 @@ CMakeFiles/NezhaGuard.dir/src/views/monitor.cc.o
  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qrgb.h
  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qrgba64.h
  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qstylehints.h
+ /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qtextcursor.h
  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qtextdocument.h
+ /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qtextformat.h
  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qtextoption.h
  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qtgui-config.h
  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qtguiexports.h
@@ -15352,6 +15355,7 @@ CMakeFiles/NezhaGuard.dir/src/views/monitor.cc.o
  /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/QTableView
  /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/QTableWidget
  /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/QTableWidgetItem
+ /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/QTextEdit
  /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/QVBoxLayout
  /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/QWidget
  /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qabstractbutton.h
@@ -15385,6 +15389,7 @@ CMakeFiles/NezhaGuard.dir/src/views/monitor.cc.o
  /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qtableview.h
  /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qtablewidget.h
  /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qtabwidget.h
+ /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qtextedit.h
  /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qtwidgets-config.h
  /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qtwidgetsexports.h
  /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qtwidgetsglobal.h

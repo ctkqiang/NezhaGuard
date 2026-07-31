@@ -24,6 +24,7 @@
 #include <QtWidgets/QStatusBar>
 #include <QtWidgets/QTableView>
 #include <QtWidgets/QTableWidget>
+#include <QtWidgets/QTextEdit>
 #include <QtWidgets/QVBoxLayout>
 #include <QtWidgets/QWidget>
 
@@ -77,8 +78,14 @@ public:
     QTableView *log_view;
     QWidget *page_alerts;
     QVBoxLayout *alerts_layout;
+    QHBoxLayout *alerts_header_layout;
     QLabel *alerts_title;
+    QLabel *alert_stats_label;
+    QSpacerItem *spacerItem;
+    QLabel *alert_filter_label;
+    QComboBox *alert_severity_filter;
     QTableView *alert_view;
+    QTextEdit *alert_detail;
     QWidget *page_honeypot;
     QVBoxLayout *honey_layout;
     QLabel *honey_title;
@@ -100,7 +107,7 @@ public:
     {
         if (monitor->objectName().isEmpty())
             monitor->setObjectName("monitor");
-        monitor->resize(1360, 860);
+        monitor->resize(800, 860);
         centralwidget = new QWidget(monitor);
         centralwidget->setObjectName("centralwidget");
         root_layout = new QVBoxLayout(centralwidget);
@@ -305,18 +312,54 @@ public:
         page_alerts = new QWidget();
         page_alerts->setObjectName("page_alerts");
         alerts_layout = new QVBoxLayout(page_alerts);
-        alerts_layout->setSpacing(12);
+        alerts_layout->setSpacing(8);
         alerts_layout->setObjectName("alerts_layout");
         alerts_layout->setContentsMargins(24, 24, 24, 24);
+        alerts_header_layout = new QHBoxLayout();
+        alerts_header_layout->setObjectName("alerts_header_layout");
         alerts_title = new QLabel(page_alerts);
         alerts_title->setObjectName("alerts_title");
 
-        alerts_layout->addWidget(alerts_title);
+        alerts_header_layout->addWidget(alerts_title);
+
+        alert_stats_label = new QLabel(page_alerts);
+        alert_stats_label->setObjectName("alert_stats_label");
+
+        alerts_header_layout->addWidget(alert_stats_label);
+
+        spacerItem = new QSpacerItem(0, 0, QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Minimum);
+
+        alerts_header_layout->addItem(spacerItem);
+
+        alert_filter_label = new QLabel(page_alerts);
+        alert_filter_label->setObjectName("alert_filter_label");
+
+        alerts_header_layout->addWidget(alert_filter_label);
+
+        alert_severity_filter = new QComboBox(page_alerts);
+        alert_severity_filter->addItem(QString());
+        alert_severity_filter->addItem(QString());
+        alert_severity_filter->addItem(QString());
+        alert_severity_filter->addItem(QString());
+        alert_severity_filter->addItem(QString());
+        alert_severity_filter->setObjectName("alert_severity_filter");
+
+        alerts_header_layout->addWidget(alert_severity_filter);
+
+
+        alerts_layout->addLayout(alerts_header_layout);
 
         alert_view = new QTableView(page_alerts);
         alert_view->setObjectName("alert_view");
 
         alerts_layout->addWidget(alert_view);
+
+        alert_detail = new QTextEdit(page_alerts);
+        alert_detail->setObjectName("alert_detail");
+        alert_detail->setReadOnly(true);
+        alert_detail->setMaximumHeight(80);
+
+        alerts_layout->addWidget(alert_detail);
 
         pages->addWidget(page_alerts);
         page_honeypot = new QWidget();
@@ -424,25 +467,25 @@ public:
 
     void retranslateUi(QMainWindow *monitor)
     {
-        monitor->setWindowTitle(QCoreApplication::translate("monitor", "NezhaGuard SIEM", nullptr));
-        app_title->setText(QCoreApplication::translate("monitor", "NezhaGuard SIEM", nullptr));
+        monitor->setWindowTitle(QCoreApplication::translate("monitor", "\345\223\252\345\220\222\347\275\221\347\273\234\345\256\211\345\205\250 SIEM", nullptr));
+        app_title->setText(QCoreApplication::translate("monitor", "\345\223\252\345\220\222\347\275\221\347\273\234\345\256\211\345\205\250 SIEM", nullptr));
         app_title->setStyleSheet(QCoreApplication::translate("monitor", "font-size:15px;font-weight:bold;", nullptr));
         clock_label->setText(QString());
         status_dot->setText(QString());
-        status_text->setText(QCoreApplication::translate("monitor", "Running", nullptr));
-        dash_title->setText(QCoreApplication::translate("monitor", "Dashboard", nullptr));
+        status_text->setText(QCoreApplication::translate("monitor", "\350\277\220\350\241\214\344\270\255", nullptr));
+        dash_title->setText(QCoreApplication::translate("monitor", "\344\273\252\350\241\250\347\233\230\346\246\202\350\247\210", nullptr));
         card_logs_value->setText(QCoreApplication::translate("monitor", "0", nullptr));
-        card_logs_label->setText(QCoreApplication::translate("monitor", "Total Logs", nullptr));
+        card_logs_label->setText(QCoreApplication::translate("monitor", "\346\227\245\345\277\227\346\200\273\346\225\260", nullptr));
         card_alerts_value->setText(QCoreApplication::translate("monitor", "0", nullptr));
-        card_alerts_label->setText(QCoreApplication::translate("monitor", "Alerts", nullptr));
+        card_alerts_label->setText(QCoreApplication::translate("monitor", "\345\256\211\345\205\250\345\221\212\350\255\246", nullptr));
         card_threats_value->setText(QCoreApplication::translate("monitor", "0", nullptr));
-        card_threats_label->setText(QCoreApplication::translate("monitor", "Threats", nullptr));
+        card_threats_label->setText(QCoreApplication::translate("monitor", "\346\264\273\350\267\203\345\250\201\350\203\201", nullptr));
         card_uptime_value->setText(QCoreApplication::translate("monitor", "00:00", nullptr));
-        card_uptime_label->setText(QCoreApplication::translate("monitor", "Uptime", nullptr));
-        recent_alerts_label->setText(QCoreApplication::translate("monitor", "Recent Alerts", nullptr));
-        logs_title->setText(QCoreApplication::translate("monitor", "Log Monitor", nullptr));
-        logs_filter_label->setText(QCoreApplication::translate("monitor", "Level", nullptr));
-        level_filter->setItemText(0, QCoreApplication::translate("monitor", "ALL", nullptr));
+        card_uptime_label->setText(QCoreApplication::translate("monitor", "\350\277\220\350\241\214\346\227\266\351\227\264", nullptr));
+        recent_alerts_label->setText(QCoreApplication::translate("monitor", "\346\234\200\350\277\221\345\221\212\350\255\246", nullptr));
+        logs_title->setText(QCoreApplication::translate("monitor", "\346\227\245\345\277\227\347\233\221\346\216\247", nullptr));
+        logs_filter_label->setText(QCoreApplication::translate("monitor", "\346\227\245\345\277\227\347\272\247\345\210\253", nullptr));
+        level_filter->setItemText(0, QCoreApplication::translate("monitor", "\345\205\250\351\203\250", nullptr));
         level_filter->setItemText(1, QCoreApplication::translate("monitor", "Trace", nullptr));
         level_filter->setItemText(2, QCoreApplication::translate("monitor", "Debug", nullptr));
         level_filter->setItemText(3, QCoreApplication::translate("monitor", "Info", nullptr));
@@ -450,21 +493,30 @@ public:
         level_filter->setItemText(5, QCoreApplication::translate("monitor", "Error", nullptr));
         level_filter->setItemText(6, QCoreApplication::translate("monitor", "Critical", nullptr));
 
-        alerts_title->setText(QCoreApplication::translate("monitor", "Security Alerts", nullptr));
-        honey_title->setText(QCoreApplication::translate("monitor", "Honeypot", nullptr));
-        network_title->setText(QCoreApplication::translate("monitor", "Network", nullptr));
-        refresh_network->setText(QCoreApplication::translate("monitor", "Refresh", nullptr));
-        local_ip_label->setText(QCoreApplication::translate("monitor", "Local Interfaces", nullptr));
+        alerts_title->setText(QCoreApplication::translate("monitor", "\345\256\211\345\205\250\345\221\212\350\255\246", nullptr));
+        alert_stats_label->setText(QString());
+        alert_filter_label->setText(QCoreApplication::translate("monitor", "\344\270\245\351\207\215\347\272\247\345\210\253", nullptr));
+        alert_severity_filter->setItemText(0, QCoreApplication::translate("monitor", "\345\205\250\351\203\250", nullptr));
+        alert_severity_filter->setItemText(1, QCoreApplication::translate("monitor", "CRIT", nullptr));
+        alert_severity_filter->setItemText(2, QCoreApplication::translate("monitor", "ERROR", nullptr));
+        alert_severity_filter->setItemText(3, QCoreApplication::translate("monitor", "WARN", nullptr));
+        alert_severity_filter->setItemText(4, QCoreApplication::translate("monitor", "INFO", nullptr));
+
+        alert_detail->setPlaceholderText(QCoreApplication::translate("monitor", "\351\200\211\346\213\251\345\221\212\350\255\246\346\237\245\347\234\213\350\257\246\346\203\205\342\200\246", nullptr));
+        honey_title->setText(QCoreApplication::translate("monitor", "\350\234\234\347\275\220\347\233\221\346\216\247", nullptr));
+        network_title->setText(QCoreApplication::translate("monitor", "\347\275\221\347\273\234\344\277\241\346\201\257", nullptr));
+        refresh_network->setText(QCoreApplication::translate("monitor", "\345\210\267\346\226\260", nullptr));
+        local_ip_label->setText(QCoreApplication::translate("monitor", "\346\234\254\345\234\260\346\216\245\345\217\243", nullptr));
         QTableWidgetItem *___qtablewidgetitem = local_ip_table->horizontalHeaderItem(0);
-        ___qtablewidgetitem->setText(QCoreApplication::translate("monitor", "Interface", nullptr));
+        ___qtablewidgetitem->setText(QCoreApplication::translate("monitor", "\346\216\245\345\217\243\345\220\215\347\247\260", nullptr));
         QTableWidgetItem *___qtablewidgetitem1 = local_ip_table->horizontalHeaderItem(1);
-        ___qtablewidgetitem1->setText(QCoreApplication::translate("monitor", "IP Address", nullptr));
-        arp_label->setText(QCoreApplication::translate("monitor", "ARP Cache", nullptr));
+        ___qtablewidgetitem1->setText(QCoreApplication::translate("monitor", "IP \345\234\260\345\235\200", nullptr));
+        arp_label->setText(QCoreApplication::translate("monitor", "ARP \347\274\223\345\255\230\350\241\250", nullptr));
         QTableWidgetItem *___qtablewidgetitem2 = arp_table->horizontalHeaderItem(0);
-        ___qtablewidgetitem2->setText(QCoreApplication::translate("monitor", "IP Address", nullptr));
+        ___qtablewidgetitem2->setText(QCoreApplication::translate("monitor", "IP \345\234\260\345\235\200", nullptr));
         QTableWidgetItem *___qtablewidgetitem3 = arp_table->horizontalHeaderItem(1);
-        ___qtablewidgetitem3->setText(QCoreApplication::translate("monitor", "MAC Address", nullptr));
-        status_label->setText(QCoreApplication::translate("monitor", "Ready", nullptr));
+        ___qtablewidgetitem3->setText(QCoreApplication::translate("monitor", "MAC \345\234\260\345\235\200", nullptr));
+        status_label->setText(QCoreApplication::translate("monitor", "\345\260\261\347\273\252", nullptr));
     } // retranslateUi
 
 };

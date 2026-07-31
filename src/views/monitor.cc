@@ -131,6 +131,7 @@ public:
 
 monitor::monitor(QWidget *parent) : QMainWindow(parent), ui(new Ui::monitor) {
     ui->setupUi(this);
+    setAttribute(Qt::WA_QuitOnClose, true);
     start_time_ = QTime::currentTime();
 
 #if QT_VERSION >= QT_VERSION_CHECK(6, 5, 0)
@@ -140,19 +141,19 @@ monitor::monitor(QWidget *parent) : QMainWindow(parent), ui(new Ui::monitor) {
 #endif
     apply_theme(dark_mode_);
 
-    connect(qApp->styleHints(), &QStyleHints::colorSchemeChanged, this, &monitor::on_theme_changed);
+    connect(qApp->styleHints(), &QStyleHints::colorSchemeChanged, this, &monitor::sync_theme);
 
     clock_timer_ = new QTimer(this);
-    connect(clock_timer_, &QTimer::timeout, this, &monitor::on_clock_tick);
+    connect(clock_timer_, &QTimer::timeout, this, &monitor::update_clock);
     clock_timer_->start(1000);
-    on_clock_tick();
+    update_clock();
 
     setup_sidebar();
 }
 
 monitor::~monitor() { delete ui; }
 
-void monitor::on_theme_changed() {
+void monitor::sync_theme() {
 #if QT_VERSION >= QT_VERSION_CHECK(6, 5, 0)
     bool dk = (QGuiApplication::styleHints()->colorScheme() == Qt::ColorScheme::Dark);
 #else
@@ -236,7 +237,7 @@ void monitor::apply_theme(bool dark) {
             QFrame#card_logs, QFrame#card_alerts, QFrame#card_threats, QFrame#card_uptime {
                 background:#ffffff; border:1px solid #e8e8e8; border-radius:8px; padding:16px; }
             QFrame#card_logs:hover, QFrame#card_alerts:hover, QFrame#card_threats:hover, QFrame#card_uptime:hover {
-                border-color:#1677ff; box-shadow:0 2px 8px rgba(0,0,0,0.08); }
+                border-color:#1677ff; }
             #card_logs_value, #card_alerts_value, #card_threats_value, #card_uptime_value {
                 font-size:28px; font-weight:bold; color:#000000; }
             #card_logs_icon, #card_alerts_icon, #card_threats_icon, #card_uptime_icon { font-size:20px; }
@@ -275,15 +276,15 @@ void monitor::setup_sidebar() {
         auto *it = new QListWidgetItem(items[i], ui->sidebar);
         it->setSizeHint(QSize(0, 36));
     }
-    connect(ui->sidebar, &QListWidget::currentRowChanged, this, &monitor::on_sidebar_changed);
+    connect(ui->sidebar, &QListWidget::currentRowChanged, this, &monitor::switch_page);
     ui->sidebar->setCurrentRow(0);
 }
 
-void monitor::on_sidebar_changed(int row) {
+void monitor::switch_page(int row) {
     ui->pages->setCurrentIndex(row);
 }
 
-void monitor::on_clock_tick() {
+void monitor::update_clock() {
     ui->clock_label->setText(QDateTime::currentDateTime().toString(QStringLiteral("yyyy-MM-dd  hh:mm:ss")));
 }
 
@@ -323,16 +324,24 @@ void monitor::init_models() {
     ui->log_view->horizontalHeader()->setSectionResizeMode(2, QHeaderView::Stretch);
 
     connect(ui->level_filter, QOverload<int>::of(&QComboBox::currentIndexChanged),
-            this, &monitor::on_level_filter_changed);
+            this, &monitor::apply_log_filter);
 
     alert_model_ = new LogModel(this);
+    alert_proxy_ = new QSortFilterProxyModel(this);
+    alert_proxy_->setSourceModel(alert_model_);
+    alert_proxy_->setFilterRole(LogModel::LevelRole);
+    alert_proxy_->setFilterCaseSensitivity(Qt::CaseInsensitive);
+
     setup_log_table(ui->alert_view);
-    ui->alert_view->setModel(alert_model_);
+    ui->alert_view->setModel(alert_proxy_);
     alert_delegate_ = new AlertDelegate(this);
     static_cast<AlertDelegate *>(alert_delegate_)->dark = dark_mode_;
     ui->alert_view->setItemDelegate(alert_delegate_);
     ui->alert_view->horizontalHeader()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
     ui->alert_view->horizontalHeader()->setSectionResizeMode(2, QHeaderView::Stretch);
+    connect(ui->alert_view, &QTableView::clicked, this, &monitor::show_alert_detail);
+    connect(ui->alert_severity_filter, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this, &monitor::filter_alert_severity);
 
     setup_log_table(ui->recent_alerts_view);
     ui->recent_alerts_view->setModel(alert_model_);
@@ -341,6 +350,7 @@ void monitor::init_models() {
     ui->recent_alerts_view->setItemDelegate(recent_delegate_);
     ui->recent_alerts_view->horizontalHeader()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
     ui->recent_alerts_view->horizontalHeader()->setSectionResizeMode(2, QHeaderView::Stretch);
+    connect(ui->recent_alerts_view, &QTableView::clicked, this, &monitor::show_alert_detail);
 
     honey_model_ = new LogModel(this);
     setup_log_table(ui->honey_view);
@@ -350,52 +360,85 @@ void monitor::init_models() {
     ui->honey_view->setItemDelegate(honey_delegate_);
     ui->honey_view->horizontalHeader()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
     ui->honey_view->horizontalHeader()->setSectionResizeMode(2, QHeaderView::Stretch);
+    connect(ui->honey_view, &QTableView::clicked, this, &monitor::show_honey_detail);
 
     setup_network_table(ui->local_ip_table);
     setup_network_table(ui->arp_table);
-    connect(ui->refresh_network, &QPushButton::clicked, this, &monitor::on_refresh_network);
-    on_refresh_network();
+    connect(ui->refresh_network, &QPushButton::clicked, this, &monitor::refresh_network_info);
+    refresh_network_info();
 }
 
 void monitor::update_stats(int log_count, int alert_count) {
+    ui->app_title->setText(QStringLiteral("哪吒网络安全 SIEM"));
     ui->status_label->setText(
-        QStringLiteral("就绪  |  日志 %1  |  告警 %2").arg(log_count).arg(alert_count));
+        QStringLiteral("运行中  |  日志 %1  |  告警 %2").arg(log_count).arg(alert_count));
     ui->card_logs_value->setText(QString::number(log_count));
     ui->card_alerts_value->setText(QString::number(alert_count));
 
     int secs = start_time_.secsTo(QTime::currentTime());
-    int h = secs / 3600, m = (secs % 3600) / 60;
-    ui->card_uptime_value->setText(QStringLiteral("%1h %2m").arg(h).arg(m));
+    int h = secs / 3600, m = (secs % 3600) / 60, s = secs % 60;
+    ui->card_uptime_value->setText(QStringLiteral("%1h %2m %3s").arg(h).arg(m).arg(s));
 }
 
 void monitor::append_alert(const QString &time, const QString &type, const QString &ip,
                            int count, double score, const QString &severity) {
     if (!alert_model_) return;
-    QString msg = QStringLiteral("[%1]  %2  ×%3  score=%4")
-                      .arg(type, ip).arg(count).arg(score, 0, 'f', 0);
+    // 丰富的中文告警信息
+    QString sc = severity.startsWith(QStringLiteral("CRIT")) ? QStringLiteral("严重")
+               : severity.startsWith(QStringLiteral("ERR"))  ? QStringLiteral("错误")
+               : severity.startsWith(QStringLiteral("WARN")) ? QStringLiteral("警告")
+               :                                               QStringLiteral("信息");
+    QString msg = QStringLiteral("%1  |  %2  |  x%3  |  %4分")
+                      .arg(type, ip).arg(count).arg(static_cast<int>(score));
     alert_model_->append(time, severity, msg);
     int a = alert_model_->total();
     ui->card_alerts_value->setText(QString::number(a));
     ui->card_threats_value->setText(QString::number(a));
+    ui->alert_stats_label->setText(
+        QStringLiteral("共 %1 条告警").arg(a));
 }
 
 void monitor::append_honeypot(const QString &time, const QString &src_ip,
                               uint16_t sport, uint16_t dport, const QString &service) {
     if (!honey_model_) return;
-    QString msg = QStringLiteral("%1:%2  →  :%3  [%4]")
+    QString msg = QStringLiteral("来源 %1:%2  →  端口 :%3  [%4]")
                       .arg(src_ip).arg(sport).arg(dport).arg(service);
-    honey_model_->append(time, QStringLiteral("Info"), msg);
+    honey_model_->append(time, QStringLiteral("INFO"), msg);
+    ui->honey_stats_label->setText(
+        QStringLiteral("共 %1 次连接").arg(honey_model_->total()));
 }
 
-void monitor::on_level_filter_changed(int index) {
+void monitor::apply_log_filter(int index) {
     if (!log_proxy_) return;
     log_proxy_->setFilterFixedString(index == 0 ? QString() : ui->level_filter->currentText());
+}
+
+void monitor::filter_alert_severity(int index) {
+    if (!alert_proxy_) return;
+    alert_proxy_->setFilterFixedString(index == 0 ? QString() : ui->alert_severity_filter->currentText());
+}
+
+void monitor::show_alert_detail(const QModelIndex &idx) {
+    if (!idx.isValid()) return;
+    QString tm = idx.data(LogModel::TimestampRole).toString();
+    QString lv = idx.data(LogModel::LevelRole).toString();
+    QString msg = idx.data(LogModel::MessageRole).toString();
+    ui->alert_detail->setPlainText(
+        QStringLiteral("时间: %1  |  级别: %2\n%3").arg(tm, lv, msg));
+}
+
+void monitor::show_honey_detail(const QModelIndex &idx) {
+    if (!idx.isValid()) return;
+    QString tm = idx.data(LogModel::TimestampRole).toString();
+    QString msg = idx.data(LogModel::MessageRole).toString();
+    ui->honey_detail->setPlainText(
+        QStringLiteral("时间: %1\n%2").arg(tm, msg));
 }
 
 void monitor::refresh_local_ips() {
     auto *t = ui->local_ip_table;
     t->setRowCount(0);
-    t->setHorizontalHeaderLabels({QStringLiteral("接口"), QStringLiteral("IP 地址")});
+    t->setHorizontalHeaderLabels({QStringLiteral("接口名称"), QStringLiteral("IP 地址")});
     ifaddrs *ifap = nullptr;
     if (getifaddrs(&ifap) != 0) return;
     QFont mf(QStringLiteral("Menlo"), 10);
@@ -490,7 +533,7 @@ void monitor::refresh_arp_table() {
     t->horizontalHeader()->setStretchLastSection(true);
 }
 
-void monitor::on_refresh_network() {
+void monitor::refresh_network_info() {
     refresh_local_ips();
     refresh_arp_table();
 }

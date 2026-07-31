@@ -1,11 +1,9 @@
-//
-// Created by 钟智强 on 2026/7/31.
-//
-
 #ifndef NEZHAGUARD_DATABASE_HELPER_H
 #define NEZHAGUARD_DATABASE_HELPER_H
 
+#include <cstdint>
 #include <string>
+#include <vector>
 
 namespace Nezha::Database {
     enum class DatabaseService : std::uint8_t {
@@ -30,6 +28,13 @@ namespace Nezha::Database {
         std::int32_t DatabasePort = 0;
     };
 
+    struct QuarantineRecord {
+        std::string ip_address;
+        std::string reason;
+        double threat_score;
+        std::string quarantined_at;
+    };
+
     class DatabaseHelper {
     public:
         static void InitiateDatabaseService(DatabaseService service);
@@ -38,9 +43,21 @@ namespace Nezha::Database {
 
         void Connect();
 
+        static void QuarantineIP(const std::string &ip,
+                                 const std::string &reason,
+                                 double threat_score);
+
+        static bool IsIPQuarantined(const std::string &ip);
+
+        static void RemoveQuarantine(const std::string &ip);
+
+        [[nodiscard]] static std::vector<QuarantineRecord> GetQuarantineList();
+
+        static void InitializeQuarantineDatabase();
+
     private:
         DatabaseConfiguration m_config;
     };
 }
 
-#endif // NEZHAGUARD_DATABASE_HELPER_H
+#endif //NEZHAGUARD_DATABASE_HELPER_H

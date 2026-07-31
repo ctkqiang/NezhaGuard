@@ -47,12 +47,18 @@ void LogModel::append(const QString &timestamp, const QString &level, const QStr
     e.timestamp = timestamp;
     e.level = level;
     e.message = message;
-    if (level == QStringLiteral("Critical")) e.color = QColor("#f85149");
-    else if (level == QStringLiteral("Error")) e.color = QColor("#f0883e");
-    else if (level == QStringLiteral("Warn")) e.color = QColor("#d29922");
-    else if (level == QStringLiteral("Info")) e.color = QColor("#3fb950");
-    else if (level == QStringLiteral("Debug")) e.color = QColor("#58a6ff");
-    else e.color = QColor("#6e7681");
+    if (level.startsWith(QStringLiteral("CRIT")) || level == QStringLiteral("Critical"))
+        e.color = QColor("#f85149");
+    else if (level.startsWith(QStringLiteral("ERR")) || level == QStringLiteral("Error"))
+        e.color = QColor("#f0883e");
+    else if (level.startsWith(QStringLiteral("WARN")) || level == QStringLiteral("Warn"))
+        e.color = QColor("#d29922");
+    else if (level.startsWith(QStringLiteral("INFO")) || level == QStringLiteral("Info"))
+        e.color = QColor("#3fb950");
+    else if (level.startsWith(QStringLiteral("DEB")) || level == QStringLiteral("Debug"))
+        e.color = QColor("#58a6ff");
+    else
+        e.color = QColor("#6e7681");
 
     entries_.append(std::move(e));
     endInsertRows();

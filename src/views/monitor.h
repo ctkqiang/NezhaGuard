@@ -41,11 +41,14 @@ public slots:
                          uint16_t sport, uint16_t dport, const QString &service);
 
 private slots:
-    void on_sidebar_changed(int row);
-    void on_level_filter_changed(int index);
-    void on_refresh_network();
-    void on_clock_tick();
-    void on_theme_changed();
+    void switch_page(int row);
+    void apply_log_filter(int index);
+    void filter_alert_severity(int index);
+    void show_alert_detail(const QModelIndex &idx);
+    void show_honey_detail(const QModelIndex &idx);
+    void refresh_network_info();
+    void update_clock();
+    void sync_theme();
 
 private:
     void apply_theme(bool dark);
@@ -61,6 +64,7 @@ private:
     LogModel *honey_model_;
     std::shared_ptr<GuiSink> gui_sink_;
     QSortFilterProxyModel *log_proxy_;
+    QSortFilterProxyModel *alert_proxy_;
     QTimer *clock_timer_;
     QStyledItemDelegate *log_delegate_;
     QStyledItemDelegate *alert_delegate_;

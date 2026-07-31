@@ -1280,6 +1280,12 @@ CMakeFiles/NezhaGuard.dir/src/views/monitor.cc.o: \
   /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qstatusbar.h \
   /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/QTableWidget \
   /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qtablewidget.h \
+  /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/QTextEdit \
+  /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qtextedit.h \
+  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qtextoption.h \
+  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qtextcursor.h \
+  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qtextformat.h \
+  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qpen.h \
   /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/QVBoxLayout \
   /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/QWidget \
   /Users/johnmelodyme/Documents/ctkqiang/NezhaGuard/src/views/log_model.h \
@@ -1293,8 +1299,6 @@ CMakeFiles/NezhaGuard.dir/src/views/monitor.cc.o: \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/QDateTime \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/QPainter \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qpainter.h \
-  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qtextoption.h \
-  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qpen.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/QSortFilterProxyModel \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qsortfilterproxymodel.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qabstractproxymodel.h \

@@ -26,13 +26,13 @@ namespace Nezha::Log {
 
     constexpr const char *level_to_string(Level lv) noexcept {
         switch (lv) {
-            case Level::Trace: return "Trace";
-            case Level::Debug: return "Debug";
-            case Level::Info: return "Info";
-            case Level::Warn: return "Warn";
-            case Level::Error: return "Error";
-            case Level::Critical: return "Critical";
-            default: return "Unknown";
+            case Level::Trace:    return "TRACE";
+            case Level::Debug:    return "DEBUG";
+            case Level::Info:     return "INFO ";
+            case Level::Warn:     return "WARN ";
+            case Level::Error:    return "ERROR";
+            case Level::Critical: return "CRIT ";
+            default:              return "?????";
         }
     }
 
@@ -84,8 +84,8 @@ namespace Nezha::Log {
             );
 
             std::string full = std::format(
-                "[哪吒系统] [{}] @ {}: {}",
-                level_to_string(lv), time_str, msg
+                "{}  [{}]  {}",
+                time_str, level_to_string(lv), msg
             );
             write_to_sinks(lv, full);
         }

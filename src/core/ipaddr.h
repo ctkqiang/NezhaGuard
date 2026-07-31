@@ -22,6 +22,7 @@ namespace Nezha {
             static ipaddr from_bytes(const std::uint8_t src[16]); // 直接拷 16 字节(如从包里)
             static bool parse(std::string_view text, ipaddr &out); // 解析 v4 或 v6 文本
 
+            static std::string ResolveHostname(const std::string& ip);
 
             bool is_v4() const noexcept;
 
@@ -30,12 +31,10 @@ namespace Nezha {
             bool is_loopback() const noexcept; // 127.0.0.0/8 或 ::1
             bool is_private() const noexcept; // RFC1918 / fc00::/7 (规则里排除内网)
 
-            // ---- 访问 / 输出 ----
             const std::array<std::uint8_t, 16> &bytes() const noexcept { return b_; }
 
             std::string to_string() const;
 
-            // ---- 比较(可作有序/无序容器 key) ----
             bool operator==(const ipaddr &o) const noexcept { return b_ == o.b_; }
             bool operator!=(const ipaddr &o) const noexcept { return b_ != o.b_; }
             bool operator<(const ipaddr &o) const noexcept { return b_ < o.b_; }
@@ -48,7 +47,7 @@ namespace Nezha {
         struct ipaddr_hash {
             std::size_t operator()(const ipaddr &a) const noexcept;
         };
-    } // namespace IPAddress
-} // namespace Nezha
+    }
+}
 
 #endif //NEZHAGUARD_IPADDR_H

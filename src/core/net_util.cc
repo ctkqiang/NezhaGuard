@@ -167,10 +167,8 @@ namespace Nezha::Core {
     }
 
     void dump_network_info() {
-        NZ_INFO("======== 本地网络信息 ========");
         dump_local_ips();
         dump_arp_table();
-        NZ_INFO("===============================");
     }
 
 }
