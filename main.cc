@@ -7,6 +7,7 @@
 #include <ctime>
 #include <iostream>
 #include <thread>
+#include <unordered_map>
 
 #include "src/contants.h"
 #include "src/core/alert.h"
@@ -125,9 +126,16 @@ static int run_cli_mode() {
             Core::event e{};
             if (!Core::ProtocolDecoder::decode(raw, len, ts, arena, e)) return;
             if (Database::DatabaseHelper::IsIPQuarantined(e.src.to_string())) {
-                NZ_WARN("已隔离 IP 被拦截: {}", e.src.to_string());
+                static std::unordered_map<std::string, Nanos> last_warn;
+                Nanos now_ns = static_cast<Nanos>(ts.tv_sec) * 1'000'000'000ULL + ts.tv_usec * 1000ULL;
+                auto ip = e.src.to_string();
+                auto it = last_warn.find(ip);
+                if (it == last_warn.end() || (now_ns - it->second) > 10'000'000'000ULL) {
+                    NZ_WARN("已隔离 IP 被拦截: {}", ip);
+                    last_warn[ip] = now_ns;
+                }
                 Core::ActiveResponse::send_icmp_unreachable(
-                    e.dst.to_string(), e.src.to_string(), raw, len);
+                    e.dst.to_string(), ip, raw, len);
                 return;
             }
             if (tor_checker.is_tor_exit(e.src.to_string())) {
@@ -321,9 +329,16 @@ static int run_gui_mode(int argc, char *argv[]) {
                 Core::event e{};
                 if (!Core::ProtocolDecoder::decode(raw, len, ts, arena, e)) return;
                 if (Database::DatabaseHelper::IsIPQuarantined(e.src.to_string())) {
-                    NZ_WARN("已隔离 IP 被拦截: {}", e.src.to_string());
+                    static std::unordered_map<std::string, Nanos> last_warn;
+                    Nanos now_ns = static_cast<Nanos>(ts.tv_sec) * 1'000'000'000ULL + ts.tv_usec * 1000ULL;
+                    auto ip = e.src.to_string();
+                    auto it = last_warn.find(ip);
+                    if (it == last_warn.end() || (now_ns - it->second) > 10'000'000'000ULL) {
+                        NZ_WARN("已隔离 IP 被拦截: {}", ip);
+                        last_warn[ip] = now_ns;
+                    }
                     Core::ActiveResponse::send_icmp_unreachable(
-                        e.dst.to_string(), e.src.to_string(), raw, len);
+                        e.dst.to_string(), ip, raw, len);
                     return;
                 }
                 detector.analyze(e, arena, [&](const Core::Alert &a) { alerter.submit(a); });

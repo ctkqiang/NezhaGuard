@@ -14,6 +14,7 @@
 #include "../core/ipaddr.h"
 #include <QListWidget>
 #include <QPainter>
+#include <QPropertyAnimation>
 #include <QPushButton>
 #include <QSortFilterProxyModel>
 #include <QStackedWidget>
@@ -152,6 +153,21 @@ monitor::monitor(QWidget *parent) : QMainWindow(parent), ui(new Ui::monitor) {
     update_clock();
 
     setup_sidebar();
+
+    auto *pulse = new QPropertyAnimation(ui->status_dot, "minimumSize", this);
+    pulse->setDuration(1200);
+    pulse->setStartValue(QSize(8, 8));
+    pulse->setEndValue(QSize(12, 12));
+    pulse->setEasingCurve(QEasingCurve::InOutSine);
+    pulse->setLoopCount(-1);
+    auto *pulse2 = new QPropertyAnimation(ui->status_dot, "maximumSize", this);
+    pulse2->setDuration(1200);
+    pulse2->setStartValue(QSize(8, 8));
+    pulse2->setEndValue(QSize(12, 12));
+    pulse2->setEasingCurve(QEasingCurve::InOutSine);
+    pulse2->setLoopCount(-1);
+    pulse->start();
+    pulse2->start();
 }
 
 monitor::~monitor() { delete ui; }
