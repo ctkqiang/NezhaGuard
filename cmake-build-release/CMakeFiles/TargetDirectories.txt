@@ -1,5 +1,0 @@
-/Users/johnmelodyme/Documents/ctkqiang/NezhaGuard/cmake-build-release/CMakeFiles/NezhaGuard.dir
-/Users/johnmelodyme/Documents/ctkqiang/NezhaGuard/cmake-build-release/CMakeFiles/edit_cache.dir
-/Users/johnmelodyme/Documents/ctkqiang/NezhaGuard/cmake-build-release/CMakeFiles/rebuild_cache.dir
-/Users/johnmelodyme/Documents/ctkqiang/NezhaGuard/cmake-build-release/CMakeFiles/NezhaGuard_autogen_timestamp_deps.dir
-/Users/johnmelodyme/Documents/ctkqiang/NezhaGuard/cmake-build-release/CMakeFiles/NezhaGuard_autogen.dir
