@@ -1,0 +1,51 @@
+@startuml 哪吒网络安全SIEM系统架构
+!theme mars
+title 哪吒网络安全 SIEM — 系统架构
+
+package "核心引擎" {
+    [PacketCapture\n抓包采集] as Capture
+    [HoneypotListener\n蜜罐监听] as Honeypot
+    [LogWatcher\n日志监控] as LogWatch
+}
+
+package "检测分析" {
+    [ProtocolDecoder\n协议解码] as Decoder
+    [AttackDetector\n攻击检测] as Detector
+    [TorChecker\nTor出口节点] as TorCheck
+    [GeoIP\nIP地理位置] as GeoIP
+}
+
+package "响应与管理" {
+    [AlertManager\n告警管理] as Alert
+    [DatabaseHelper\n隔离数据库] as DB
+    [ActiveResponse\n主动响应] as Response
+}
+
+package "用户界面" {
+    [monitor (GUI)\nQt6 仪表盘] as GUI
+    [Console (CLI)\n终端日志] as CLI
+}
+
+database "SQLite\nnezha_quarantine.db" as SQLite
+cloud "Tor Project\n出口节点列表" as TorAPI
+cloud "ip-api.com\nGeoIP 查询" as GeoAPI
+
+Capture --> Decoder : 原始数据包
+Honeypot --> Detector : 连接事件
+LogWatch --> Detector : 日志事件
+Decoder --> Detector : 解码事件
+Detector --> Alert : 告警
+Detector --> DB : 隔离IP
+TorCheck --> Detector : Tor标记
+GeoIP --> Detector : 地理位置
+Alert --> Response : 触发主动响应
+Response --> Capture : ICMP/TCP RST
+
+Alert --> GUI : invokeMethod
+Alert --> CLI : Logger
+
+TorCheck <.. TorAPI : curl HTTPS
+GeoIP <.. GeoAPI : curl HTTP
+DB <.. SQLite : sqlite3
+
+@enduml

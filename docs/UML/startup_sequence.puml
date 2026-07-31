@@ -1,0 +1,58 @@
+@startuml 哪吒网络安全SIEM启动流程
+!theme mars
+title 哪吒网络安全 SIEM — 启动时序图
+
+actor 用户
+participant "main()" as Main
+participant "Logger" as Log
+participant "DatabaseHelper" as DB
+participant "TorChecker" as Tor
+participant "PacketCapture" as Capture
+participant "HoneypotListener" as Honey
+participant "LogWatcher" as LogW
+participant "AttackDetector" as Detector
+participant "AlertManager" as Alert
+participant "monitor(GUI)" as GUI
+
+用户 -> Main : 启动 ./NezhaGuard
+Main -> Log : init_default("logs/nezha.log", Info)
+Main -> DB : InitializeQuarantineDatabase()
+note right : 创建 SQLite 表\n加载已有隔离缓存
+
+Main -> Tor : initialize()
+Tor -> Tor : load_from_cache()
+alt 缓存为空
+    Tor -> Tor : fetch_from_tor_project()
+    note right : curl check.torproject.org\n加载出口节点列表
+    Tor -> Tor : save_to_cache()
+end
+Tor --> Main : 1365 个 Tor 节点
+
+Main -> Main : dump_network_info()
+note right : 本地接口 + ARP 表
+
+Main -> Detector : 创建 AttackDetector
+Main -> Alert : 创建 AlertManager\nset_dedup_window(10s)
+
+Main -> Capture : open("en0")
+Capture --> Main : 抓包已启动 (或 需要root)
+
+Main -> Honey : 添加 8 个蜜罐端口
+Main -> Honey : start()
+Honey --> Main : 蜜罐引擎已启动
+
+Main -> LogW : 添加 4 个日志源
+Main -> LogW : start()
+LogW --> Main : 日志引擎已启动
+
+alt ShowGui = true
+    Main -> GUI : new monitor() + init_models()
+    Main -> Log : add_sink(GuiSink)
+    note right : 日志同时输出到 GUI 面板
+    Main -> GUI : show()
+end
+
+Main -> Capture : start(callback)
+note over Capture : 进入抓包循环\npcap_loop()
+
+@enduml

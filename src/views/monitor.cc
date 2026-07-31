@@ -10,6 +10,7 @@
 #include <QHeaderView>
 #include <QLabel>
 #include <QRegularExpression>
+#include <QtConcurrent>
 #include "../core/geo_ip.h"
 #include "../core/ipaddr.h"
 #include <QListWidget>
@@ -438,6 +439,7 @@ void monitor::show_log_detail(const QModelIndex &idx) {
     QString lv = idx.data(LogModel::LevelRole).toString();
     QString msg = idx.data(LogModel::MessageRole).toString();
 
+    // 提取 IP 地址
     QRegularExpression ip_re(R"((\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}))");
     QStringList ips;
     auto it = ip_re.globalMatch(msg);
@@ -448,45 +450,77 @@ void monitor::show_log_detail(const QModelIndex &idx) {
     }
 
     QString detail;
-    detail += QStringLiteral("━━━ 日志详情 ━━━\n\n");
+    detail += QStringLiteral("══════ 日志详情 ══════\n\n");
     detail += QStringLiteral("时间: %1\n").arg(tm);
     detail += QStringLiteral("级别: %1\n").arg(lv);
     detail += QStringLiteral("内容: %1\n\n").arg(msg);
 
+    // Hex dump of the message
+    QByteArray raw = msg.toUtf8();
+    detail += QStringLiteral("──── Hex Dump ────\n");
+    for (int i = 0; i < raw.size(); i += 16) {
+        detail += QStringLiteral("%1  ").arg(i, 4, 16, QChar('0'));
+        for (int j = 0; j < 16; ++j) {
+            if (i + j < raw.size())
+                detail += QStringLiteral("%1 ").arg(static_cast<unsigned char>(raw[i + j]), 2, 16, QChar('0'));
+            else
+                detail += QStringLiteral("   ");
+        }
+        detail += QStringLiteral(" ");
+        for (int j = 0; j < 16 && (i + j) < raw.size(); ++j) {
+            unsigned char c = raw[i + j];
+            detail += (c >= 32 && c < 127) ? QChar(c) : QChar('.');
+        }
+        detail += QStringLiteral("\n");
+    }
+    detail += QStringLiteral("\n");
+
+    // IP 快速信息 (非阻塞)
     for (const auto &ip : ips) {
         std::string ip_std = ip.toStdString();
         Nezha::IPAddress::ipaddr addr;
         Nezha::IPAddress::ipaddr::parse(ip_std, addr);
-        auto geo = Nezha::Core::GeoIP::lookup(ip_std);
-        std::string host = Nezha::IPAddress::ipaddr::ResolveHostname(ip_std);
 
-        detail += QStringLiteral("═══ IP: %1 ═══\n").arg(ip);
-        if (!host.empty() && host != ip_std)
-            detail += QStringLiteral("  主机名: %1\n").arg(QString::fromStdString(host));
-        detail += QStringLiteral("  内网: %1  回环: %2\n")
-            .arg(addr.is_private() ? QStringLiteral("是") : QStringLiteral("否"))
-            .arg(addr.is_loopback() ? QStringLiteral("是") : QStringLiteral("否"));
-
-        if (geo.valid) {
-            detail += QStringLiteral("  国家: %1 (%2)\n")
-                .arg(QString::fromStdString(geo.country), QString::fromStdString(geo.country_code));
-            if (!geo.region.empty())
-                detail += QStringLiteral("  地区: %1\n").arg(QString::fromStdString(geo.region));
-            if (!geo.city.empty())
-                detail += QStringLiteral("  城市: %1\n").arg(QString::fromStdString(geo.city));
-            if (geo.lat != 0.0 || geo.lon != 0.0)
-                detail += QStringLiteral("  坐标: %.4f, %.4f\n").arg(geo.lat).arg(geo.lon);
-            if (!geo.isp.empty())
-                detail += QStringLiteral("  ISP: %1\n").arg(QString::fromStdString(geo.isp));
-            if (!geo.org.empty() && geo.org != geo.isp)
-                detail += QStringLiteral("  组织: %1\n").arg(QString::fromStdString(geo.org));
-            if (!geo.timezone.empty())
-                detail += QStringLiteral("  时区: %1\n").arg(QString::fromStdString(geo.timezone));
-        }
-        detail += QStringLiteral("\n");
+        detail += QStringLiteral("── IP: %1").arg(ip);
+        detail += QStringLiteral("  内网:%1").arg(addr.is_private() ? QStringLiteral("是") : QStringLiteral("否"));
+        detail += QStringLiteral("  回环:%1\n").arg(addr.is_loopback() ? QStringLiteral("是") : QStringLiteral("否"));
     }
 
+    // 异步查询 GeoIP + 主机名
     ui->log_detail->setPlainText(detail);
+    if (!ips.isEmpty()) {
+        QStringList ips_copy = ips;
+        QtConcurrent::run([this, ips_copy]() mutable {
+            for (const auto &ip : ips_copy) {
+                std::string ip_std = ip.toStdString();
+                auto geo = Nezha::Core::GeoIP::lookup(ip_std);
+                std::string host = Nezha::IPAddress::ipaddr::ResolveHostname(ip_std);
+
+                QString extra;
+                if (!host.empty() && host != ip_std)
+                    extra += QStringLiteral("  主机名: %1\n").arg(QString::fromStdString(host));
+                if (geo.valid) {
+                    extra += QStringLiteral("  国家: %1 (%2)")
+                        .arg(QString::fromStdString(geo.country), QString::fromStdString(geo.country_code));
+                    if (!geo.city.empty())
+                        extra += QStringLiteral("  城市: %1").arg(QString::fromStdString(geo.city));
+                    if (geo.lat != 0.0 || geo.lon != 0.0)
+                        extra += QStringLiteral("  坐标: %.4f,%.4f").arg(geo.lat).arg(geo.lon);
+                    if (!geo.isp.empty())
+                        extra += QStringLiteral("  ISP: %1").arg(QString::fromStdString(geo.isp));
+                    extra += QStringLiteral("\n");
+                }
+
+                if (!extra.isEmpty()) {
+                    QMetaObject::invokeMethod(this, [this, extra]() {
+                        QString cur = ui->log_detail->toPlainText();
+                        if (!cur.contains(extra))
+                            ui->log_detail->setPlainText(cur + extra);
+                    }, Qt::QueuedConnection);
+                }
+            }
+        });
+    }
 }
 
 void monitor::show_alert_detail(const QModelIndex &idx) {

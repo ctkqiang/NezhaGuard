@@ -1,0 +1,31 @@
+@startuml 哪吒网络安全SIEM GUI数据流
+!theme mars
+title 哪吒网络安全 SIEM — GUI 数据流
+
+participant "SIEM 核心线程" as Core
+participant "Logger" as Log
+participant "GuiSink" as Sink
+queue "Qt Event Queue" as Queue
+participant "LogModel" as Model
+participant "QSortFilterProxy" as Proxy
+participant "LogDelegate" as Delegate
+participant "QTableView" as View
+participant "show_log_detail" as Detail
+
+Core -> Log : log(level, message)
+Log -> Sink : write(level, line, len)
+note over Sink : 解析日志行\n提取时间戳+级别+消息
+Sink -> Queue : invokeMethod\nQt::QueuedConnection
+Queue -> Model : append(timestamp, level, message)
+Model -> Model : 环形缓冲区 5000条\nbeginInsertRows/endInsertRows
+Model -> Proxy : dataChanged 信号
+Proxy -> Delegate : data() 调用
+Delegate -> View : paint() 绘制行\n着色严重度徽章
+
+用户 -> View : 点击行
+View -> Detail : show_log_detail(idx)
+Detail -> Detail : 立即显示:\n- 时间/级别/内容\n- Hex Dump\n- IP 内网/回环
+Detail -> Queue : QtConcurrent::run
+Queue -> Detail : GeoIP::lookup + ResolveHostname
+note over Detail : 异步回填:\n国家/城市/坐标/ISP/主机名
+@enduml

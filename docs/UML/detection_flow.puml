@@ -1,0 +1,58 @@
+@startuml 哪吒网络安全SIEM检测流程
+!theme mars
+title 哪吒网络安全 SIEM — 数据包检测与告警流程
+
+start
+:数据包到达 en0;
+:pcap_loop 捕获;
+:ProtocolDecoder::decode();
+note right: Ethernet → IP → TCP/UDP/ICMP
+
+if (解码成功?) then (no)
+    stop
+endif
+
+:提取 src_ip, dst_ip, sport, dport, proto;
+
+:DatabaseHelper::IsIPQuarantined(src_ip);
+if (已隔离?) then (yes)
+    :记录拦截日志 (10s去重);
+    :ActiveResponse::send_icmp_unreachable();
+    note right: ICMP Type3 Code1\n发回客户端
+    stop
+endif
+
+:TorChecker::is_tor_exit(src_ip);
+if (是Tor出口?) then (yes)
+    :标记 [Tor] 告警;
+endif
+
+:AttackDetector::analyze();
+note right: 检测攻击特征
+
+:match_signature(message, user_agent);
+if (匹配攻击签名?) then (yes)
+    :创建 Alert;
+    :AlertManager::submit();
+    note right: 去重窗口内合并同类告警
+else (no)
+    :速率计数器 entry.count++;
+    if (proto == ICMP 且 count>=5?) then (yes)
+        :创建 ICMP 洪流 Alert;
+        if (count >= 隔离阈值?) then (yes)
+            :DatabaseHelper::QuarantineIP();
+            note right: 写入 SQLite + 内存缓存
+        endif
+    elseif (count > 100?) then (yes)
+        :创建速率异常 Alert;
+    endif
+endif
+
+:AlertManager::flush() 每1秒;
+note right: 超过去重窗口的告警发出
+
+:Logger::log() → GuiSink/Stderr;
+:callback → GUI append_alert();
+
+stop
+@enduml

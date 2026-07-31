@@ -1,0 +1,42 @@
+@startuml 哪吒网络安全SIEM隔离与主动响应
+!theme mars
+title 哪吒网络安全 SIEM — 隔离与主动响应流程
+
+actor 攻击者
+participant "PacketCapture" as Capture
+participant "Detector" as Detector
+participant "DatabaseHelper" as DB
+database "SQLite\nnezha_quarantine.db" as SQLite
+participant "ActiveResponse" as Response
+participant "AlertManager" as Alert
+
+攻击者 -> Capture : ICMP ping (大量)
+Capture -> Detector : 持续分析
+
+loop ICMP count >= 5
+    Detector -> Alert : 创建告警\n"端口扫描 | ICMP洪流"
+end
+
+Detector -> Detector : entry.count >= AnomaliesQuarantineThreshold (100)
+Detector -> DB : QuarantineIP(ip, "ICMP异常流量", score)
+
+DB -> DB : g_quarantine_cache.insert(ip)
+DB -> SQLite : INSERT OR REPLACE\nINTO quarantine
+SQLite --> DB : OK
+
+note over DB : 内存 O(1) 查询 + SQLite 持久化
+
+攻击者 -> Capture : 继续发包 (已被隔离)
+Capture -> DB : IsIPQuarantined(ip)
+DB --> Capture : true (内存命中, <1μs)
+
+Capture -> Capture : last_warn 去重检查
+Capture -> Alert : 每10s最多1条\n"已隔离 IP 被拦截: x.x.x.x"
+
+Capture -> Response : send_icmp_unreachable()
+note over Response : 构建原始 ICMP 包\nType=3 Code=1\n原始IP头 + 8字节载荷
+
+Response -> 攻击者 : ICMP Destination Unreachable
+note over 攻击者 : ping 显示\n"Destination Host Unreachable"
+
+@enduml
