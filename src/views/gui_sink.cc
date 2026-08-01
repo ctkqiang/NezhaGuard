@@ -1,7 +1,9 @@
 #include "gui_sink.h"
 #include "log_model.h"
+#include "theme.h"
 
 #include <QMetaObject>
+#include <QRegularExpression>
 #include <QString>
 
 GuiSink::GuiSink(LogModel *model, QObject *parent) : QObject(parent), model_(model) {}
@@ -31,9 +33,40 @@ void GuiSink::write(Nezha::Log::Level lv, const char *line, std::size_t len) {
         message = raw;
     }
 
+    QColor color = level_color(level, message);
+
     QMetaObject::invokeMethod(
         model_.data(), "append", Qt::QueuedConnection,
         Q_ARG(QString, timestamp),
         Q_ARG(QString, level),
-        Q_ARG(QString, message));
+        Q_ARG(QString, message),
+        Q_ARG(QColor, color));
+}
+
+QColor GuiSink::level_color(const QString &level, const QString &message) {
+    if (level.startsWith(QStringLiteral("CRIT")) || level == QStringLiteral("Critical"))
+        return QColor(Theme::Red);
+    if (level.startsWith(QStringLiteral("ERR")) || level == QStringLiteral("Error"))
+        return QColor(Theme::Orange);
+    if (level.startsWith(QStringLiteral("WARN")) || level == QStringLiteral("Warn"))
+        return QColor(Theme::Orange);
+    if (level.startsWith(QStringLiteral("INFO")) || level == QStringLiteral("Info"))
+        return QColor(Theme::PinkDeep);
+    if (level.startsWith(QStringLiteral("DEB")) || level == QStringLiteral("Debug"))
+        return QColor(Theme::PinkLight);
+    if (level.startsWith(QStringLiteral("TRA")) || level == QStringLiteral("Trace"))
+        return QColor(Theme::Grey);
+
+    if (message.contains(QStringLiteral("隔离")) || message.contains(QStringLiteral("quarantine")))
+        return QColor(Theme::PinkDeep);
+    if (message.contains(QStringLiteral("拦截")) || message.contains(QStringLiteral("blocked")))
+        return QColor(Theme::Red);
+    if (message.contains(QStringLiteral("已启动")) || message.contains(QStringLiteral("started")))
+        return QColor(Theme::Green);
+    if (message.contains(QStringLiteral("Tor")))
+        return QColor(Theme::Purple);
+    if (message.contains(QStringLiteral("蜜罐")) || message.contains(QStringLiteral("honeypot")))
+        return QColor(Theme::PinkDeep);
+
+    return QColor(Theme::PinkLight);
 }

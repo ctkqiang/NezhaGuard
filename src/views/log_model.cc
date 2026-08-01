@@ -1,4 +1,5 @@
 #include "log_model.h"
+#include "theme.h"
 
 LogModel::LogModel(QObject *parent) : QAbstractListModel(parent) {
     entries_.reserve(kMaxEntries);
@@ -33,7 +34,26 @@ QHash<int, QByteArray> LogModel::roleNames() const {
     };
 }
 
+QColor LogModel::default_color(const QString &level) {
+    if (level.startsWith(QStringLiteral("CRIT")) || level == QStringLiteral("Critical"))
+        return QColor(Theme::Red);
+    if (level.startsWith(QStringLiteral("ERR")) || level == QStringLiteral("Error"))
+        return QColor(Theme::Orange);
+    if (level.startsWith(QStringLiteral("WARN")) || level == QStringLiteral("Warn"))
+        return QColor(Theme::Orange);
+    if (level.startsWith(QStringLiteral("INFO")) || level == QStringLiteral("Info"))
+        return QColor(Theme::PinkDeep);
+    if (level.startsWith(QStringLiteral("DEB")) || level == QStringLiteral("Debug"))
+        return QColor(Theme::PinkLight);
+    return QColor(Theme::Grey);
+}
+
 void LogModel::append(const QString &timestamp, const QString &level, const QString &message) {
+    append(timestamp, level, message, default_color(level));
+}
+
+void LogModel::append(const QString &timestamp, const QString &level, const QString &message,
+                      const QColor &color) {
     ++total_;
     if (entries_.size() >= kMaxEntries) {
         beginRemoveRows(QModelIndex(), 0, 0);
@@ -47,18 +67,7 @@ void LogModel::append(const QString &timestamp, const QString &level, const QStr
     e.timestamp = timestamp;
     e.level = level;
     e.message = message;
-    if (level.startsWith(QStringLiteral("CRIT")) || level == QStringLiteral("Critical"))
-        e.color = QColor("#f85149");
-    else if (level.startsWith(QStringLiteral("ERR")) || level == QStringLiteral("Error"))
-        e.color = QColor("#f0883e");
-    else if (level.startsWith(QStringLiteral("WARN")) || level == QStringLiteral("Warn"))
-        e.color = QColor("#d29922");
-    else if (level.startsWith(QStringLiteral("INFO")) || level == QStringLiteral("Info"))
-        e.color = QColor("#39c5bb");
-    else if (level.startsWith(QStringLiteral("DEB")) || level == QStringLiteral("Debug"))
-        e.color = QColor("#4dd0e1");
-    else
-        e.color = QColor("#6e7681");
+    e.color = color;
 
     entries_.append(std::move(e));
     endInsertRows();

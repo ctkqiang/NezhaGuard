@@ -34,13 +34,13 @@ namespace Nezha::Core {
 
         void add_port(const HoneyPort &hp);
         void add_port(std::uint16_t port, std::uint8_t proto, const char *service);
-        void start(Arena &arena, HoneypotCallback cb);
+        void start(Arena &arena, const HoneypotCallback &cb);
         void stop();
 
         [[nodiscard]] bool running() const noexcept { return running_; }
 
     private:
-        void listen_port(const HoneyPort &hp, Arena &arena, HoneypotCallback cb);
+        void listen_port(const HoneyPort &hp, Arena &arena, const HoneypotCallback &cb);
         static std::string get_peer_ip(int fd);
 
         struct PortThread {

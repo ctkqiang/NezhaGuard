@@ -26,11 +26,15 @@ public:
     [[nodiscard]] QHash<int, QByteArray> roleNames() const override;
 
     Q_INVOKABLE void append(const QString &timestamp, const QString &level, const QString &message);
+    Q_INVOKABLE void append(const QString &timestamp, const QString &level, const QString &message,
+                            const QColor &color);
     Q_INVOKABLE void clear();
 
     [[nodiscard]] int total() const noexcept { return total_; }
 
 private:
+    static QColor default_color(const QString &level);
+
     static constexpr int kMaxEntries = 5000;
     QVector<Entry> entries_;
     int total_ = 0;

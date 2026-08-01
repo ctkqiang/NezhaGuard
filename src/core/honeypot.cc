@@ -7,7 +7,6 @@
 #include "ipaddr.h"
 #include <arpa/inet.h>
 #include <chrono>
-#include <cstring>
 #include <fcntl.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
@@ -25,7 +24,7 @@ namespace Nezha::Core {
         ports_.push_back({port, proto, service});
     }
 
-    void HoneypotListener::start(Arena &arena, HoneypotCallback cb) {
+    void HoneypotListener::start(Arena &arena, const HoneypotCallback &cb) {
         if (running_) return;
         running_ = true;
         for (const auto &hp: ports_) {
@@ -65,7 +64,7 @@ namespace Nezha::Core {
         return buf;
     }
 
-    void HoneypotListener::listen_port(const HoneyPort &hp, Arena &arena, HoneypotCallback cb) {
+    void HoneypotListener::listen_port(const HoneyPort &hp, Arena &arena, const HoneypotCallback &cb) {
         int type = (hp.proto == PROTO_UDP) ? SOCK_DGRAM : SOCK_STREAM;
         int fd = socket(AF_INET6, type, 0);
         if (fd < 0) return;

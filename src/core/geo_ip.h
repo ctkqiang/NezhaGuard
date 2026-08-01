@@ -24,11 +24,6 @@ public:
     GeoIP() = default;
 
     static GeoIPResult lookup(const std::string &ip);
-
-private:
-    static GeoIPResult parse_json(const std::string &json);
-    static GeoIPResult lookup_cached(const std::string &ip);
-    static void cache_result(const GeoIPResult &r);
 };
 
 }

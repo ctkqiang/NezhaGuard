@@ -50,6 +50,9 @@ set(NEZHA_CORE_SOURCES
     src/views/log_model.h
     src/views/gui_sink.cc
     src/views/gui_sink.h
+    src/views/detail_panel.cc
+    src/views/detail_panel.h
+    src/views/theme.h
     src/contants.h
 )
 

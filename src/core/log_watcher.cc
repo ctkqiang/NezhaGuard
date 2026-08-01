@@ -16,10 +16,10 @@ namespace Nezha::Core {
 
     void LogWatcher::add_source(const LogSource &src) { sources_.push_back(src); }
 
-    void LogWatcher::start(Arena &arena, LogEventCallback cb) {
+    void LogWatcher::start(Arena &arena, const LogEventCallback &cb) {
         if (running_) return;
         running_ = true;
-        worker_ = std::thread([this, &arena, cb = std::move(cb)]() mutable {
+        worker_ = std::thread([this, &arena, cb]() {
             watch_loop(&arena, &cb);
         });
     }
@@ -29,7 +29,7 @@ namespace Nezha::Core {
         if (worker_.joinable()) worker_.join();
     }
 
-    void LogWatcher::watch_loop(Arena *arena, LogEventCallback *cb) {
+    void LogWatcher::watch_loop(Arena *arena, const LogEventCallback *cb) {
         struct FileState {
             std::string path;
             std::ifstream stream;

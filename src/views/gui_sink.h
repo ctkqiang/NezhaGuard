@@ -3,6 +3,8 @@
 
 #include <QObject>
 #include <QPointer>
+#include <QColor>
+#include <QString>
 #include <memory>
 
 #include "../utilities/logger.h"
@@ -19,6 +21,7 @@ public:
     void flush() override {}
 
 private:
+    static QColor level_color(const QString &level, const QString &message);
     QPointer<LogModel> model_;
 };
 

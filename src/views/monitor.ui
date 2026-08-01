@@ -2,7 +2,7 @@
 <ui version="4.0">
  <class>monitor</class>
  <widget class="QMainWindow" name="monitor">
-  <property name="geometry"><rect><x>0</x><y>0</y><width>900</width><height>740</height></rect></property>
+  <property name="geometry"><rect><x>0</x><y>0</y><width>1120</width><height>780</height></rect></property>
   <property name="minimumSize"><size><width>960</width><height>640</height></size></property>
   <property name="windowTitle"><string>哪吒网络安全 SIEM</string></property>
   <widget class="QWidget" name="centralwidget">
@@ -12,11 +12,11 @@
     <property name="rightMargin"><number>0</number></property><property name="bottomMargin"><number>0</number></property>
     <item>
      <widget class="QWidget" name="header" native="true">
-      <property name="minimumSize"><size><width>0</width><height>56</height></size></property>
-      <property name="maximumSize"><size><width>16777215</width><height>56</height></size></property>
+      <property name="minimumSize"><size><width>0</width><height>48</height></size></property>
+      <property name="maximumSize"><size><width>16777215</width><height>48</height></size></property>
       <layout class="QHBoxLayout" name="header_layout">
        <property name="spacing"><number>10</number></property>
-       <property name="leftMargin"><number>20</number></property><property name="rightMargin"><number>20</number></property>
+       <property name="leftMargin"><number>18</number></property><property name="rightMargin"><number>18</number></property>
        <property name="topMargin"><number>0</number></property><property name="bottomMargin"><number>0</number></property>
        <item>
         <widget class="QLabel" name="brand_badge">
@@ -48,33 +48,18 @@
        <property name="rightMargin"><number>0</number></property><property name="bottomMargin"><number>0</number></property>
        <item>
         <widget class="QListWidget" name="sidebar">
-         <property name="minimumSize"><size><width>200</width><height>0</height></size></property>
-         <property name="maximumSize"><size><width>200</width><height>16777215</height></size></property>
+         <property name="minimumSize"><size><width>180</width><height>0</height></size></property>
+         <property name="maximumSize"><size><width>180</width><height>16777215</height></size></property>
          <property name="frameShape"><enum>QFrame::NoFrame</enum></property>
          <property name="selectionMode"><enum>QAbstractItemView::SingleSelection</enum></property>
          <property name="selectionBehavior"><enum>QAbstractItemView::SelectRows</enum></property>
          <property name="spacing"><number>0</number></property>
          <property name="currentRow"><number>0</number></property>
-         <item>
-          <property name="text"><string>◉  仪表盘</string></property>
-          <property name="textAlignment"><set>Qt::AlignLeading|Qt::AlignVCenter</set></property>
-         </item>
-         <item>
-          <property name="text"><string>☰  日志监控</string></property>
-          <property name="textAlignment"><set>Qt::AlignLeading|Qt::AlignVCenter</set></property>
-         </item>
-         <item>
-          <property name="text"><string>⚠  安全告警</string></property>
-          <property name="textAlignment"><set>Qt::AlignLeading|Qt::AlignVCenter</set></property>
-         </item>
-         <item>
-          <property name="text"><string>◈  蜜罐监控</string></property>
-          <property name="textAlignment"><set>Qt::AlignLeading|Qt::AlignVCenter</set></property>
-         </item>
-         <item>
-          <property name="text"><string>⚡  网络信息</string></property>
-          <property name="textAlignment"><set>Qt::AlignLeading|Qt::AlignVCenter</set></property>
-         </item>
+         <item><property name="text"><string>  仪表盘</string></property></item>
+         <item><property name="text"><string>  日志监控</string></property></item>
+         <item><property name="text"><string>  安全告警</string></property></item>
+         <item><property name="text"><string>  蜜罐监控</string></property></item>
+         <item><property name="text"><string>  网络信息</string></property></item>
         </widget>
        </item>
        <item>
@@ -83,33 +68,33 @@
          <!-- ============ 仪表盘 ============ -->
          <widget class="QWidget" name="page_dashboard">
           <layout class="QVBoxLayout" name="dash_layout">
-           <property name="spacing"><number>16</number></property>
-           <property name="leftMargin"><number>24</number></property><property name="topMargin"><number>20</number></property>
-           <property name="rightMargin"><number>24</number></property><property name="bottomMargin"><number>20</number></property>
+           <property name="spacing"><number>14</number></property>
+           <property name="leftMargin"><number>24</number></property><property name="topMargin"><number>18</number></property>
+           <property name="rightMargin"><number>24</number></property><property name="bottomMargin"><number>18</number></property>
            <item><widget class="QLabel" name="dash_title"><property name="text"><string>仪表盘概览</string></property></widget></item>
            <item>
-            <layout class="QHBoxLayout" name="cards_layout"><property name="spacing"><number>16</number></property>
+            <layout class="QHBoxLayout" name="cards_layout"><property name="spacing"><number>14</number></property>
              <item>
-              <widget class="QFrame" name="card_logs"><property name="minimumSize"><size><width>0</width><height>92</height></size></property><property name="frameShape"><enum>QFrame::NoFrame</enum></property>
-               <layout class="QVBoxLayout" name="card_logs_layout"><property name="spacing"><number>4</number></property><property name="leftMargin"><number>18</number></property><property name="topMargin"><number>16</number></property><property name="rightMargin"><number>16</number></property><property name="bottomMargin"><number>16</number></property>
+              <widget class="QFrame" name="card_logs"><property name="minimumSize"><size><width>0</width><height>80</height></size></property><property name="frameShape"><enum>QFrame::NoFrame</enum></property>
+               <layout class="QVBoxLayout" name="card_logs_layout"><property name="spacing"><number>2</number></property><property name="leftMargin"><number>18</number></property><property name="topMargin"><number>14</number></property><property name="rightMargin"><number>16</number></property><property name="bottomMargin"><number>14</number></property>
                 <item><widget class="QLabel" name="card_logs_value"><property name="text"><string>0</string></property></widget></item>
                 <item><widget class="QLabel" name="card_logs_label"><property name="text"><string>日志总数</string></property></widget></item></layout></widget>
              </item>
              <item>
-              <widget class="QFrame" name="card_alerts"><property name="minimumSize"><size><width>0</width><height>92</height></size></property><property name="frameShape"><enum>QFrame::NoFrame</enum></property>
-               <layout class="QVBoxLayout" name="card_alerts_layout"><property name="spacing"><number>4</number></property><property name="leftMargin"><number>18</number></property><property name="topMargin"><number>16</number></property><property name="rightMargin"><number>16</number></property><property name="bottomMargin"><number>16</number></property>
+              <widget class="QFrame" name="card_alerts"><property name="minimumSize"><size><width>0</width><height>80</height></size></property><property name="frameShape"><enum>QFrame::NoFrame</enum></property>
+               <layout class="QVBoxLayout" name="card_alerts_layout"><property name="spacing"><number>2</number></property><property name="leftMargin"><number>18</number></property><property name="topMargin"><number>14</number></property><property name="rightMargin"><number>16</number></property><property name="bottomMargin"><number>14</number></property>
                 <item><widget class="QLabel" name="card_alerts_value"><property name="text"><string>0</string></property></widget></item>
                 <item><widget class="QLabel" name="card_alerts_label"><property name="text"><string>安全告警</string></property></widget></item></layout></widget>
              </item>
              <item>
-              <widget class="QFrame" name="card_threats"><property name="minimumSize"><size><width>0</width><height>92</height></size></property><property name="frameShape"><enum>QFrame::NoFrame</enum></property>
-               <layout class="QVBoxLayout" name="card_threats_layout"><property name="spacing"><number>4</number></property><property name="leftMargin"><number>18</number></property><property name="topMargin"><number>16</number></property><property name="rightMargin"><number>16</number></property><property name="bottomMargin"><number>16</number></property>
+              <widget class="QFrame" name="card_threats"><property name="minimumSize"><size><width>0</width><height>80</height></size></property><property name="frameShape"><enum>QFrame::NoFrame</enum></property>
+               <layout class="QVBoxLayout" name="card_threats_layout"><property name="spacing"><number>2</number></property><property name="leftMargin"><number>18</number></property><property name="topMargin"><number>14</number></property><property name="rightMargin"><number>16</number></property><property name="bottomMargin"><number>14</number></property>
                 <item><widget class="QLabel" name="card_threats_value"><property name="text"><string>0</string></property></widget></item>
                 <item><widget class="QLabel" name="card_threats_label"><property name="text"><string>已隔离 IP</string></property></widget></item></layout></widget>
              </item>
              <item>
-              <widget class="QFrame" name="card_uptime"><property name="minimumSize"><size><width>0</width><height>92</height></size></property><property name="frameShape"><enum>QFrame::NoFrame</enum></property>
-               <layout class="QVBoxLayout" name="card_uptime_layout"><property name="spacing"><number>4</number></property><property name="leftMargin"><number>18</number></property><property name="topMargin"><number>16</number></property><property name="rightMargin"><number>16</number></property><property name="bottomMargin"><number>16</number></property>
+              <widget class="QFrame" name="card_uptime"><property name="minimumSize"><size><width>0</width><height>80</height></size></property><property name="frameShape"><enum>QFrame::NoFrame</enum></property>
+               <layout class="QVBoxLayout" name="card_uptime_layout"><property name="spacing"><number>2</number></property><property name="leftMargin"><number>18</number></property><property name="topMargin"><number>14</number></property><property name="rightMargin"><number>16</number></property><property name="bottomMargin"><number>14</number></property>
                 <item><widget class="QLabel" name="card_uptime_value"><property name="text"><string>00:00</string></property></widget></item>
                 <item><widget class="QLabel" name="card_uptime_label"><property name="text"><string>运行时间</string></property></widget></item></layout></widget>
              </item>
@@ -122,6 +107,8 @@
              <property name="frameShape"><enum>QFrame::NoFrame</enum></property>
             </widget>
            </item>
+           <item><widget class="QLabel" name="attackers_label"><property name="text"><string>Top Attackers</string></property></widget></item>
+           <item><widget class="QTableWidget" name="attackers_table"><property name="maximumHeight"><number>160</number></property><property name="frameShape"><enum>QFrame::NoFrame</enum></property><property name="alternatingRowColors"><bool>true</bool></property><property name="showGrid"><bool>false</bool></property><property name="columnCount"><number>4</number></property><property name="editTriggers"><set>QAbstractItemView::NoEditTriggers</set></property><property name="selectionMode"><enum>QAbstractItemView::SingleSelection</enum></property><property name="selectionBehavior"><enum>QAbstractItemView::SelectRows</enum></property><attribute name="horizontalHeaderVisible"><bool>true</bool></attribute><attribute name="horizontalHeaderStretchLastSection"><bool>true</bool></attribute><attribute name="verticalHeaderVisible"><bool>false</bool></attribute><column><property name="text"><string>IP</string></property></column><column><property name="text"><string>Country</string></property></column><column><property name="text"><string>Score</string></property></column><column><property name="text"><string>Attacks</string></property></column></widget></item>
            <item><widget class="QLabel" name="recent_alerts_label"><property name="text"><string>最近告警</string></property></widget></item>
            <item>
             <widget class="QTableView" name="recent_alerts_view">
@@ -140,9 +127,9 @@
          <!-- ============ 日志监控 ============ -->
          <widget class="QWidget" name="page_logs">
           <layout class="QVBoxLayout" name="logs_layout">
-           <property name="spacing"><number>12</number></property>
-           <property name="leftMargin"><number>24</number></property><property name="topMargin"><number>20</number></property>
-           <property name="rightMargin"><number>24</number></property><property name="bottomMargin"><number>20</number></property>
+           <property name="spacing"><number>10</number></property>
+           <property name="leftMargin"><number>24</number></property><property name="topMargin"><number>18</number></property>
+           <property name="rightMargin"><number>24</number></property><property name="bottomMargin"><number>18</number></property>
            <item>
             <layout class="QHBoxLayout" name="logs_filter_layout"><property name="spacing"><number>10</number></property>
              <item><widget class="QLabel" name="logs_title"><property name="text"><string>日志监控</string></property></widget></item>
@@ -154,7 +141,7 @@
            <item>
             <layout class="QHBoxLayout" name="logs_search_layout"><property name="spacing"><number>8</number></property>
              <item><widget class="QLineEdit" name="log_search_box"><property name="placeholderText"><string>搜索日志内容 (Ctrl+F)...</string></property><property name="clearButtonEnabled"><bool>true</bool></property></widget></item>
-             <item><widget class="QPushButton" name="log_clear_btn"><property name="text"><string>清空</string></property><property name="minimumSize"><size><width>60</width><height>0</height></size></property></widget></item>
+             <item><widget class="QPushButton" name="log_clear_btn"><property name="text"><string>清空</string></property><property name="minimumSize"><size><width>56</width><height>0</height></size></property></widget></item>
             </layout>
            </item>
            <item>
@@ -169,15 +156,15 @@
              <attribute name="verticalHeaderVisible"><bool>false</bool></attribute>
             </widget>
            </item>
-           <item><widget class="QTextEdit" name="log_detail"><property name="readOnly"><bool>true</bool></property><property name="maximumHeight"><number>120</number></property><property name="placeholderText"><string>选择日志条目查看详情…</string></property></widget></item>
+           <item><widget class="QTextEdit" name="log_detail"><property name="readOnly"><bool>true</bool></property><property name="maximumHeight"><number>120</number></property><property name="placeholderText"><string>选择日志条目查看详情...</string></property></widget></item>
           </layout>
          </widget>
          <!-- ============ 安全告警 ============ -->
          <widget class="QWidget" name="page_alerts">
           <layout class="QVBoxLayout" name="alerts_layout">
            <property name="spacing"><number>10</number></property>
-           <property name="leftMargin"><number>24</number></property><property name="topMargin"><number>20</number></property>
-           <property name="rightMargin"><number>24</number></property><property name="bottomMargin"><number>20</number></property>
+           <property name="leftMargin"><number>24</number></property><property name="topMargin"><number>18</number></property>
+           <property name="rightMargin"><number>24</number></property><property name="bottomMargin"><number>18</number></property>
            <item>
             <layout class="QHBoxLayout" name="alerts_header_layout"><property name="spacing"><number>10</number></property>
              <item><widget class="QLabel" name="alerts_title"><property name="text"><string>安全告警</string></property></widget></item>
@@ -199,15 +186,27 @@
              <attribute name="verticalHeaderVisible"><bool>false</bool></attribute>
             </widget>
            </item>
-           <item><widget class="QTextEdit" name="alert_detail"><property name="readOnly"><bool>true</bool></property><property name="maximumHeight"><number>72</number></property><property name="placeholderText"><string>选择告警查看详情…</string></property></widget></item>
+           <item>
+            <layout class="QHBoxLayout" name="severity_layout"><property name="spacing"><number>10</number></property>
+             <item><widget class="QLabel" name="sev_crit"><property name="minimumSize"><size><width>0</width><height>40</height></size></property><property name="alignment"><set>Qt::AlignCenter</set></property><property name="text"><string>CRIT
+0</string></property></widget></item>
+             <item><widget class="QLabel" name="sev_error"><property name="minimumSize"><size><width>0</width><height>40</height></size></property><property name="alignment"><set>Qt::AlignCenter</set></property><property name="text"><string>ERROR
+0</string></property></widget></item>
+             <item><widget class="QLabel" name="sev_warn"><property name="minimumSize"><size><width>0</width><height>40</height></size></property><property name="alignment"><set>Qt::AlignCenter</set></property><property name="text"><string>WARN
+0</string></property></widget></item>
+             <item><widget class="QLabel" name="sev_info"><property name="minimumSize"><size><width>0</width><height>40</height></size></property><property name="alignment"><set>Qt::AlignCenter</set></property><property name="text"><string>INFO
+0</string></property></widget></item>
+            </layout>
+           </item>
+           <item><widget class="QTextEdit" name="alert_detail"><property name="readOnly"><bool>true</bool></property><property name="maximumHeight"><number>76</number></property><property name="placeholderText"><string>选择告警查看详情...</string></property></widget></item>
           </layout>
          </widget>
          <!-- ============ 蜜罐监控 ============ -->
          <widget class="QWidget" name="page_honeypot">
           <layout class="QVBoxLayout" name="honey_layout">
            <property name="spacing"><number>10</number></property>
-           <property name="leftMargin"><number>24</number></property><property name="topMargin"><number>20</number></property>
-           <property name="rightMargin"><number>24</number></property><property name="bottomMargin"><number>20</number></property>
+           <property name="leftMargin"><number>24</number></property><property name="topMargin"><number>18</number></property>
+           <property name="rightMargin"><number>24</number></property><property name="bottomMargin"><number>18</number></property>
            <item>
             <layout class="QHBoxLayout" name="honey_header_layout"><property name="spacing"><number>10</number></property>
              <item><widget class="QLabel" name="honey_title"><property name="text"><string>蜜罐监控</string></property></widget></item>
@@ -227,15 +226,15 @@
              <attribute name="verticalHeaderVisible"><bool>false</bool></attribute>
             </widget>
            </item>
-           <item><widget class="QTextEdit" name="honey_detail"><property name="readOnly"><bool>true</bool></property><property name="maximumHeight"><number>72</number></property><property name="placeholderText"><string>选择连接查看详情…</string></property></widget></item>
+           <item><widget class="QTextEdit" name="honey_detail"><property name="readOnly"><bool>true</bool></property><property name="maximumHeight"><number>76</number></property><property name="placeholderText"><string>选择连接查看详情...</string></property></widget></item>
           </layout>
          </widget>
          <!-- ============ 网络信息 ============ -->
          <widget class="QWidget" name="page_network">
           <layout class="QVBoxLayout" name="network_layout">
            <property name="spacing"><number>10</number></property>
-           <property name="leftMargin"><number>24</number></property><property name="topMargin"><number>20</number></property>
-           <property name="rightMargin"><number>24</number></property><property name="bottomMargin"><number>20</number></property>
+           <property name="leftMargin"><number>24</number></property><property name="topMargin"><number>18</number></property>
+           <property name="rightMargin"><number>24</number></property><property name="bottomMargin"><number>18</number></property>
            <item>
             <layout class="QHBoxLayout" name="network_header_layout"><property name="spacing"><number>10</number></property>
              <item><widget class="QLabel" name="network_title"><property name="text"><string>网络信息</string></property></widget></item>
@@ -244,11 +243,11 @@
             </layout>
            </item>
            <item><widget class="QLabel" name="local_ip_label"><property name="text"><string>本地接口</string></property></widget></item>
-           <item><widget class="QTableWidget" name="local_ip_table"><property name="maximumHeight"><number>150</number></property><property name="frameShape"><enum>QFrame::NoFrame</enum></property><property name="alternatingRowColors"><bool>true</bool></property><property name="showGrid"><bool>false</bool></property><property name="columnCount"><number>2</number></property><property name="editTriggers"><set>QAbstractItemView::NoEditTriggers</set></property><property name="selectionMode"><enum>QAbstractItemView::SingleSelection</enum></property><property name="selectionBehavior"><enum>QAbstractItemView::SelectRows</enum></property><attribute name="horizontalHeaderVisible"><bool>true</bool></attribute><attribute name="horizontalHeaderStretchLastSection"><bool>true</bool></attribute><attribute name="verticalHeaderVisible"><bool>false</bool></attribute><column><property name="text"><string>接口名称</string></property></column><column><property name="text"><string>IP 地址</string></property></column></widget></item>
+           <item><widget class="QTableWidget" name="local_ip_table"><property name="maximumHeight"><number>130</number></property><property name="frameShape"><enum>QFrame::NoFrame</enum></property><property name="alternatingRowColors"><bool>true</bool></property><property name="showGrid"><bool>false</bool></property><property name="columnCount"><number>2</number></property><property name="editTriggers"><set>QAbstractItemView::NoEditTriggers</set></property><property name="selectionMode"><enum>QAbstractItemView::SingleSelection</enum></property><property name="selectionBehavior"><enum>QAbstractItemView::SelectRows</enum></property><attribute name="horizontalHeaderVisible"><bool>true</bool></attribute><attribute name="horizontalHeaderStretchLastSection"><bool>true</bool></attribute><attribute name="verticalHeaderVisible"><bool>false</bool></attribute><column><property name="text"><string>接口名称</string></property></column><column><property name="text"><string>IP 地址</string></property></column></widget></item>
            <item><widget class="QLabel" name="arp_label"><property name="text"><string>ARP 缓存表</string></property></widget></item>
-           <item><widget class="QTableWidget" name="arp_table"><property name="maximumHeight"><number>210</number></property><property name="frameShape"><enum>QFrame::NoFrame</enum></property><property name="alternatingRowColors"><bool>true</bool></property><property name="showGrid"><bool>false</bool></property><property name="columnCount"><number>2</number></property><property name="editTriggers"><set>QAbstractItemView::NoEditTriggers</set></property><property name="selectionMode"><enum>QAbstractItemView::SingleSelection</enum></property><property name="selectionBehavior"><enum>QAbstractItemView::SelectRows</enum></property><attribute name="horizontalHeaderVisible"><bool>true</bool></attribute><attribute name="horizontalHeaderStretchLastSection"><bool>true</bool></attribute><attribute name="verticalHeaderVisible"><bool>false</bool></attribute><column><property name="text"><string>IP 地址</string></property></column><column><property name="text"><string>MAC 地址</string></property></column></widget></item>
+           <item><widget class="QTableWidget" name="arp_table"><property name="maximumHeight"><number>180</number></property><property name="frameShape"><enum>QFrame::NoFrame</enum></property><property name="alternatingRowColors"><bool>true</bool></property><property name="showGrid"><bool>false</bool></property><property name="columnCount"><number>2</number></property><property name="editTriggers"><set>QAbstractItemView::NoEditTriggers</set></property><property name="selectionMode"><enum>QAbstractItemView::SingleSelection</enum></property><property name="selectionBehavior"><enum>QAbstractItemView::SelectRows</enum></property><attribute name="horizontalHeaderVisible"><bool>true</bool></attribute><attribute name="horizontalHeaderStretchLastSection"><bool>true</bool></attribute><attribute name="verticalHeaderVisible"><bool>false</bool></attribute><column><property name="text"><string>IP 地址</string></property></column><column><property name="text"><string>MAC 地址</string></property></column></widget></item>
            <item><widget class="QLabel" name="quarantine_label"><property name="text"><string>隔离列表</string></property></widget></item>
-           <item><widget class="QTableWidget" name="quarantine_table"><property name="maximumHeight"><number>210</number></property><property name="frameShape"><enum>QFrame::NoFrame</enum></property><property name="alternatingRowColors"><bool>true</bool></property><property name="showGrid"><bool>false</bool></property><property name="columnCount"><number>3</number></property><property name="editTriggers"><set>QAbstractItemView::NoEditTriggers</set></property><property name="selectionMode"><enum>QAbstractItemView::SingleSelection</enum></property><property name="selectionBehavior"><enum>QAbstractItemView::SelectRows</enum></property><attribute name="horizontalHeaderVisible"><bool>true</bool></attribute><attribute name="horizontalHeaderStretchLastSection"><bool>true</bool></attribute><attribute name="verticalHeaderVisible"><bool>false</bool></attribute><column><property name="text"><string>IP 地址</string></property></column><column><property name="text"><string>隔离原因</string></property></column><column><property name="text"><string>威胁评分</string></property></column></widget></item>
+           <item><widget class="QTableWidget" name="quarantine_table"><property name="maximumHeight"><number>180</number></property><property name="frameShape"><enum>QFrame::NoFrame</enum></property><property name="alternatingRowColors"><bool>true</bool></property><property name="showGrid"><bool>false</bool></property><property name="columnCount"><number>3</number></property><property name="editTriggers"><set>QAbstractItemView::NoEditTriggers</set></property><property name="selectionMode"><enum>QAbstractItemView::SingleSelection</enum></property><property name="selectionBehavior"><enum>QAbstractItemView::SelectRows</enum></property><attribute name="horizontalHeaderVisible"><bool>true</bool></attribute><attribute name="horizontalHeaderStretchLastSection"><bool>true</bool></attribute><attribute name="verticalHeaderVisible"><bool>false</bool></attribute><column><property name="text"><string>IP 地址</string></property></column><column><property name="text"><string>隔离原因</string></property></column><column><property name="text"><string>威胁评分</string></property></column></widget></item>
           </layout>
          </widget>
         </widget>
@@ -268,7 +267,7 @@
    <receiver>pages</receiver>
    <slot>setCurrentIndex(int)</slot>
    <hints>
-    <hint type="sourcelabel"><x>100</x><y>300</y></hint>
+    <hint type="sourcelabel"><x>90</x><y>300</y></hint>
     <hint type="destinationlabel"><x>600</x><y>300</y></hint>
    </hints>
   </connection>

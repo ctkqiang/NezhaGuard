@@ -7,7 +7,7 @@ namespace Nezha::Core {
 
 class ActiveResponse {
 public:
-    ActiveResponse() = default;
+    ActiveResponse() = delete;
 
     static bool send_icmp_unreachable(const std::string &src_ip,
                                       const std::string &dst_ip,

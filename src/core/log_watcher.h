@@ -33,13 +33,13 @@ namespace Nezha::Core {
         LogWatcher &operator=(const LogWatcher &) = delete;
 
         void add_source(const LogSource &src);
-        void start(Arena &arena, LogEventCallback cb);
+        void start(Arena &arena, const LogEventCallback &cb);
         void stop();
 
         [[nodiscard]] bool running() const noexcept { return running_; }
 
     private:
-        void watch_loop(Arena *arena, LogEventCallback *cb);
+        void watch_loop(Arena *arena, const LogEventCallback *cb);
         bool parse_line(std::string_view line, Arena &arena, const LogSource &src, event &out);
 
         static bool parse_combined(std::string_view line, Arena &arena, event &out);
