@@ -8,3 +8,6 @@ cmake-build-release/
 *.db-wal
 .DS_Store
 .idea/
+.claude
+.trae
+.reasonix
