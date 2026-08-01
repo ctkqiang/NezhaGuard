@@ -75,29 +75,41 @@
            <item>
             <layout class="QHBoxLayout" name="cards_layout"><property name="spacing"><number>14</number></property>
              <item>
-              <widget class="QFrame" name="card_logs"><property name="minimumSize"><size><width>0</width><height>80</height></size></property><property name="frameShape"><enum>QFrame::NoFrame</enum></property>
+              <widget class="QFrame" name="card_logs"><property name="minimumSize"><size><width>0</width><height>110</height></size></property><property name="frameShape"><enum>QFrame::NoFrame</enum></property>
                <layout class="QVBoxLayout" name="card_logs_layout"><property name="spacing"><number>2</number></property><property name="leftMargin"><number>18</number></property><property name="topMargin"><number>14</number></property><property name="rightMargin"><number>16</number></property><property name="bottomMargin"><number>14</number></property>
                 <item><widget class="QLabel" name="card_logs_value"><property name="text"><string>0</string></property></widget></item>
                 <item><widget class="QLabel" name="card_logs_label"><property name="text"><string>日志总数</string></property></widget></item></layout></widget>
              </item>
              <item>
-              <widget class="QFrame" name="card_alerts"><property name="minimumSize"><size><width>0</width><height>80</height></size></property><property name="frameShape"><enum>QFrame::NoFrame</enum></property>
+              <widget class="QFrame" name="card_alerts"><property name="minimumSize"><size><width>0</width><height>110</height></size></property><property name="frameShape"><enum>QFrame::NoFrame</enum></property>
                <layout class="QVBoxLayout" name="card_alerts_layout"><property name="spacing"><number>2</number></property><property name="leftMargin"><number>18</number></property><property name="topMargin"><number>14</number></property><property name="rightMargin"><number>16</number></property><property name="bottomMargin"><number>14</number></property>
                 <item><widget class="QLabel" name="card_alerts_value"><property name="text"><string>0</string></property></widget></item>
                 <item><widget class="QLabel" name="card_alerts_label"><property name="text"><string>安全告警</string></property></widget></item></layout></widget>
              </item>
              <item>
-              <widget class="QFrame" name="card_threats"><property name="minimumSize"><size><width>0</width><height>80</height></size></property><property name="frameShape"><enum>QFrame::NoFrame</enum></property>
+              <widget class="QFrame" name="card_threats"><property name="minimumSize"><size><width>0</width><height>110</height></size></property><property name="frameShape"><enum>QFrame::NoFrame</enum></property>
                <layout class="QVBoxLayout" name="card_threats_layout"><property name="spacing"><number>2</number></property><property name="leftMargin"><number>18</number></property><property name="topMargin"><number>14</number></property><property name="rightMargin"><number>16</number></property><property name="bottomMargin"><number>14</number></property>
                 <item><widget class="QLabel" name="card_threats_value"><property name="text"><string>0</string></property></widget></item>
                 <item><widget class="QLabel" name="card_threats_label"><property name="text"><string>已隔离 IP</string></property></widget></item></layout></widget>
              </item>
              <item>
-              <widget class="QFrame" name="card_uptime"><property name="minimumSize"><size><width>0</width><height>80</height></size></property><property name="frameShape"><enum>QFrame::NoFrame</enum></property>
+              <widget class="QFrame" name="card_uptime"><property name="minimumSize"><size><width>0</width><height>110</height></size></property><property name="frameShape"><enum>QFrame::NoFrame</enum></property>
                <layout class="QVBoxLayout" name="card_uptime_layout"><property name="spacing"><number>2</number></property><property name="leftMargin"><number>18</number></property><property name="topMargin"><number>14</number></property><property name="rightMargin"><number>16</number></property><property name="bottomMargin"><number>14</number></property>
                 <item><widget class="QLabel" name="card_uptime_value"><property name="text"><string>00:00</string></property></widget></item>
                 <item><widget class="QLabel" name="card_uptime_label"><property name="text"><string>运行时间</string></property></widget></item></layout></widget>
              </item>
+            </layout>
+           </item>
+           <item>
+            <layout class="QHBoxLayout" name="quickstats_layout"><property name="spacing"><number>10</number></property>
+             <item><widget class="QLabel" name="qs_tor"><property name="minimumSize"><size><width>0</width><height>36</height></size></property><property name="alignment"><set>Qt::AlignCenter</set></property><property name="text"><string>Tor
+—</string></property></widget></item>
+             <item><widget class="QLabel" name="qs_blocked"><property name="minimumSize"><size><width>0</width><height>36</height></size></property><property name="alignment"><set>Qt::AlignCenter</set></property><property name="text"><string>今日拦截
+—</string></property></widget></item>
+             <item><widget class="QLabel" name="qs_engines"><property name="minimumSize"><size><width>0</width><height>36</height></size></property><property name="alignment"><set>Qt::AlignCenter</set></property><property name="text"><string>引擎
+—</string></property></widget></item>
+             <item><widget class="QLabel" name="qs_types"><property name="minimumSize"><size><width>0</width><height>36</height></size></property><property name="alignment"><set>Qt::AlignCenter</set></property><property name="text"><string>攻击类型
+—</string></property></widget></item>
             </layout>
            </item>
            <item>
@@ -107,6 +119,7 @@
              <property name="frameShape"><enum>QFrame::NoFrame</enum></property>
             </widget>
            </item>
+           <item><widget class="QLabel" name="threat_activity"><property name="text"><string/></property><property name="minimumSize"><size><width>0</width><height>24</height></size></property><property name="wordWrap"><bool>true</bool></property></widget></item>
            <item><widget class="QLabel" name="attackers_label"><property name="text"><string>攻击者排行</string></property></widget></item>
            <item><widget class="QTableView" name="attackers_view"><property name="maximumHeight"><number>160</number></property><property name="frameShape"><enum>QFrame::NoFrame</enum></property><property name="alternatingRowColors"><bool>true</bool></property><property name="showGrid"><bool>false</bool></property><property name="selectionBehavior"><enum>QAbstractItemView::SelectRows</enum></property><property name="editTriggers"><set>QAbstractItemView::NoEditTriggers</set></property><attribute name="horizontalHeaderStretchLastSection"><bool>true</bool></attribute><attribute name="horizontalHeaderHighlightSections"><bool>false</bool></attribute><attribute name="verticalHeaderVisible"><bool>false</bool></attribute></widget></item>
            <item><widget class="QLabel" name="recent_alerts_label"><property name="text"><string>最近告警</string></property></widget></item>

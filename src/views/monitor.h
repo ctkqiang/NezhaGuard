@@ -7,6 +7,7 @@
 #include <QStyledItemDelegate>
 #include <QTableView>
 #include <QTime>
+#include <QSet>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -99,6 +100,7 @@ private:
     void refresh_arp_table();
     void refresh_quarantine_list();
     void refresh_attackers();
+    void refresh_quickstats();
     void start_animations();
 
     Ui::monitor *ui;
@@ -123,6 +125,8 @@ private:
     QHash<QString, Attacker> attackers_;
     LogModel *attackers_model_ = nullptr;
     int sev_crit_ = 0, sev_error_ = 0, sev_warn_ = 0, sev_info_ = 0;
+    QSet<QString> active_types_;
+    int pkt_rate_ = 0;
     QList<int> sparkline_data_;
     bool dark_mode_ = true;
     QTime start_time_;

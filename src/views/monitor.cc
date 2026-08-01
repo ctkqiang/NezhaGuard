@@ -322,15 +322,15 @@ void monitor::apply_theme(bool d) {
         #recent_alerts_label,#attackers_label,#local_ip_label,#arp_label,#quarantine_label
             { font-size:12px; font-weight:600; color:%9; padding-bottom:4px; border-bottom:1px solid %3; }
         QFrame#card_logs,QFrame#card_alerts,QFrame#card_threats,QFrame#card_uptime
-            { background:%2; border:1px solid %3; border-radius:14px; padding:14px; border-left:4px solid %3; }
+            { background:%2; border:1px solid %3; border-radius:14px; padding:16px 14px; border-left:4px solid %3; }
         QFrame#card_logs { border-left-color:%9; } QFrame#card_alerts { border-left-color:%5; }
         QFrame#card_threats { border-left-color:#ff6b6b; } QFrame#card_uptime { border-left-color:#7ecf8a; }
         QFrame#card_logs:hover,QFrame#card_alerts:hover,QFrame#card_threats:hover,QFrame#card_uptime:hover
             { border-color:%9; background:%10; }
         #card_logs_value,#card_alerts_value,#card_threats_value,#card_uptime_value
-            { font-size:26px; font-weight:800; color:%4; }
+            { font-size:28px; font-weight:800; color:%4; }
         #card_logs_label,#card_alerts_label,#card_threats_label,#card_uptime_label
-            { font-size:9px; font-weight:600; color:%6; margin-top:2px; }
+            { font-size:10px; font-weight:600; color:%6; margin-top:2px; }
         QTableView { background:%1; alternate-background-color:%10; gridline-color:%3;
                      color:%4; border:1px solid %3; border-radius:10px; font-size:11px; }
         QTableView::item:selected { background:%7; }
@@ -355,8 +355,10 @@ void monitor::apply_theme(bool d) {
         QScrollBar::add-line:vertical,QScrollBar::sub-line:vertical { height:0; }
         #sev_crit,#sev_error,#sev_warn,#sev_info { border-radius:10px; font-family:"Menlo"; font-size:10px;
             font-weight:700; padding:4px 0; background:%2; }
-        #sev_crit { color:#ff8a80; } #sev_error { color:#ffab91; }
+        #sev_crit { color:#ff6b6b; } #sev_error { color:#ff9966; }
         #sev_warn { color:%9; } #sev_info { color:%6; }
+        #qs_tor,#qs_blocked,#qs_engines,#qs_types { border-radius:10px; font-family:"Menlo"; font-size:9px;
+            font-weight:700; padding:4px 6px; background:%2; color:%6; border:1px solid %3; }
     )").arg(B, C, Br, T, A, M, S, H, P, C));
 }
 
@@ -387,6 +389,8 @@ void monitor::init_models() {
     log_proxy_->setSourceModel(log_model_);
     log_proxy_->setFilterRole(LogModel::LevelRole);
     log_proxy_->setFilterCaseSensitivity(Qt::CaseInsensitive);
+    log_proxy_->setSortRole(LogModel::TimestampRole);
+    log_proxy_->sort(0, Qt::DescendingOrder);
 
     setup_log_table(ui->log_view);
     ui->log_view->setModel(log_proxy_);
@@ -402,6 +406,7 @@ void monitor::init_models() {
     log_search_proxy_->setSourceModel(log_proxy_);
     log_search_proxy_->setFilterRole(LogModel::MessageRole);
     log_search_proxy_->setFilterCaseSensitivity(Qt::CaseInsensitive);
+    log_search_proxy_->setDynamicSortFilter(true);
     ui->log_view->setModel(log_search_proxy_);
     connect(ui->log_search_box, &QLineEdit::textChanged, this, &monitor::log_search_changed);
     connect(ui->log_clear_btn, &QPushButton::clicked, this, &monitor::clear_logs);
@@ -412,6 +417,8 @@ void monitor::init_models() {
     alert_proxy_->setSourceModel(alert_model_);
     alert_proxy_->setFilterRole(LogModel::LevelRole);
     alert_proxy_->setFilterCaseSensitivity(Qt::CaseInsensitive);
+    alert_proxy_->setSortRole(LogModel::TimestampRole);
+    alert_proxy_->sort(0, Qt::DescendingOrder);
 
     setup_log_table(ui->alert_view);
     ui->alert_view->setModel(alert_proxy_);
@@ -528,23 +535,27 @@ void monitor::update_stats(int log_count, int alert_count) {
     static int last_log = 0, last_alert = 0;
     int logRate = std::max(0, log_count - last_log);
     int alertRate = std::max(0, alert_count - last_alert);
+    pkt_rate_ = logRate;
     last_log = log_count; last_alert = alert_count;
     int qc = static_cast<int>(Nezha::Database::DatabaseHelper::GetQuarantineList().size());
 
-    ui->status_label->setText(QStringLiteral("日志 %1 (+%2/s) | 告警 %3 (+%4/s) | 已隔离 %5")
-        .arg(log_count).arg(logRate).arg(alert_count).arg(alertRate).arg(qc));
+    auto threatLvl = alertRate > 10 ? QStringLiteral("危险") : alertRate > 3 ? QStringLiteral("警告") : QStringLiteral("正常");
+    auto threatColor = alertRate > 10 ? Theme::Red : alertRate > 3 ? Theme::Orange : Theme::Green;
+    ui->status_label->setText(QStringLiteral("威胁: %1 | 日志 %2 (+%3/s) | 告警 %4 (+%5/s) | 已隔离 %6")
+        .arg(threatLvl).arg(log_count).arg(logRate).arg(alert_count).arg(alertRate).arg(qc));
 
     ui->card_logs_value->setText(QString::number(log_count));
-    ui->card_logs_label->setText(QStringLiteral("日志总数  +%1/s").arg(logRate));
+    ui->card_logs_label->setText(QStringLiteral("日志  +%1/s").arg(logRate));
     ui->card_alerts_value->setText(QString::number(alert_count));
-    ui->card_alerts_label->setText(QStringLiteral("安全告警  +%1/s").arg(alertRate));
+    ui->card_alerts_label->setText(QStringLiteral("告警  +%1/s").arg(alertRate));
     ui->card_threats_value->setText(QString::number(qc));
-    ui->card_threats_label->setText(QStringLiteral("已隔离 IP"));
+    ui->card_threats_label->setText(QStringLiteral("隔离  |  %1 种攻击").arg(active_types_.size()));
 
     int secs = std::max(1, start_time_.secsTo(QTime::currentTime()));
     int h = secs / 3600, m = (secs % 3600) / 60;
     ui->card_uptime_value->setText(QStringLiteral("%1h %2m").arg(h).arg(m));
-    ui->card_uptime_label->setText(QStringLiteral("运行时间"));
+    ui->card_uptime_label->setText(QStringLiteral("运行  |  %1 攻击者").arg(attackers_.size()));
+    refresh_quickstats();
 }
 
 void monitor::append_alert(const QString &time, const QString &type, const QString &ip, int count, double score, const QString &severity) {
@@ -564,6 +575,17 @@ void monitor::append_alert(const QString &time, const QString &type, const QStri
     ui->sev_error->setText(QStringLiteral("ERROR\n%1").arg(sev_error_));
     ui->sev_warn->setText(QStringLiteral("WARN\n%1").arg(sev_warn_));
     ui->sev_info->setText(QStringLiteral("INFO\n%1").arg(sev_info_));
+
+    // track active attack types
+    active_types_.insert(type);
+    QStringList types;
+    for (const auto &t : active_types_) {
+        auto color = sev_crit_ > 0 ? Theme::PinkDeep : Theme::Pink;
+        types.append(QStringLiteral("<span style='color:%1;background:%2;border-radius:8px;padding:2px 8px;margin:1px;font-size:10px;font-weight:600;'>%3</span>")
+            .arg(Theme::White, Theme::DkCard, t));
+    }
+    ui->threat_activity->setText(types.isEmpty() ? QString() : types.join(QStringLiteral(" ")));
+    ui->threat_activity->setTextFormat(Qt::RichText);
 }
 
 void monitor::append_honeypot(const QString &time, const QString &src_ip, uint16_t sport, uint16_t dport, const QString &service) {
@@ -741,6 +763,7 @@ void monitor::refresh_quarantine_list() {
 // -- misc --
 void monitor::clear_logs() {
     sev_crit_ = sev_error_ = sev_warn_ = sev_info_ = 0;
+    active_types_.clear();
     if (log_model_) log_model_->clear();
     if (alert_model_) alert_model_->clear();
     if (honey_model_) honey_model_->clear();
@@ -756,4 +779,15 @@ void monitor::update_sparkline() {
     sparkline_data_.append(delta);
     if (sparkline_data_.size() > 60) sparkline_data_.removeFirst();
     if (sparkline_widget_) sparkline_widget_->set_data(sparkline_data_);
+}
+
+void monitor::refresh_quickstats() {
+    int qc = static_cast<int>(Nezha::Database::DatabaseHelper::GetQuarantineList().size());
+    auto set_qs = [](QLabel *l, const QString &label, int n, const QString &color) {
+        l->setText(QStringLiteral("%1\n%2").arg(label).arg(n));
+    };
+    set_qs(ui->qs_tor, QStringLiteral("攻击者"), attackers_.size(), Theme::Pink);
+    set_qs(ui->qs_blocked, QStringLiteral("已隔离"), qc, Theme::PinkDeep);
+    set_qs(ui->qs_engines, QStringLiteral("引擎数"), 3, Theme::Green);
+    set_qs(ui->qs_types, QStringLiteral("攻击类型"), active_types_.size(), Theme::PinkLight);
 }
