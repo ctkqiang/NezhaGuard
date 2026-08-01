@@ -442,8 +442,18 @@ void monitor::init_models() {
     connect(ui->honey_view, &QTableView::clicked, this, &monitor::show_honey_detail);
 
     // network page
-    for (auto *t : {ui->local_ip_table, ui->arp_table, ui->quarantine_table, ui->attackers_table})
+    for (auto *t : {ui->local_ip_table, ui->arp_table, ui->quarantine_table})
         setup_network_table(t);
+
+    // attackers leaderboard
+    attackers_model_ = new LogModel(this);
+    setup_log_table(ui->attackers_view);
+    ui->attackers_view->setModel(attackers_model_);
+    auto *attackersDelegate = new AlertDelegate(this);
+    attackersDelegate->dark = dark_mode_;
+    ui->attackers_view->setItemDelegate(attackersDelegate);
+    ui->attackers_view->horizontalHeader()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
+    ui->attackers_view->horizontalHeader()->setSectionResizeMode(2, QHeaderView::Stretch);
     connect(ui->refresh_network, &QPushButton::clicked, this, &monitor::refresh_network_info);
     refresh_network_info();
 
@@ -566,13 +576,6 @@ void monitor::append_honeypot(const QString &time, const QString &src_ip, uint16
 void monitor::record_attacker(const QString &ip, double score, const QString &type) {
     auto &a = attackers_[ip]; a.score = std::max(a.score, score); a.count++;
     if (!type.isEmpty()) a.type = type;
-    refresh_attackers();
-}
-
-void monitor::refresh_attackers() {
-    auto *t = ui->attackers_table;
-    t->setRowCount(0);
-    t->setHorizontalHeaderLabels({QStringLiteral("IP"), QStringLiteral("国家"), QStringLiteral("评分"), QStringLiteral("次数")});
 
     QList<std::pair<QString, Attacker>> sorted;
     for (auto it = attackers_.begin(); it != attackers_.end(); ++it)
@@ -580,28 +583,16 @@ void monitor::refresh_attackers() {
     std::sort(sorted.begin(), sorted.end(), [](const auto &a, const auto &b) {
         return a.second.score * a.second.count > b.second.score * b.second.count;
     });
-    if (sorted.size() > 10) sorted = sorted.mid(0, 10);
 
-    QFont mf(QStringLiteral("Menlo"), 10); mf.setStyleHint(QFont::Monospace);
+    attackers_model_->clear();
+    int rank = 0;
     for (const auto &[ip, a] : sorted) {
-        int r = t->rowCount(); t->insertRow(r);
-        auto *i1 = new QTableWidgetItem(ip); i1->setFont(mf); i1->setForeground(QColor(Theme::Pink));
-        auto *i2 = new QTableWidgetItem(QStringLiteral("...")); i2->setForeground(QColor(Theme::DkMuted));
-        auto *i3 = new QTableWidgetItem(QString::number(a.score, 'f', 0)); i3->setForeground(QColor(Theme::PinkDeep));
-        auto *i4 = new QTableWidgetItem(QString::number(a.count)); i4->setForeground(QColor(Theme::DkText));
-        t->setItem(r, 0, i1); t->setItem(r, 1, i2); t->setItem(r, 2, i3); t->setItem(r, 3, i4);
-
-        auto ipCopy = ip;
-        auto _f = QtConcurrent::run([this, ipCopy, r]() {
-            auto geo = Nezha::Core::GeoIP::lookup(ipCopy.toStdString());
-            if (geo.valid) QMetaObject::invokeMethod(this, [this, r, geo]() {
-                auto *it = ui->attackers_table->item(r, 1);
-                if (it) it->setText(QString::fromStdString(geo.country_code));
-            }, Qt::QueuedConnection);
-        });
+        if (++rank > 10) break;
+        attackers_model_->append(
+            QStringLiteral("#%1").arg(rank),
+            a.score > 80 ? QStringLiteral("CRIT") : a.score > 50 ? QStringLiteral("WARN") : QStringLiteral("INFO"),
+            QStringLiteral("%1  |  %2分  x%3  [%4]").arg(ip).arg(static_cast<int>(a.score)).arg(a.count).arg(a.type));
     }
-    t->resizeColumnToContents(0);
-    t->horizontalHeader()->setStretchLastSection(true);
 }
 
 // -- filters --

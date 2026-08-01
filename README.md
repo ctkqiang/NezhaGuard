@@ -25,8 +25,9 @@
 12. [安全设计](#12-安全设计)
 13. [性能基准](#13-性能基准)
 14. [故障排查](#14-故障排查)
-15. [开发指南](#15-开发指南)
-16. [项目结构](#16-项目结构)
+15. [单元测试](#15-单元测试)
+16. [开发指南](#16-开发指南)
+17. [项目结构](#17-项目结构)
 
 ---
 
@@ -173,12 +174,12 @@ if proto == TCP/UDP:
 
 | 级别 | 枚举值 | 含义 | GUI 颜色 |
 |------|--------|------|----------|
-| `CRITICAL` | `Severity::Critical` | 确认攻击，触发自动隔离 | `#f85149` 红 |
-| `ERROR` | `Severity::Error` | 高度可疑，累计 5 次后隔离 | `#f0883e` 橙 |
-| `WARN` | `Severity::Warn` | 可疑活动 | `#d29922` 黄 |
-| `INFO` | `Severity::Info` | 信息事件 | `#39c5bb` 青 |
-| `DEBUG` | `Severity::Debug` | 调试诊断 | `#4dd0e1` 蓝 |
-| `TRACE` | `Severity::Trace` | 全量追踪 | `#6e7681` 灰 |
+| `CRITICAL` | `Severity::Critical` | 确认攻击，触发自动隔离 | `#ff6b6b` 红 |
+| `ERROR` | `Severity::Error` | 高度可疑，累计 5 次后隔离 | `#ff9966` 橙 |
+| `WARN` | `Severity::Warn` | 可疑活动 | `#ff6699` 粉 |
+| `INFO` | `Severity::Info` | 信息事件 | `#e0557e` 深粉 |
+| `DEBUG` | `Severity::Debug` | 调试诊断 | `#ff99bb` 浅粉 |
+| `TRACE` | `Severity::Trace` | 全量追踪 | `#999999` 灰 |
 
 ### 2.4 主动响应 (`ActiveResponse`)
 
@@ -581,36 +582,40 @@ Arena 本身**非线程安全**。每个线程使用独立的 Arena 实例：
 QMainWindow (monitor)
 ├── header (QWidget)
 │   ├── brand_badge (QLabel: "NZ")
-│   ├── app_title (QLabel: "哪吒网络安全 SIEM")
+│   ├── app_title (QLabel: "哪吒网络安全 SIEM" + glow 动画)
 │   ├── clock_label (QLabel: 实时时钟, 1s 刷新)
 │   ├── status_dot (QLabel: 脉冲动画呼吸灯)
 │   └── status_text (QLabel: "运行中")
 ├── body (QWidget)
-│   ├── sidebar (QListWidget: 200px)
-│   │   ├── ◉ 仪表盘
-│   │   ├── ☰ 日志监控
-│   │   ├── ⚠ 安全告警
-│   │   ├── ◈ 蜜罐监控
-│   │   └── ⚡ 网络信息
+│   ├── sidebar (QListWidget: 180px)
+│   │   ├── 仪表盘
+│   │   ├── 日志监控
+│   │   ├── 安全告警
+│   │   ├── 蜜罐监控
+│   │   └── 网络信息
 │   └── pages (QStackedWidget)
 │       ├── page_dashboard (仪表盘)
-│       │   ├── 统计卡片 × 4 (日志/告警/隔离/运行时间)
-│       │   ├── SparklineWidget (实时事件速率折线图, 1s 刷新, 60 点)
+│       │   ├── 统计卡片 × 4 (日志/告警/隔离/运行时间) + 左边框彩色 accent
+│       │   ├── SparklineWidget (实时事件速率折线图, 1s, 60 点, 粉渐变)
+│       │   ├── 攻击者排行 (QTableView + LogModel: Top 10 IP)
 │       │   └── recent_alerts_view (QTableView: 最近告警)
 │       ├── page_logs (日志监控)
-│       │   ├── log_level_filter (QComboBox)
-│       │   ├── log_search_box (QLineEdit: 全文搜索)
-│       │   ├── log_clear_btn (QPushButton: 清空)
+│       │   ├── 级别过滤 (QComboBox) + 全文搜索 (QLineEdit)
 │       │   ├── log_view (QTableView: LogModel → level proxy → search proxy)
-│       │   └── log_detail (QTextEdit: 选中行详情 + Hex dump + GeoIP)
+│       │   └── DetailPanel (QTextBrowser: 结构化 HTML 卡片详情)
 │       ├── page_alerts (安全告警)
+│       │   ├── 严重级别统计卡片 × 4 (CRIT/ERROR/WARN/INFO 实时计数)
+│       │   ├── alert_view (QTableView: LogModel → severity proxy)
+│       │   └── DetailPanel (告警详情卡片)
 │       ├── page_honeypot (蜜罐监控)
+│       │   ├── honey_view (QTableView)
+│       │   └── DetailPanel (蜜罐详情卡片)
 │       └── page_network (网络信息)
 │           ├── local_ip_table (QTableWidget: 接口/IP)
 │           ├── arp_table (QTableWidget: ARP 缓存)
 │           └── quarantine_table (QTableWidget: 隔离列表)
 └── QStatusBar
-    └── status_label: "运行中 | 日志 N | 告警 M | 已隔离 K"
+    └── status_label: "日志 N (+n/s) | 告警 M (+m/s) | 已隔离 K"
 ```
 
 ### 7.2 Model/View 架构
@@ -641,10 +646,12 @@ Filter Chain (告警):
 
 | 主题 | 背景 | 强调色 | 检测方式 |
 |------|------|--------|----------|
-| **暗色** | `#0a1922` (深海蓝黑) | `#39c5bb` (青) / `#4dd0e1` (亮青) | `QStyleHints::colorScheme()` |
-| **亮色** | `#e0f7fa` (浅青白) | `#00bcd4` (青) / `#00838f` (深青) | 自动跟随系统设置 |
+| **暗色** | `#12060c` (粉调黑) | `#ff6699` (粉) / `#ffffff` (白) | `QStyleHints::colorScheme()` |
+| **亮色** | `#fff0f5` (浅粉) | `#e0557e` (深粉) / `#ff99bb` (浅粉) | 自动跟随系统设置 |
 
-**实现**: `apply_theme(bool dark)` 动态注入完整 QSS 样式表, `colorSchemeChanged` 信号实时切换。
+**实现**: `apply_theme(bool d)` 动态注入完整 QSS 样式表，单模板 + 10 参数化颜色变量，
+`colorSchemeChanged` 信号实时切换。卡片使用左侧彩色边框强调（日志=粉、告警=白、隔离=红、运行=绿）。
+自定义 `LogDelegate` / `AlertDelegate` 渲染 Menlo 等宽字体时间戳 + 圆角色标。
 
 ### 7.5 键盘快捷键
 
@@ -1173,7 +1180,27 @@ cat data/tor_exits.cache | wc -l
 
 ---
 
-## 15. 开发指南
+## 15. 单元测试
+
+### 15.1 运行测试
+
+```bash
+cmake -B cmake-build-debug/test test -DCMAKE_PREFIX_PATH=$(brew --prefix qt6)
+cmake --build cmake-build-debug/test -j$(sysctl -n hw.ncpu)
+./cmake-build-debug/test/NezhaGuardTests
+```
+
+### 15.2 测试覆盖
+
+| 测试文件 | 测试数 | 覆盖模块 |
+|----------|--------|----------|
+| `test_ipaddr.cc` | 13 | IP 解析、比较、哈希、私有/回环/公网判定 |
+| `test_arena.cc` | 12 | 分配、对齐、驻留、cstr、重置、移动语义 |
+| `test_types.cc` | 8 | Severity 枚举、协议常量、EventSource、类型大小 |
+| `test_log_model.cc` | 10 | 增删、角色、颜色映射、清空、5000 上限 |
+| `test_theme.cc` | 6 | 色板 hex 有效性、暗/亮一致性、颜色独立性 |
+
+## 16. 开发指南
 
 ### 15.1 添加新攻击签名
 
@@ -1371,10 +1398,21 @@ NezhaGuard/
 │   └── views/                       # Qt6 GUI 层
 │       ├── monitor.h/cc             # QMainWindow: 蓝队控制台, 5 页, 双主题, 键盘快捷键
 │       ├── monitor.ui               # Qt Designer XML: 布局、样式、信号槽
+│       ├── theme.h                  # 全局色板 (粉系 + 语义色 + 暗/亮调色盘)
 │       ├── log_model.h/cc           # QAbstractListModel: 5000 条环形缓冲区, 自定义 Role
-│       ├── gui_sink.h/cc            # ISink → QObject: spdlog 桥接到 GUI Model
+│       ├── gui_sink.h/cc            # ISink → QObject: spdlog 桥接到 GUI Model + 内容感知着色
+│       ├── detail_panel.h/cc        # QTextBrowser: 结构化 HTML 卡片详情面板
 │       ├── app_icon.svg             # 矢量图标源文件
 │       └── app_icon.icns            # macOS Bundle 图标
+│
+├── test/                            # 单元测试
+│   ├── CMakeLists.txt               # Qt6::Test + 核心库链接
+│   ├── test_main.cc                 # 测试运行器入口
+│   ├── test_ipaddr.cc               # IP 解析/比较/哈希/私有/回环
+│   ├── test_arena.cc                # Arena 分配/对齐/驻留/重置/移动
+│   ├── test_types.cc                # 基础类型/枚举/协议常量
+│   ├── test_log_model.cc            # LogModel 增删/角色/颜色/上限
+│   └── test_theme.cc                # 色板有效性/差异性/格式
 │
 └── logs/                            # 日志输出目录 (.gitignore)
 ```

@@ -121,6 +121,7 @@ private:
     DetailPanel *honey_detail_panel_ = nullptr;
     struct Attacker { double score = 0; int count = 0; QString type; };
     QHash<QString, Attacker> attackers_;
+    LogModel *attackers_model_ = nullptr;
     int sev_crit_ = 0, sev_error_ = 0, sev_warn_ = 0, sev_info_ = 0;
     QList<int> sparkline_data_;
     bool dark_mode_ = true;

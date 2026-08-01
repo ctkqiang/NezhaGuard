@@ -12,6 +12,14 @@
             </PerProfileState>
           </value>
         </entry>
+        <entry key="RelWithDebInfo">
+          <value>
+            <PerProfileState>
+              <option name="myQmlPath" value="/opt/homebrew/opt/qt/share/qt/qml" />
+              <option name="myQtBinPath" value="/opt/homebrew/opt/qt/bin" />
+            </PerProfileState>
+          </value>
+        </entry>
         <entry key="Release">
           <value>
             <PerProfileState>
