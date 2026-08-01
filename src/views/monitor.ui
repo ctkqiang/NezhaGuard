@@ -255,6 +255,13 @@
              <item><widget class="QPushButton" name="refresh_network"><property name="text"><string>刷新</string></property></widget></item>
             </layout>
            </item>
+           <item>
+            <widget class="QFrame" name="radar_frame">
+             <property name="minimumSize"><size><width>0</width><height>220</height></size></property>
+             <property name="maximumSize"><size><width>16777215</width><height>220</height></size></property>
+             <property name="frameShape"><enum>QFrame::NoFrame</enum></property>
+            </widget>
+           </item>
            <item><widget class="QLabel" name="local_ip_label"><property name="text"><string>本地接口</string></property></widget></item>
            <item><widget class="QTableWidget" name="local_ip_table"><property name="maximumHeight"><number>130</number></property><property name="frameShape"><enum>QFrame::NoFrame</enum></property><property name="alternatingRowColors"><bool>true</bool></property><property name="showGrid"><bool>false</bool></property><property name="columnCount"><number>2</number></property><property name="editTriggers"><set>QAbstractItemView::NoEditTriggers</set></property><property name="selectionMode"><enum>QAbstractItemView::SingleSelection</enum></property><property name="selectionBehavior"><enum>QAbstractItemView::SelectRows</enum></property><attribute name="horizontalHeaderVisible"><bool>true</bool></attribute><attribute name="horizontalHeaderStretchLastSection"><bool>true</bool></attribute><attribute name="verticalHeaderVisible"><bool>false</bool></attribute><column><property name="text"><string>接口名称</string></property></column><column><property name="text"><string>IP 地址</string></property></column></widget></item>
            <item><widget class="QLabel" name="arp_label"><property name="text"><string>ARP 缓存表</string></property></widget></item>

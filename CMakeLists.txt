@@ -56,6 +56,8 @@ set(NEZHA_CORE_SOURCES
     src/views/gui_sink.h
     src/views/detail_panel.cc
     src/views/detail_panel.h
+    src/views/radar_widget.cc
+    src/views/radar_widget.h
     src/views/theme.h
     src/contants.h
 )

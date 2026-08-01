@@ -112,6 +112,7 @@ static int run_cli_mode() {
     }
 
     Core::dump_network_info();
+    Core::dump_arp_table();
 
     Core::Arena arena(128 * 1024);
     Core::AttackDetector detector;

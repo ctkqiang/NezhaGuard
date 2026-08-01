@@ -3,6 +3,7 @@
 #include "log_model.h"
 #include "gui_sink.h"
 #include "detail_panel.h"
+#include "radar_widget.h"
 #include "theme.h"
 #include "../service/database_helper.h"
 #include "../core/geo_ip.h"
@@ -287,6 +288,7 @@ void monitor::apply_theme(bool d) {
     if (recent_delegate_) recent_delegate_->dark = d;
     if (honey_delegate_) honey_delegate_->dark = d;
     if (sparkline_widget_) sparkline_widget_->dark = d;
+    if (radar_widget_) radar_widget_->dark = d;
     if (log_detail_panel_) log_detail_panel_->set_dark(d);
     if (alert_detail_panel_) alert_detail_panel_->set_dark(d);
     if (honey_detail_panel_) honey_detail_panel_->set_dark(d);
@@ -463,6 +465,12 @@ void monitor::init_models() {
     if (ui->sparkline_frame->layout()) delete ui->sparkline_frame->layout();
     auto *vbl = new QVBoxLayout(ui->sparkline_frame); vbl->setContentsMargins(0, 0, 0, 0);
     vbl->addWidget(sparkline_widget_);
+
+    // radar
+    radar_widget_ = new RadarWidget(); radar_widget_->dark = dark_mode_;
+    if (ui->radar_frame->layout()) delete ui->radar_frame->layout();
+    auto *rvbl = new QVBoxLayout(ui->radar_frame); rvbl->setContentsMargins(0, 0, 0, 0);
+    rvbl->addWidget(radar_widget_);
 
     // detail panels
     auto replace = [this](QTextEdit *old, DetailPanel *&panel, int maxH) {
@@ -734,6 +742,18 @@ void monitor::refresh_arp_table() {
         p += rtm->rtm_msglen;
     }
     t->resizeColumnToContents(0); t->horizontalHeader()->setStretchLastSection(true);
+
+    // populate radar
+    if (radar_widget_) {
+        QVector<RadarDevice> devices;
+        for (int r = 0; r < t->rowCount(); ++r) {
+            RadarDevice d;
+            d.ip = t->item(r, 0) ? t->item(r, 0)->text() : QString();
+            d.mac = t->item(r, 1) ? t->item(r, 1)->text() : QString();
+            if (!d.ip.isEmpty()) devices.append(d);
+        }
+        radar_widget_->set_devices(devices);
+    }
 }
 
 void monitor::refresh_network_info() { refresh_local_ips(); refresh_arp_table(); refresh_quarantine_list(); }

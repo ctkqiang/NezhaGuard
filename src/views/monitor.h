@@ -26,6 +26,7 @@ namespace Ui { class monitor; }
 QT_END_NAMESPACE
 
 class DetailPanel;
+class RadarWidget;
 
 class SparklineWidget : public QFrame {
     Q_OBJECT
@@ -118,6 +119,7 @@ private:
     AlertDelegate *recent_delegate_ = nullptr;
     LogDelegate *honey_delegate_ = nullptr;
     SparklineWidget *sparkline_widget_ = nullptr;
+    RadarWidget *radar_widget_ = nullptr;
     DetailPanel *log_detail_panel_ = nullptr;
     DetailPanel *alert_detail_panel_ = nullptr;
     DetailPanel *honey_detail_panel_ = nullptr;
