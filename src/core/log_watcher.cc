@@ -147,7 +147,9 @@ namespace Nezha::Core {
             auto status_end = line.find(' ', status_start);
             if (status_end != std::string_view::npos) {
                 std::string_view status = line.substr(status_start, status_end - status_start);
-                out.fields.put(4, FieldVal::num(std::stoi(std::string(status))));
+                int sc = 0;
+                for (char c : status) { if (c >= '0' && c <= '9') sc = sc * 10 + (c - '0'); else break; }
+                out.fields.put(4, FieldVal::num(sc));
                 if (!status.empty() && status[0] == '5') out.level = Severity::Warn;
                 if (!status.empty() && status[0] == '4') out.level = Severity::Info;
             }

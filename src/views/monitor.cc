@@ -8,6 +8,7 @@
 #include <QClipboard>
 #include <QComboBox>
 #include <QDateTime>
+#include <QGraphicsDropShadowEffect>
 #include <QHeaderView>
 #include <QLabel>
 #include <QLineEdit>
@@ -264,6 +265,29 @@ monitor::monitor(QWidget *parent) : QMainWindow(parent), ui(new Ui::monitor) {
     sparkline_timer_ = new QTimer(this);
     connect(sparkline_timer_, &QTimer::timeout, this, &monitor::update_sparkline);
     sparkline_timer_->start(1000);
+
+    /* 标题光晕呼吸动画: 哪吒网络安全 SIEM */
+    auto *glow = new QGraphicsDropShadowEffect(this);
+    glow->setBlurRadius(12);
+    glow->setOffset(0, 0);
+    glow->setColor(QColor("#39c5bb"));
+    ui->app_title->setGraphicsEffect(glow);
+    auto *glow_anim = new QPropertyAnimation(glow, "blurRadius", this);
+    glow_anim->setDuration(1800);
+    glow_anim->setStartValue(6);
+    glow_anim->setEndValue(20);
+    glow_anim->setEasingCurve(QEasingCurve::InOutSine);
+    glow_anim->setLoopCount(-1);
+    glow_anim->start();
+    auto *glow_color = new QPropertyAnimation(glow, "color", this);
+    glow_color->setDuration(2200);
+    glow_color->setStartValue(QColor("#4dd0e1"));
+    glow_color->setKeyValueAt(0.33, QColor("#39c5bb"));
+    glow_color->setKeyValueAt(0.66, QColor("#00bcd4"));
+    glow_color->setEndValue(QColor("#4dd0e1"));
+    glow_color->setEasingCurve(QEasingCurve::InOutSine);
+    glow_color->setLoopCount(-1);
+    glow_color->start();
 }
 
 monitor::~monitor() { delete ui; }
@@ -679,7 +703,7 @@ void monitor::show_log_detail(const QModelIndex &idx) {
     ui->log_detail->setPlainText(detail);
     if (!ips.isEmpty()) {
         QStringList ips_copy = ips;
-        QtConcurrent::run([this, ips_copy]() mutable {
+        auto future = QtConcurrent::run([this, ips_copy]() mutable {
             for (const auto &ip : ips_copy) {
                 std::string ip_std = ip.toStdString();
                 auto geo = Nezha::Core::GeoIP::lookup(ip_std);

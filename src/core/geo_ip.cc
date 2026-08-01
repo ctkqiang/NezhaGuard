@@ -1,6 +1,7 @@
 #include "geo_ip.h"
 #include "../utilities/logger.h"
 
+#include <arpa/inet.h>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -16,6 +17,15 @@ namespace Nezha::Core {
 
         std::mutex g_geo_mutex;
         std::unordered_map<std::string, GeoIPResult> g_geo_cache;
+
+        bool is_private_ip(const std::string &ip) {
+            if (ip.rfind("192.168.", 0) == 0) return true;
+            if (ip.rfind("10.", 0) == 0) return true;
+            if (ip.rfind("172.16.", 0) == 0) return true;
+            if (ip == "127.0.0.1" || ip == "0.0.0.0") return true;
+            if (ip.rfind("169.254.", 0) == 0) return true;
+            return false;
+        }
 
         double parse_double(const char *s) {
             if (!s || !*s) return 0.0;
@@ -55,6 +65,11 @@ namespace Nezha::Core {
         }
 
         GeoIPResult fetch_from_api(const std::string &ip) {
+            /* 防御: 严格校验 IP 格式，防止命令注入 */
+            struct sockaddr_in sa;
+            if (::inet_pton(AF_INET, ip.c_str(), &sa.sin_addr) != 1) return {};
+            if (is_private_ip(ip)) return {};
+
             char url[512];
             std::snprintf(url, sizeof(url), kAPIURL, ip.c_str());
             std::string cmd = std::string("curl -s --max-time 5 \"") + url + "\" 2>/dev/null";
@@ -71,14 +86,6 @@ namespace Nezha::Core {
             return r;
         }
 
-        bool is_private_ip(const std::string &ip) {
-            if (ip.rfind("192.168.", 0) == 0) return true;
-            if (ip.rfind("10.", 0) == 0) return true;
-            if (ip.rfind("172.16.", 0) == 0) return true;
-            if (ip == "127.0.0.1" || ip == "0.0.0.0") return true;
-            if (ip.rfind("169.254.", 0) == 0) return true;
-            return false;
-        }
     }
 
     GeoIPResult GeoIP::lookup(const std::string &ip) {

@@ -40,8 +40,9 @@ namespace Nezha::Core {
         constexpr std::size_t kIcmpHdrLen = 8;
         std::size_t orig_copy = std::min(original_len, kIpHdrLen + 8);
         std::size_t total = kIcmpHdrLen + orig_copy;
-        std::uint8_t pkt[total];
-        std::memset(pkt, 0, total);
+        static constexpr std::size_t kMaxIcmpPkt = kIcmpHdrLen + kIpHdrLen + 8;
+        std::uint8_t pkt[kMaxIcmpPkt];
+        std::memset(pkt, 0, sizeof(pkt));
 
         auto *icmp = reinterpret_cast<struct icmp *>(pkt);
         icmp->icmp_type = ICMP_UNREACH;

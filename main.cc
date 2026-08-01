@@ -8,6 +8,7 @@
 #include <ctime>
 #include <iostream>
 #include <thread>
+#include <unistd.h>
 #include <unordered_map>
 
 #include "src/contants.h"
@@ -58,13 +59,33 @@ static int run_cli_mode() {
     Core::TorChecker tor_checker;
     tor_checker.initialize();
     auto qlist = Database::DatabaseHelper::GetQuarantineList();
-    NZ_INFO("══════════════════════════════════════════════════");
-    NZ_INFO("  哪吒网络安全 SIEM 系统 {} [蓝队模式]",
-            Configuration::ApplicationConstants::ApplicationVersion);
-    NZ_INFO("  隔离阈值: {} 次  |  历史隔离记录: {} 条",
-            Configuration::ApplicationConstants::AnomaliesQuarantineThreshold,
-            qlist.size());
-    NZ_INFO("══════════════════════════════════════════════════");
+    char hostname[256] = {0};
+    gethostname(hostname, sizeof(hostname));
+    NZ_INFO("══════════════════════════════════════════════════════════════");
+    NZ_INFO("");
+    NZ_INFO("  哪 吒 网 络 安 全  SIEM  系 统");
+    NZ_INFO("  NezhaGuard v{} — 蓝队主动防御平台", Configuration::ApplicationConstants::ApplicationVersion);
+    NZ_INFO("");
+    NZ_INFO("  C++26  |  Qt6  |  libpcap  |  SQLite3  |  spdlog");
+    NZ_INFO("  构建: {} {}", __DATE__, __TIME__);
+    NZ_INFO("  主机: {}  |  PID: {}", hostname, getpid());
+    NZ_INFO("");
+    NZ_INFO("══════════════════════════════════════════════════════════════");
+    NZ_INFO("  [配置摘要]");
+    NZ_INFO("  运行模式:      蓝队 CLI 控制台 (无 GUI)");
+    NZ_INFO("  网卡接口:      {}", get_net_interface());
+    NZ_INFO("  抓包过滤器:    tcp or udp or icmp");
+    NZ_INFO("  隔离阈值:      {} 次异常触发自动隔离",
+            Configuration::ApplicationConstants::AnomaliesQuarantineThreshold);
+    NZ_INFO("  告警去重窗口:  10 秒");
+    NZ_INFO("  Arena 块大小:  128 KB (每 30s 回收)");
+    NZ_INFO("  历史隔离记录:  {} 条", qlist.size());
+    if (!qlist.empty()) {
+        NZ_INFO("  ── 已隔离 IP 列表 ──");
+        for (const auto &r : qlist)
+            NZ_INFO("    {}  [{}]  score={:.0f}", r.ip_address, r.reason, r.threat_score);
+    }
+    NZ_INFO("══════════════════════════════════════════════════════════════");
     Core::dump_network_info();
 
     Core::Arena arena(128 * 1024);
@@ -134,6 +155,9 @@ static int run_cli_mode() {
 
     if (cap.is_open()) {
         cap.start([&](const std::uint8_t *raw, std::size_t len, const timeval &ts) {
+            static uint64_t pkt_count = 0;
+            static Nanos last_stats = 0;
+            ++pkt_count;
             Core::event e{};
             if (!Core::ProtocolDecoder::decode(raw, len, ts, arena, e)) return;
             if (Database::DatabaseHelper::IsIPQuarantined(e.src.to_string())) {
@@ -170,6 +194,15 @@ static int run_cli_mode() {
                 alerter.flush();
                 last_flush = e.ts_ns;
             }
+            if (last_stats == 0) last_stats = e.ts_ns;
+            if (e.ts_ns - last_stats > 60'000'000'000ULL) {
+                auto ql = Database::DatabaseHelper::GetQuarantineList();
+                double elapsed = (e.ts_ns - last_stats) / 1'000'000'000.0;
+                NZ_INFO("[统计] 包: {}  |  告警: {}  |  隔离: {}  |  速率: {:.0f} pps  |  Tor节点: {}",
+                        pkt_count, alerter.total_alerts(), ql.size(),
+                        pkt_count / elapsed, tor_checker.total_nodes());
+                last_stats = e.ts_ns;
+            }
         });
     } else {
         NZ_INFO("运行中 (无网络采集)，Ctrl+C 退出");
@@ -185,15 +218,26 @@ static int run_cli_mode() {
     alerter.flush();
     Log::Logger::instance().flush();
     auto final_qlist = Database::DatabaseHelper::GetQuarantineList();
-    NZ_INFO("══════════════════════════════════════════════════");
-    NZ_INFO("  SIEM 已停止  |  本次告警: {}  |  隔离 IP: {}",
-            alerter.total_alerts(), final_qlist.size());
+    NZ_INFO("");
+    NZ_INFO("══════════════════════════════════════════════════════════════");
+    NZ_INFO("");
+    NZ_INFO("  哪 吒 网 络 安 全  SIEM  系 统  已 停 止");
+    NZ_INFO("");
+    NZ_INFO("  ── 本次运行摘要 ──");
+    NZ_INFO("  累计告警:     {}", alerter.total_alerts());
+    NZ_INFO("  当前隔离 IP:  {}", final_qlist.size());
+    NZ_INFO("  Tor 出口节点: {} 个已缓存", tor_checker.total_nodes());
+    NZ_INFO("");
     if (!final_qlist.empty()) {
         NZ_INFO("  ── 隔离列表 ──");
         for (const auto &r: final_qlist)
             NZ_INFO("    {}  [{}]  score={:.0f}", r.ip_address, r.reason, r.threat_score);
+        NZ_INFO("");
     }
-    NZ_INFO("══════════════════════════════════════════════════");
+    NZ_INFO("  日志文件: logs/nezha.log");
+    NZ_INFO("  隔离数据库: data/nezha_quarantine.db");
+    NZ_INFO("");
+    NZ_INFO("══════════════════════════════════════════════════════════════");
     return 0;
 }
 
@@ -338,6 +382,7 @@ static int run_gui_mode(int argc, char *argv[]) {
         cap_thread = std::thread([&]() {
             cap.start([&](const std::uint8_t *raw, std::size_t len, const timeval &ts) {
                 Core::event e{};
+
                 if (!Core::ProtocolDecoder::decode(raw, len, ts, arena, e)) return;
                 if (Database::DatabaseHelper::IsIPQuarantined(e.src.to_string())) {
                     static std::unordered_map<std::string, Nanos> last_warn;
