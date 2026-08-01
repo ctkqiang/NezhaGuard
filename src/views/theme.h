@@ -2,10 +2,14 @@
 #define NEZHAGUARD_THEME_H
 
 namespace Theme {
-    // accent — pink used sparingly
-    inline constexpr auto Pink         = "#f778a1";
-    inline constexpr auto PinkLight    = "#ffb3cc";
-    inline constexpr auto PinkDeep     = "#e0637e";
+    // cute cyan
+    inline constexpr auto Cyan         = "#7ee8e8";
+    inline constexpr auto CyanLight    = "#b5f0f0";
+    inline constexpr auto CyanDeep     = "#4db8b8";
+
+    // soft pink accent
+    inline constexpr auto Pink         = "#ffb3cc";
+    inline constexpr auto PinkDeep     = "#f0a0b8";
 
     // semantic
     inline constexpr auto Red          = "#f85149";
