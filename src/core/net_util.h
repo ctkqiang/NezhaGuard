@@ -9,6 +9,7 @@ namespace Nezha::Core {
     void dump_local_ips();
     void dump_arp_table();
     void dump_network_info();
+    int arp_table_size();
 }
 
 #endif //NEZHAGUARD_NET_UTIL_H

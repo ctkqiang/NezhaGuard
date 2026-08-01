@@ -233,7 +233,7 @@ monitor::~monitor() { delete ui; }
 void monitor::start_animations() {
     auto *glow = new QGraphicsDropShadowEffect(this);
     glow->setBlurRadius(10); glow->setOffset(0, 0);
-    glow->setColor(QColor(Theme::PinkLight));
+    glow->setColor(QColor(Theme::CyanLight));
     ui->app_title->setGraphicsEffect(glow);
 
     auto *ga = new QPropertyAnimation(glow, "blurRadius", this);
@@ -242,9 +242,9 @@ void monitor::start_animations() {
 
     auto *gc = new QPropertyAnimation(glow, "color", this);
     gc->setDuration(3000);
-    gc->setStartValue(QColor(Theme::PinkLight));
-    gc->setKeyValueAt(0.5, QColor(Theme::Pink));
-    gc->setEndValue(QColor(Theme::PinkLight));
+    gc->setStartValue(QColor(Theme::CyanLight));
+    gc->setKeyValueAt(0.5, QColor(Theme::Cyan));
+    gc->setEndValue(QColor(Theme::CyanLight));
     gc->setEasingCurve(QEasingCurve::InOutSine); gc->setLoopCount(-1); gc->start();
 
     for (auto *s : {ui->status_dot}) {
@@ -295,7 +295,7 @@ void monitor::apply_theme(bool d) {
 
     auto B = d ? Theme::DkBg : Theme::LtBg, C = d ? Theme::DkCard : Theme::LtCard;
     auto Br = d ? Theme::DkBorder : Theme::LtBorder, T = d ? Theme::DkText : Theme::LtText;
-    auto A = d ? Theme::White : Theme::PinkDeep, M = d ? Theme::DkMuted : Theme::LtMuted;
+    auto A = d ? Theme::Cyan : Theme::CyanDeep, M = d ? Theme::DkMuted : Theme::LtMuted;
     auto S = d ? Theme::DkSelected : Theme::LtSelected, H = d ? Theme::DkHover : Theme::LtHover;
     auto P = d ? Theme::Pink : Theme::PinkDeep;
 
@@ -459,6 +459,9 @@ void monitor::init_models() {
     ui->attackers_view->horizontalHeader()->setSectionResizeMode(2, QHeaderView::Stretch);
     connect(ui->refresh_network, &QPushButton::clicked, this, &monitor::refresh_network_info);
     refresh_network_info();
+    auto *netTimer = new QTimer(this);
+    connect(netTimer, &QTimer::timeout, this, &monitor::refresh_network_info);
+    netTimer->start(30000); // 每 30s 刷新 ARP/雷达/本地接口/隔离列表
 
     // sparkline
     sparkline_widget_ = new SparklineWidget(); sparkline_widget_->dark = dark_mode_;

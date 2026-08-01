@@ -239,6 +239,27 @@ namespace Nezha::Core {
     }
 #endif
 
+    int arp_table_size() {
+#ifdef __linux__
+        return count_arp_entries();
+#else
+        int mib[6] = {CTL_NET, PF_ROUTE, 0, AF_INET, NET_RT_FLAGS, RTF_LLINFO};
+        std::size_t needed = 0;
+        if (sysctl(mib, 6, nullptr, &needed, nullptr, 0) != 0) return 0;
+        std::vector<char> buf(needed * 2);
+        needed = buf.size();
+        if (sysctl(mib, 6, buf.data(), &needed, nullptr, 0) != 0) return 0;
+        int count = 0;
+        for (char *p = buf.data(); p < buf.data() + needed;) {
+            auto *rtm = reinterpret_cast<rt_msghdr *>(p);
+            if (rtm->rtm_version != RTM_VERSION) break;
+            if (rtm->rtm_flags & RTF_LLINFO) ++count;
+            p += rtm->rtm_msglen;
+        }
+        return count;
+#endif
+    }
+
     void dump_network_info() {
         NZ_INFO("  本地接口: {} 个  |  ARP 条目: {} 个",
                 count_local_ips(), count_arp_entries());

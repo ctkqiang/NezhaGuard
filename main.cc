@@ -227,9 +227,11 @@ static int run_cli_mode() {
             if (e.ts_ns - last_stats > 60'000'000'000ULL) {
                 auto ql = Database::DatabaseHelper::GetQuarantineList();
                 double elapsed = (e.ts_ns - last_stats) / 1'000'000'000.0;
-                NZ_INFO("[统计] 包: {}  |  告警: {}  |  隔离: {}  |  速率: {:.0f} pps  |  Tor节点: {}",
+                auto arp_count = Core::arp_table_size();
+                NZ_INFO("[统计] 包: {} | 告警: {} | 隔离: {} | 速率: {:.0f} pps | ARP设备: {} | Tor节点: {} | 规则: {}",
                         pkt_count, alerter.total_alerts(), ql.size(),
-                        pkt_count / elapsed, tor_checker.total_nodes());
+                        pkt_count / elapsed, arp_count, tor_checker.total_nodes(),
+                        detector.rule_count());
                 last_stats = e.ts_ns;
             }
         });
