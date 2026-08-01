@@ -1,0 +1,111 @@
+# NezhaGuard 签名规则库 — 运行时加载，SIGHUP 热重载
+# 字段: type(AttackType枚举) severity(Critical/Error/Warn/Info) score(0-100) pattern desc [regex] [mitre_id]
+rules:
+  # ── SQL 注入 ──
+  - {type: SQLi, severity: Critical, score: 90, pattern: "UNION SELECT", desc: "联合查询注入"}
+  - {type: SQLi, severity: Critical, score: 90, pattern: "UNION ALL SELECT", desc: "联合查询注入"}
+  - {type: SQLi, severity: Critical, score: 85, pattern: "INFORMATION_SCHEMA", desc: "信息模式探测"}
+  - {type: SQLi, severity: Critical, score: 80, pattern: "SLEEP(", desc: "时间盲注"}
+  - {type: SQLi, severity: Critical, score: 80, pattern: "BENCHMARK(", desc: "时间盲注"}
+  - {type: SQLi, severity: Error,   score: 70, pattern: "' OR 1=1", desc: "条件永真注入"}
+  - {type: SQLi, severity: Error,   score: 70, pattern: '" OR 1=1', desc: "条件永真注入"}
+  - {type: SQLi, severity: Error,   score: 70, pattern: "' OR '1'='1", desc: "条件永真注入"}
+  - {type: SQLi, severity: Error,   score: 75, pattern: "'; DROP TABLE", desc: "删表注入"}
+  - {type: SQLi, severity: Error,   score: 70, pattern: "SELECT * FROM", desc: "直接查询注入"}
+  - {type: SQLi, severity: Error,   score: 65, pattern: "WAITFOR DELAY", desc: "时间盲注(MS)"}
+  - {type: SQLi, severity: Warn,    score: 60, pattern: "pg_sleep", desc: "PostgreSQL 盲注"}
+  - {type: SQLi, severity: Warn,    score: 60, pattern: "DBMS_PIPE.RECEIVE", desc: "Oracle 盲注"}
+  - {type: SQLi, severity: Warn,    score: 55, pattern: "ORDER BY ", desc: "列数探测"}
+  - {type: SQLi, severity: Warn,    score: 55, pattern: "GROUP BY ", desc: "列数探测"}
+
+  # ── XSS ──
+  - {type: XSS, severity: Critical, score: 85, pattern: "<script", desc: "脚本标签注入"}
+  - {type: XSS, severity: Error,   score: 80, pattern: "javascript:", desc: "JS 伪协议"}
+  - {type: XSS, severity: Error,   score: 80, pattern: "onerror=", desc: "事件处理器注入"}
+  - {type: XSS, severity: Error,   score: 80, pattern: "onload=", desc: "事件处理器注入"}
+  - {type: XSS, severity: Warn,    score: 75, pattern: "<img", desc: "可疑图片标签"}
+  - {type: XSS, severity: Warn,    score: 75, pattern: "<iframe", desc: "内嵌框架注入"}
+  - {type: XSS, severity: Warn,    score: 75, pattern: "<svg", desc: "SVG 注入"}
+  - {type: XSS, severity: Warn,    score: 70, pattern: "alert(", desc: "弹窗测试"}
+  - {type: XSS, severity: Warn,    score: 70, pattern: "document.cookie", desc: "Cookie 窃取"}
+
+  # ── 路径穿越 ──
+  - {type: PathTraversal, severity: Critical, score: 90, pattern: "/etc/passwd", desc: "系统密码文件"}
+  - {type: PathTraversal, severity: Critical, score: 85, pattern: "/etc/shadow", desc: "系统密码文件"}
+  - {type: PathTraversal, severity: Critical, score: 85, pattern: "C:\\Windows\\", desc: "Windows 系统路径"}
+  - {type: PathTraversal, severity: Error,   score: 80, pattern: "....//", desc: "路径穿越变体"}
+  - {type: PathTraversal, severity: Error,   score: 80, pattern: "..;/", desc: "路径穿越变体"}
+  - {type: PathTraversal, severity: Error,   score: 75, pattern: "../" "../" "../", desc: "多层穿越"}
+  - {type: PathTraversal, severity: Warn,    score: 70, pattern: "WEB-INF", desc: "Java Web目录探针"}
+  - {type: PathTraversal, severity: Warn,    score: 70, pattern: "wp-config.php", desc: "WordPress 配置"}
+
+  # ── 命令注入 ──
+  - {type: CmdInjection, severity: Critical, score: 95, pattern: ";wget", desc: "命令注入下载"}
+  - {type: CmdInjection, severity: Critical, score: 95, pattern: ";curl", desc: "命令注入下载"}
+  - {type: CmdInjection, severity: Critical, score: 90, pattern: "$(whoami)", desc: "命令替换探测"}
+  - {type: CmdInjection, severity: Critical, score: 90, pattern: "`id`", desc: "命令替换探测"}
+  - {type: CmdInjection, severity: Error,   score: 85, pattern: "| /bin/bash", desc: "管道执行"}
+  - {type: CmdInjection, severity: Error,   score: 85, pattern: "/bin/sh -c", desc: "Shell 执行"}
+  - {type: CmdInjection, severity: Error,   score: 85, pattern: "cmd.exe /c", desc: "Windows 命令执行"}
+  - {type: CmdInjection, severity: Error,   score: 80, pattern: "&& cat ", desc: "命令拼接"}
+  - {type: CmdInjection, severity: Warn,    score: 75, pattern: "/dev/tcp/", desc: "反向 Shell"}
+  - {type: CmdInjection, severity: Error,   score: 80, pattern: "169.254.169.254", desc: "AWS 元数据 SSRF"}
+  - {type: CmdInjection, severity: Error,   score: 80, pattern: "metadata.google.internal", desc: "GCP 元数据 SSRF"}
+
+  # ── 文件包含 ──
+  - {type: FileInclusion, severity: Critical, score: 85, pattern: "=http://", desc: "远程文件包含"}
+  - {type: FileInclusion, severity: Critical, score: 85, pattern: "=https://", desc: "远程文件包含"}
+  - {type: FileInclusion, severity: Error,   score: 80, pattern: "php://input", desc: "PHP 输入流"}
+  - {type: FileInclusion, severity: Error,   score: 80, pattern: "php://filter", desc: "PHP 过滤器"}
+  - {type: FileInclusion, severity: Error,   score: 80, pattern: "expect://", desc: "Expect 封装器"}
+  - {type: FileInclusion, severity: Error,   score: 80, pattern: "data://", desc: "Data URI 封装器"}
+
+  # ── 扫描探测 ──
+  - {type: Scanner, severity: Error, score: 75, pattern: "nmap", desc: "Nmap 扫描器"}
+  - {type: Scanner, severity: Error, score: 75, pattern: "sqlmap", desc: "SQLMap 注入工具"}
+  - {type: Scanner, severity: Error, score: 75, pattern: "nikto", desc: "Nikto 扫描器"}
+  - {type: Scanner, severity: Error, score: 75, pattern: "nessus", desc: "Nessus 扫描器"}
+  - {type: Scanner, severity: Error, score: 75, pattern: "burpsuite", desc: "Burp Suite"}
+  - {type: Scanner, severity: Error, score: 70, pattern: "acunetix", desc: "Acunetix 扫描器"}
+  - {type: Scanner, severity: Error, score: 70, pattern: "gobuster", desc: "目录爆破"}
+  - {type: Scanner, severity: Error, score: 70, pattern: "dirbuster", desc: "目录爆破"}
+  - {type: Scanner, severity: Warn,  score: 65, pattern: "masscan", desc: "Masscan 扫描"}
+  - {type: Scanner, severity: Warn,  score: 65, pattern: "zgrab", desc: "Zgrab 扫描"}
+  - {type: Scanner, severity: Warn,  score: 60, pattern: "python-requests", desc: "自动化脚本"}
+  - {type: Scanner, severity: Warn,  score: 60, pattern: "Go-http-client", desc: "Go HTTP 客户端"}
+  - {type: Scanner, severity: Warn,  score: 60, pattern: "curl/", desc: "Curl 自动化"}
+  - {type: Scanner, severity: Error, score: 75, pattern: "wp-login.php", desc: "WordPress 登录探测"}
+  - {type: Scanner, severity: Error, score: 75, pattern: "xmlrpc.php", desc: "WordPress XMLRPC 攻击"}
+  - {type: Scanner, severity: Warn,  score: 70, pattern: "wp-admin", desc: "WordPress 后台探测"}
+  - {type: Scanner, severity: Warn,  score: 65, pattern: "wp-content", desc: "WordPress 路径探测"}
+  - {type: Scanner, severity: Warn,  score: 65, pattern: "wp-includes", desc: "WordPress 路径探测"}
+  - {type: Scanner, severity: Error, score: 75, pattern: ".env", desc: ".env 文件探测"}
+  - {type: Scanner, severity: Error, score: 75, pattern: ".git/config", desc: "Git 配置泄露"}
+  - {type: Scanner, severity: Warn,  score: 70, pattern: "actuator", desc: "Spring Boot 端点探测"}
+  - {type: Scanner, severity: Warn,  score: 70, pattern: "jmx-console", desc: "JMX 控制台探测"}
+  - {type: Scanner, severity: Warn,  score: 70, pattern: "phpinfo.php", desc: "PHP 信息泄露"}
+  - {type: Scanner, severity: Warn,  score: 65, pattern: "robots.txt", desc: "爬虫规则探测"}
+  - {type: Scanner, severity: Warn,  score: 65, pattern: "sitemap.xml", desc: "站点地图探测"}
+
+  # ── Webshell ──
+  - {type: Webshell, severity: Critical, score: 95, pattern: "eval(base64_decode", desc: "PHP 编码执行"}
+  - {type: Webshell, severity: Critical, score: 90, pattern: "system($_", desc: "PHP 系统执行"}
+  - {type: Webshell, severity: Critical, score: 90, pattern: "exec($_", desc: "PHP 命令执行"}
+  - {type: Webshell, severity: Critical, score: 90, pattern: "shell_exec", desc: "PHP Shell 执行"}
+  - {type: Webshell, severity: Error,   score: 85, pattern: "assert($_", desc: "PHP 断言执行"}
+  - {type: Webshell, severity: Error,   score: 85, pattern: "preg_replace", desc: "PHP 正则执行"}
+  - {type: Webshell, severity: Error,   score: 85, pattern: ".php?cmd=", desc: "Webshell 访问"}
+  - {type: Webshell, severity: Warn,    score: 80, pattern: "wso.php", desc: "WSO Webshell"}
+  - {type: Webshell, severity: Warn,    score: 80, pattern: "c99.php", desc: "C99 Webshell"}
+
+  # ── Log4j ──
+  - {type: Log4j, severity: Critical, score: 95, pattern: "${jndi:ldap://", desc: "Log4j JNDI 注入"}
+  - {type: Log4j, severity: Critical, score: 95, pattern: "${jndi:ldaps://", desc: "Log4j JNDI 注入"}
+  - {type: Log4j, severity: Critical, score: 95, pattern: "${jndi:rmi://", desc: "Log4j JNDI 注入"}
+  - {type: Log4j, severity: Critical, score: 95, pattern: "${jndi:dns://", desc: "Log4j JNDI 注入"}
+  - {type: Log4j, severity: Error,   score: 90, pattern: "${${::-j}${::-n}", desc: "Log4j 混淆绕过"}
+
+  # ── 恶意爬虫 ──
+  - {type: BotActivity, severity: Warn, score: 60, pattern: "AhrefsBot", desc: "SEO 爬虫"}
+  - {type: BotActivity, severity: Warn, score: 60, pattern: "SemrushBot", desc: "SEO 爬虫"}
+  - {type: BotActivity, severity: Warn, score: 60, pattern: "DotBot", desc: "恶意爬虫"}

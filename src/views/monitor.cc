@@ -48,9 +48,7 @@
 #include <vector>
 #include <algorithm>
 
-// ──────────────────────────────────────────────
-//  SparklineWidget
-// ──────────────────────────────────────────────
+// SparklineWidget
 void SparklineWidget::set_data(const QList<int> &d) { data_ = d; update(); }
 
 void SparklineWidget::paintEvent(QPaintEvent *) {
@@ -104,9 +102,7 @@ void SparklineWidget::paintEvent(QPaintEvent *) {
                QStringLiteral("%1 pts  max %2").arg(n).arg(maxv));
 }
 
-// ──────────────────────────────────────────────
-//  Delegates
-// ──────────────────────────────────────────────
+// Delegates
 void LogDelegate::paint(QPainter *p, const QStyleOptionViewItem &opt, const QModelIndex &idx) const {
     QStyleOptionViewItem o = opt; initStyleOption(&o, idx);
     p->save();
@@ -189,9 +185,7 @@ void AlertDelegate::paint(QPainter *p, const QStyleOptionViewItem &opt, const QM
 
 QSize AlertDelegate::sizeHint(const QStyleOptionViewItem &, const QModelIndex &) const { return {200, 28}; }
 
-// ──────────────────────────────────────────────
-//  monitor
-// ──────────────────────────────────────────────
+// monitor
 monitor::monitor(QWidget *parent) : QMainWindow(parent), ui(new Ui::monitor) {
     ui->setupUi(this);
     setAttribute(Qt::WA_QuitOnClose, true);
@@ -237,18 +231,18 @@ monitor::~monitor() { delete ui; }
 // -- animations --
 void monitor::start_animations() {
     auto *glow = new QGraphicsDropShadowEffect(this);
-    glow->setBlurRadius(12); glow->setOffset(0, 0);
-    glow->setColor(QColor(Theme::Pink));
+    glow->setBlurRadius(10); glow->setOffset(0, 0);
+    glow->setColor(QColor(Theme::PinkLight));
     ui->app_title->setGraphicsEffect(glow);
 
     auto *ga = new QPropertyAnimation(glow, "blurRadius", this);
-    ga->setDuration(2200); ga->setStartValue(4); ga->setEndValue(18);
+    ga->setDuration(2400); ga->setStartValue(6); ga->setEndValue(16);
     ga->setEasingCurve(QEasingCurve::InOutSine); ga->setLoopCount(-1); ga->start();
 
     auto *gc = new QPropertyAnimation(glow, "color", this);
-    gc->setDuration(2800);
+    gc->setDuration(3000);
     gc->setStartValue(QColor(Theme::PinkLight));
-    gc->setKeyValueAt(0.5, QColor(Theme::PinkDeep));
+    gc->setKeyValueAt(0.5, QColor(Theme::Pink));
     gc->setEndValue(QColor(Theme::PinkLight));
     gc->setEasingCurve(QEasingCurve::InOutSine); gc->setLoopCount(-1); gc->start();
 
@@ -306,11 +300,11 @@ void monitor::apply_theme(bool d) {
     setStyleSheet(QStringLiteral(R"(
         * { font-family:"Inter","PingFang SC",sans-serif; }
         QMainWindow { background:%1; }
-        #header { background:%2; border-bottom:2px solid %3; }
+        #header { background:qlineargradient(x1:0,y1:0,x2:1,y2:0,stop:0 %2,stop:1 %10); border-bottom:1px solid %3; }
         QLabel { color:%4; }
         #app_title { font-size:15px; font-weight:700; color:%5; }
-        #brand_badge { background:qlineargradient(x1:0,y1:0,x2:1,y2:1,stop:0 %5,stop:1 %9);
-                       color:%1; border-radius:10px; font-size:9px; font-weight:700; padding:1px 7px; }
+        #brand_badge { background:qlineargradient(x1:0,y1:0,x2:1,y2:1,stop:0 %9,stop:1 #e0637e);
+                       color:%1; border-radius:12px; font-size:9px; font-weight:700; padding:2px 8px; }
         #clock_label,#status_text { font-size:10px; color:%5; font-weight:600; }
         #status_dot { background:%5; border-radius:4px; }
         QStatusBar { background:%2; border-top:1px solid %3; font-size:10px; color:%6; }

@@ -13,6 +13,8 @@ set(TEST_SOURCES
     test_types.cc
     test_log_model.cc
     test_theme.cc
+    test_rule_loader.cc
+    test_webshell_scanner.cc
 )
 
 add_executable(NezhaGuardTests ${TEST_SOURCES})
@@ -49,6 +51,8 @@ set(NEZHA_CORE_TEST
     ../src/core/decoder.cc
     ../src/core/log_watcher.cc
     ../src/core/detector.cc
+    ../src/core/rule_loader.cc
+    ../src/core/webshell_scanner.cc
     ../src/core/alert.cc
     ../src/core/net_util.cc
     ../src/utilities/logger.cc

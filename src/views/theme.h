@@ -2,37 +2,36 @@
 #define NEZHAGUARD_THEME_H
 
 namespace Theme {
-    // accent — saturated, visible on dark bg
-    inline constexpr auto Pink         = "#ff6699";
-    inline constexpr auto PinkLight    = "#ff99bb";
-    inline constexpr auto PinkDeep     = "#e0557e";
-    inline constexpr auto Rose         = "#ffb3cc";
+    // accent — pink used sparingly
+    inline constexpr auto Pink         = "#f778a1";
+    inline constexpr auto PinkLight    = "#ffb3cc";
+    inline constexpr auto PinkDeep     = "#e0637e";
 
     // semantic
-    inline constexpr auto Red          = "#ff6b6b";
-    inline constexpr auto Orange       = "#ff9966";
-    inline constexpr auto Green        = "#7ecf8a";
-    inline constexpr auto Purple       = "#c88df0";
-    inline constexpr auto White        = "#ffffff";
-    inline constexpr auto Grey         = "#999999";
+    inline constexpr auto Red          = "#f85149";
+    inline constexpr auto Orange       = "#f0883e";
+    inline constexpr auto Green        = "#3fb950";
+    inline constexpr auto Purple       = "#a371f7";
+    inline constexpr auto White        = "#e6edf3";
+    inline constexpr auto Grey         = "#6e7681";
 
-    // dark — deeper contrast
-    inline constexpr auto DkBg         = "#12060c";
-    inline constexpr auto DkCard       = "#1e0e16";
-    inline constexpr auto DkBorder     = "#3a1a2a";
-    inline constexpr auto DkHover      = "#281420";
-    inline constexpr auto DkSelected   = "#301a28";
-    inline constexpr auto DkText       = "#ffe0ea";
-    inline constexpr auto DkMuted      = "#b87088";
+    // dark — neutral
+    inline constexpr auto DkBg         = "#0d1117";
+    inline constexpr auto DkCard       = "#161b22";
+    inline constexpr auto DkBorder     = "#30363d";
+    inline constexpr auto DkHover      = "#1c2128";
+    inline constexpr auto DkSelected   = "#1a2c38";
+    inline constexpr auto DkText       = "#e6edf3";
+    inline constexpr auto DkMuted      = "#8b949e";
 
     // light
-    inline constexpr auto LtBg         = "#fff0f5";
+    inline constexpr auto LtBg         = "#f6f8fa";
     inline constexpr auto LtCard       = "#ffffff";
-    inline constexpr auto LtBorder     = "#f0c0d0";
-    inline constexpr auto LtHover      = "#fff5f8";
-    inline constexpr auto LtSelected   = "#ffe4ec";
-    inline constexpr auto LtText       = "#3d0d1e";
-    inline constexpr auto LtMuted      = "#9e5a72";
+    inline constexpr auto LtBorder     = "#d0d7de";
+    inline constexpr auto LtHover      = "#f3f4f6";
+    inline constexpr auto LtSelected   = "#e0e7ee";
+    inline constexpr auto LtText       = "#1f2328";
+    inline constexpr auto LtMuted      = "#656d76";
 }
 
 #endif

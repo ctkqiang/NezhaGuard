@@ -31,11 +31,11 @@ private slots:
     void color_by_level() {
         LogModel m;
         m.append("t", "CRIT", "x");
-        QCOMPARE(m.index(0).data(LogModel::ColorRole).value<QColor>().name(), "#ff8a80");
+        QCOMPARE(m.index(0).data(LogModel::ColorRole).value<QColor>().name(), "#ff6b6b");
         m.append("t", "ERROR", "x");
-        QCOMPARE(m.index(1).data(LogModel::ColorRole).value<QColor>().name(), "#ffab91");
+        QCOMPARE(m.index(1).data(LogModel::ColorRole).value<QColor>().name(), "#ff9966");
         m.append("t", "Info", "x");
-        QCOMPARE(m.index(2).data(LogModel::ColorRole).value<QColor>().name(), "#f06292");
+        QCOMPARE(m.index(2).data(LogModel::ColorRole).value<QColor>().name(), "#e0557e");
     }
 
     void explicit_color_override() {

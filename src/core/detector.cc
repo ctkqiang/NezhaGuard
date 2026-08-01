@@ -4,8 +4,10 @@
 
 #include "detector.h"
 #include "arena.h"
+#include "rule_loader.h"
 #include "../contants.h"
 #include "../service/database_helper.h"
+#include "../utilities/logger.h"
 #include <algorithm>
 #include <cstring>
 
@@ -133,24 +135,23 @@ namespace Nezha::Core {
         {AttackType::CmdInjection, Severity::Error, 80.0, "169.254.169.254", "AWS 元数据 SSRF"},
         {AttackType::CmdInjection, Severity::Error, 80.0, "metadata.google.internal", "GCP 元数据 SSRF"},
     };
-    static constexpr std::size_t kSigCount = sizeof(kSignatures) / sizeof(kSignatures[0]);
-
     namespace {
-        const SigRule *match_signature(std::string_view msg, std::string_view ua) {
+        // 基于规则集的签名匹配，返回最佳匹配规则指针（指向 rules 中的元素）
+        const SigRule *match_signature(const std::vector<SigRule> &rules,
+                                       std::string_view msg, std::string_view ua) {
             const SigRule *best = nullptr;
             double best_score = 0.0;
 
             auto try_match = [&](std::string_view target, bool in_ua) {
-                for (std::size_t i = 0; i < kSigCount; ++i) {
-                    const auto &r = kSignatures[i];
+                for (const auto &r : rules) {
                     if (r.type == AttackType::BotActivity && !in_ua) continue;
                     if (r.type == AttackType::Scanner && !in_ua
-                        && std::strstr(r.pattern, "curl") == r.pattern)
+                        && r.pattern.starts_with("curl"))
                         continue;
 
                     auto it = std::search(
                         target.begin(), target.end(),
-                        r.pattern, r.pattern + std::strlen(r.pattern),
+                        r.pattern.begin(), r.pattern.end(),
                         [](char a, char b) { return std::tolower(a) == std::tolower(b); }
                     );
                     if (it != target.end() && r.score > best_score) {
@@ -186,6 +187,33 @@ namespace Nezha::Core {
         }
     }
 
+    AttackDetector::AttackDetector() {
+        // 从编译期内置签名初始化规则表
+        for (const auto &r : kSignatures)
+            rules_.push_back(r);
+    }
+
+    bool AttackDetector::load_rules(const std::string &path) {
+        RuleLoader loader;
+        auto result = loader.load_from_file(path);
+        if (!result) {
+            NZ_WARN("规则加载失败: {} (保留现有 {} 条规则)",
+                    rule_load_error_str(result.error()), rules_.size());
+            return false;
+        }
+        if (result->empty()) {
+            NZ_WARN("规则文件为空，保留现有 {} 条规则", rules_.size());
+            return false;
+        }
+        rules_ = std::move(*result);
+        NZ_INFO("规则热加载完成: {} 条", rules_.size());
+        return true;
+    }
+
+    void AttackDetector::reload_rules(const std::string &path) {
+        load_rules(path);
+    }
+
     void AttackDetector::analyze(const event &e, Arena &arena, AlertCallback cb) {
         if (!cb) return;
         Nanos now = e.ts_ns
@@ -197,7 +225,7 @@ namespace Nezha::Core {
         const FieldVal *ua_val = e.fields.get(5);
         if (ua_val && ua_val->kind == FieldVal::Kind::Str) ua = ua_val->s;
 
-        const SigRule *rule = match_signature(e.msg, ua);
+        const SigRule *rule = match_signature(rules_, e.msg, ua);
         if (rule) {
             Alert a{};
             a.type = rule->type;

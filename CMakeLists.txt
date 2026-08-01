@@ -27,8 +27,12 @@ set(NEZHA_CORE_SOURCES
     src/core/log_watcher.h
     src/core/detector.cc
     src/core/detector.h
+    src/core/rule_loader.cc
+    src/core/rule_loader.h
     src/core/honeypot.cc
     src/core/honeypot.h
+    src/core/webshell_scanner.cc
+    src/core/webshell_scanner.h
     src/core/alert.cc
     src/core/alert.h
     src/model/request.h

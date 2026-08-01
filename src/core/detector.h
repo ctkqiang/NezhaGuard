@@ -38,8 +38,8 @@ namespace Nezha::Core {
         AttackType type;
         Severity level;
         double score;
-        const char *pattern;
-        const char *desc;
+        std::string pattern;
+        std::string desc;
     };
 
     struct Alert {
@@ -57,10 +57,18 @@ namespace Nezha::Core {
 
     class AttackDetector {
     public:
-        AttackDetector() = default;
+        AttackDetector();
 
         void analyze(const event &e, Arena &arena, AlertCallback cb);
         void expire_counters(Nanos now_ns);
+
+        // 运行时规则加载：从文件加载，成功返回 true，失败保留旧规则并告警
+        bool load_rules(const std::string &path);
+
+        // SIGHUP 热重载：调用 load_rules
+        void reload_rules(const std::string &path);
+
+        [[nodiscard]] std::size_t rule_count() const noexcept { return rules_.size(); }
 
     private:
         struct RateEntry {
@@ -69,6 +77,7 @@ namespace Nezha::Core {
         };
         using IpPortKey = std::uint64_t;
         std::unordered_map<IpPortKey, RateEntry> rates_;
+        std::vector<SigRule> rules_;
         Nanos last_expire_ = 0;
 
         static IpPortKey make_key(const event &e) noexcept;

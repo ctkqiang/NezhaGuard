@@ -1,0 +1,2 @@
+set(__QT_DEPLOY_TARGET_NezhaGuardTests_FILE /Users/johnmelodyme/Documents/ctkqiang/NezhaGuard/NezhaGuardTests)
+set(__QT_DEPLOY_TARGET_NezhaGuardTests_TYPE EXECUTABLE)

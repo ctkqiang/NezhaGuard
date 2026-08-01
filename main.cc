@@ -41,7 +41,12 @@ static const char *get_net_interface() {
 }
 
 static Core::PacketCapture *g_cap = nullptr;
+static Core::AttackDetector *g_detector = nullptr;
 static volatile bool g_running = true;
+
+static void on_sighup(int) {
+    if (g_detector) g_detector->reload_rules("rules/default.yaml");
+}
 
 static std::string quarantine_detail(const std::string &ip) {
     for (const auto &r: Database::DatabaseHelper::GetQuarantineList()) {
@@ -110,6 +115,8 @@ static int run_cli_mode() {
 
     Core::Arena arena(128 * 1024);
     Core::AttackDetector detector;
+    detector.load_rules("rules/default.yaml");
+    g_detector = &detector;
     Core::AlertManager alerter;
     alerter.set_dedup_window(10);
 
@@ -172,6 +179,7 @@ static int run_cli_mode() {
 
     std::signal(SIGINT, on_signal);
     std::signal(SIGTERM, on_signal);
+    std::signal(SIGHUP, on_sighup);
 
     if (cap.is_open()) {
         cap.start([&](const std::uint8_t *raw, std::size_t len, const timeval &ts) {
@@ -312,6 +320,8 @@ static int run_gui_mode(int argc, char *argv[]) {
 
     Core::Arena arena(128 * 1024);
     Core::AttackDetector detector;
+    detector.load_rules("rules/default.yaml");
+    g_detector = &detector;
     Core::AlertManager alerter;
     alerter.set_dedup_window(10);
 
@@ -467,6 +477,7 @@ static int run_gui_mode(int argc, char *argv[]) {
     // 信号 → 优雅退出
     std::signal(SIGINT, [](int) { QApplication::quit(); });
     std::signal(SIGTERM, [](int) { QApplication::quit(); });
+    std::signal(SIGHUP, on_sighup);
 
     int ret = app.exec();
 
