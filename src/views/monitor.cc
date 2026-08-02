@@ -18,6 +18,9 @@
 #include <QFileDialog>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QMenuBar>
+#include <QMessageBox>
+#include <QSystemTrayIcon>
 #include <QTextBrowser>
 #include <QTextStream>
 #include <QTreeWidget>
@@ -238,6 +241,8 @@ monitor::monitor(QWidget *parent) : QMainWindow(parent), ui(new Ui::monitor) {
     update_clock();
 
     setup_sidebar();
+    setup_tray();
+    setup_file_menu();
     start_animations();
 
     // 系统配置页 — 切换到配置页时自动加载
@@ -247,6 +252,9 @@ monitor::monitor(QWidget *parent) : QMainWindow(parent), ui(new Ui::monitor) {
     // 应用监控
     connect(ui->monitor_conf_save, &QPushButton::clicked, this, &monitor::save_monitor_conf);
     connect(ui->monitor_conf_load, &QPushButton::clicked, this, &monitor::load_settings_configs);
+    // 数据库
+    connect(ui->database_conf_save, &QPushButton::clicked, this, &monitor::save_database_conf);
+    connect(ui->database_conf_load, &QPushButton::clicked, this, &monitor::load_settings_configs);
     // Slack
     connect(ui->slack_conf_save, &QPushButton::clicked, this, [this]{ save_notifier_conf(); });
     connect(ui->slack_conf_load, &QPushButton::clicked, this, &monitor::load_settings_configs);
@@ -1334,6 +1342,28 @@ void monitor::load_settings_configs() {
         read_or_default(QStringLiteral("config/monitor_apps.conf"),
                         QStringLiteral(MONITOR_TEMPLATE)));
 
+    ui->database_conf_edit->setPlainText(
+        read_or_default(QStringLiteral("config/database.conf"),
+            QStringLiteral(
+                "# ============================================================\n"
+                "# NezhaGuard — 数据库配置\n"
+                "# ============================================================\n"
+                "# type:     数据库类型 — sqlite, mysql, postgres, oracle, db2\n"
+                "# host:     数据库主机地址\n"
+                "# port:     数据库端口 (mysql=3306, postgres=5432)\n"
+                "# name:     数据库名称\n"
+                "# user:     数据库用户名\n"
+                "# password: 数据库密码\n"
+                "#\n"
+                "# sqlite 仅需 name (文件路径)，其他字段忽略\n"
+                "# ============================================================\n"
+                "type=sqlite\n"
+                "host=localhost\n"
+                "port=0\n"
+                "name=data/nezha_quarantine.db\n"
+                "user=\n"
+                "password=\n")));
+
     ui->slack_conf_edit->setPlainText(
         read_or_default(QStringLiteral("config/notifier/slack.conf"),
             QStringLiteral(CONF_HEADER("Slack",
@@ -1442,6 +1472,7 @@ void monitor::save_notifier_conf() {
     }
     QPlainTextEdit *edits[] = {
         nullptr,
+        ui->database_conf_edit,
         ui->slack_conf_edit,
         ui->discord_conf_edit,
         ui->dingtalk_conf_edit,
@@ -1453,6 +1484,7 @@ void monitor::save_notifier_conf() {
     };
     const char *paths[] = {
         nullptr,
+        "config/database.conf",
         "config/notifier/slack.conf",
         "config/notifier/discord.conf",
         "config/notifier/dingtalk.conf",
@@ -1463,10 +1495,166 @@ void monitor::save_notifier_conf() {
         "config/notifier/local.conf"
     };
     int idx = tw->currentIndex();
-    if (idx >= 0 && idx < 9 && edits[idx] && paths[idx]) {
+    if (idx >= 0 && idx < 10 && edits[idx] && paths[idx]) {
         if (write_file_utf8(QString::fromUtf8(paths[idx]), edits[idx]->toPlainText()))
             ui->status_label->setText(QString::fromUtf8(paths[idx]) + QStringLiteral(" — 已保存"));
         else
             ui->status_label->setText(QStringLiteral("保存失败"));
     }
+}
+
+void monitor::save_database_conf() {
+    if (write_file_utf8(QStringLiteral("config/database.conf"),
+                         ui->database_conf_edit->toPlainText()))
+        ui->status_label->setText(QStringLiteral("数据库配置已保存"));
+    else
+        ui->status_label->setText(QStringLiteral("保存失败"));
+}
+
+void monitor::setup_tray() {
+    tray_ = new QSystemTrayIcon(this);
+    tray_->setIcon(qApp->windowIcon());
+    tray_->setToolTip(QStringLiteral("哪吒网络安全 SIEM"));
+
+    tray_menu_ = new QMenu(this);
+    tray_menu_->addAction(QStringLiteral("显示面板"), this, &monitor::tray_show);
+    tray_menu_->addSeparator();
+    tray_menu_->addAction(QStringLiteral("退出"), this, &monitor::tray_quit);
+    tray_->setContextMenu(tray_menu_);
+
+    connect(tray_, &QSystemTrayIcon::activated, this, [this](QSystemTrayIcon::ActivationReason r) {
+        if (r == QSystemTrayIcon::DoubleClick) tray_show();
+    });
+
+    tray_->show();
+}
+
+void monitor::setup_file_menu() {
+    file_menu_ = menuBar()->addMenu(QStringLiteral("文件"));
+
+    export_act_ = file_menu_->addAction(QStringLiteral("导出配置 (.nzc)"));
+    export_act_->setShortcut(QKeySequence(QStringLiteral("Ctrl+E")));
+    connect(export_act_, &QAction::triggered, this, &monitor::export_nzc);
+
+    import_act_ = file_menu_->addAction(QStringLiteral("导入配置 (.nzc)"));
+    import_act_->setShortcut(QKeySequence(QStringLiteral("Ctrl+I")));
+    connect(import_act_, &QAction::triggered, this, &monitor::import_nzc);
+}
+
+void monitor::tray_show() {
+    show();
+    raise();
+    activateWindow();
+}
+
+void monitor::tray_quit() {
+    tray_->hide();
+    QApplication::quit();
+}
+
+void monitor::export_nzc() {
+    QString path = QFileDialog::getSaveFileName(
+        this, QStringLiteral("导出 NezhaGuard 配置"),
+        QStringLiteral("NezhaGuard_Config.nzc"),
+        QStringLiteral("NezhaGuard 配置文件 (*.nzc)"));
+    if (path.isEmpty()) return;
+
+    QJsonObject meta;
+    meta[QStringLiteral("format")] = QStringLiteral("nzc");
+    meta[QStringLiteral("version")] = QStringLiteral("1.0");
+    meta[QStringLiteral("author")] = QString::fromUtf8("钟智强");
+    meta[QStringLiteral("contact")] = QStringLiteral("johnmelodymel@qq.com");
+    meta[QStringLiteral("created_at")] = QDateTime::currentDateTimeUtc().toString(Qt::ISODate);
+
+    auto read_conf = [](const QString &p) {
+        QFile f(p);
+        if (!f.open(QIODevice::ReadOnly | QIODevice::Text)) return QString();
+        QTextStream in(&f);
+        in.setEncoding(QStringConverter::Utf8);
+        return in.readAll();
+    };
+
+    QJsonObject data;
+    data[QStringLiteral("monitor_apps")] = read_conf(QStringLiteral("config/monitor_apps.conf"));
+    data[QStringLiteral("database")] = read_conf(QStringLiteral("config/database.conf"));
+    data[QStringLiteral("notifier_slack")] = read_conf(QStringLiteral("config/notifier/slack.conf"));
+    data[QStringLiteral("notifier_discord")] = read_conf(QStringLiteral("config/notifier/discord.conf"));
+    data[QStringLiteral("notifier_dingtalk")] = read_conf(QStringLiteral("config/notifier/dingtalk.conf"));
+    data[QStringLiteral("notifier_feishu")] = read_conf(QStringLiteral("config/notifier/feishu.conf"));
+    data[QStringLiteral("notifier_wechat")] = read_conf(QStringLiteral("config/notifier/wechat.conf"));
+    data[QStringLiteral("notifier_email")] = read_conf(QStringLiteral("config/notifier/email.conf"));
+    data[QStringLiteral("notifier_telegram")] = read_conf(QStringLiteral("config/notifier/telegram.conf"));
+    data[QStringLiteral("notifier_local")] = read_conf(QStringLiteral("config/notifier/local.conf"));
+
+    QJsonObject root;
+    root[QStringLiteral("meta")] = meta;
+    root[QStringLiteral("data")] = data;
+
+    QJsonDocument doc(root);
+    QFile out(path);
+    if (out.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate)) {
+        out.write(doc.toJson(QJsonDocument::Indented));
+        ui->status_label->setText(QStringLiteral("配置已导出至 ") + path);
+    } else {
+        QMessageBox::warning(this, QStringLiteral("导出失败"), QStringLiteral("无法写入文件:\n") + path);
+    }
+}
+
+void monitor::import_nzc() {
+    QString path = QFileDialog::getOpenFileName(
+        this, QStringLiteral("导入 NezhaGuard 配置"),
+        QString(), QStringLiteral("NezhaGuard 配置文件 (*.nzc)"));
+    if (path.isEmpty()) return;
+
+    QFile in(path);
+    if (!in.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        QMessageBox::warning(this, QStringLiteral("导入失败"), QStringLiteral("无法读取文件"));
+        return;
+    }
+
+    QJsonDocument doc = QJsonDocument::fromJson(in.readAll());
+    in.close();
+
+    if (!doc.isObject()) {
+        QMessageBox::warning(this, QStringLiteral("导入失败"), QStringLiteral("文件格式无效"));
+        return;
+    }
+
+    QJsonObject root = doc.object();
+    QJsonObject meta = root[QStringLiteral("meta")].toObject();
+    QJsonObject data = root[QStringLiteral("data")].toObject();
+
+    if (meta[QStringLiteral("format")].toString() != QStringLiteral("nzc")) {
+        QMessageBox::warning(this, QStringLiteral("导入失败"), QStringLiteral("不是有效的 .nzc 文件"));
+        return;
+    }
+
+    auto write_conf = [](const QString &p, const QString &content) {
+        if (content.isEmpty()) return;
+        QFile f(p);
+        if (f.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate)) {
+            QTextStream out(&f);
+            out.setEncoding(QStringConverter::Utf8);
+            out << content;
+        }
+    };
+
+    write_conf(QStringLiteral("config/monitor_apps.conf"), data[QStringLiteral("monitor_apps")].toString());
+    write_conf(QStringLiteral("config/database.conf"), data[QStringLiteral("database")].toString());
+    write_conf(QStringLiteral("config/notifier/slack.conf"), data[QStringLiteral("notifier_slack")].toString());
+    write_conf(QStringLiteral("config/notifier/discord.conf"), data[QStringLiteral("notifier_discord")].toString());
+    write_conf(QStringLiteral("config/notifier/dingtalk.conf"), data[QStringLiteral("notifier_dingtalk")].toString());
+    write_conf(QStringLiteral("config/notifier/feishu.conf"), data[QStringLiteral("notifier_feishu")].toString());
+    write_conf(QStringLiteral("config/notifier/wechat.conf"), data[QStringLiteral("notifier_wechat")].toString());
+    write_conf(QStringLiteral("config/notifier/email.conf"), data[QStringLiteral("notifier_email")].toString());
+    write_conf(QStringLiteral("config/notifier/telegram.conf"), data[QStringLiteral("notifier_telegram")].toString());
+    write_conf(QStringLiteral("config/notifier/local.conf"), data[QStringLiteral("notifier_local")].toString());
+
+    load_settings_configs();
+    ui->status_label->setText(QStringLiteral("配置已从 ") + path + QStringLiteral(" 导入"));
+
+    QString author = meta[QStringLiteral("author")].toString();
+    QString contact = meta[QStringLiteral("contact")].toString();
+    QMessageBox::information(this, QStringLiteral("导入成功"),
+        QStringLiteral("配置已恢复\n\n作者: %1\n联系: %2").arg(author, contact));
 }

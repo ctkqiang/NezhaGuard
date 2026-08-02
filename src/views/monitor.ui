@@ -308,6 +308,19 @@
                </item>
               </layout>
              </widget>
+             <widget class="QWidget" name="tab_database">
+              <attribute name="title"><string>数据库</string></attribute>
+              <layout class="QVBoxLayout" name="db_tab_layout"><property name="spacing"><number>8</number></property>
+               <item><widget class="QPlainTextEdit" name="database_conf_edit"/></item>
+               <item>
+                <layout class="QHBoxLayout" name="db_btn_layout">
+                 <item><spacer><property name="orientation"><enum>Qt::Horizontal</enum></property></spacer></item>
+                 <item><widget class="QPushButton" name="database_conf_load"><property name="text"><string>重新加载</string></property></widget></item>
+                 <item><widget class="QPushButton" name="database_conf_save"><property name="text"><string>保存配置</string></property></widget></item>
+                </layout>
+               </item>
+              </layout>
+             </widget>
              <widget class="QWidget" name="tab_slack">
               <attribute name="title"><string>Slack</string></attribute>
               <layout class="QVBoxLayout" name="slack_tab_layout"><property name="spacing"><number>8</number></property>
