@@ -244,7 +244,7 @@ void Notifier::dispatch(const ChannelConfig &cfg, const std::string &title, cons
 }
 
 std::string Notifier::http_post(const std::string &url, const std::string &json) {
-    std::string cmd = std::format(
+    const std::string cmd = std::format(
         "curl -s --max-time 5 -X POST \"{}\" -H \"Content-Type: application/json\" -d '{}' 2>/dev/null",
         url, json
     );
