@@ -46,13 +46,11 @@ NotifyChannel channel_from_name(const std::string &name) {
     return NotifyChannel::LocalGui; // fallback
 }
 
-// -- 单例 ----------------------------------------------------------------
 Notifier &Notifier::instance() noexcept {
     static Notifier inst;
     return inst;
 }
 
-// -- 静态工具 ----------------------------------------------------------------
 static std::string trim(const std::string &s) {
     auto start = s.find_first_not_of(" \t\r\n");
     if (start == std::string::npos) return {};
@@ -84,7 +82,6 @@ static Severity parse_severity(const std::string &s) {
     return Severity::Warn;
 }
 
-// -- 配置加载 ----------------------------------------------------------------
 void Notifier::configure_channel(const ChannelConfig &cfg) {
     std::lock_guard<std::mutex> lock(mtx_);
     channels_[cfg.channel] = cfg;
@@ -170,7 +167,6 @@ void Notifier::set_gui_callback(std::function<void(const std::string &, const st
     gui_callback_ = std::move(cb);
 }
 
-// -- 关键词匹配 ----------------------------------------------------------------
 bool Notifier::keyword_match(const std::string &text, const std::vector<std::string> &keywords) {
     std::string lower = text;
     std::transform(lower.begin(), lower.end(), lower.begin(),
@@ -185,7 +181,6 @@ bool Notifier::keyword_match(const std::string &text, const std::vector<std::str
     return false;
 }
 
-// -- 告警入口 ----------------------------------------------------------------
 void Notifier::on_alert(const Core::Alert &alert) {
     std::string type_str = Core::attack_type_cstr(alert.type);
     std::string ip(alert.src_ip);
@@ -229,7 +224,6 @@ void Notifier::on_alert(const Core::Alert &alert) {
     }
 }
 
-// -- 分发 ----------------------------------------------------------------
 void Notifier::dispatch(const ChannelConfig &cfg, const std::string &title, const std::string &body) {
     auto ch = cfg.channel;
     std::string url = cfg.webhook_url;
@@ -249,7 +243,6 @@ void Notifier::dispatch(const ChannelConfig &cfg, const std::string &title, cons
     }).detach();
 }
 
-// -- HTTP 工具 ----------------------------------------------------------------
 std::string Notifier::http_post(const std::string &url, const std::string &json) {
     std::string cmd = std::format(
         "curl -s --max-time 5 -X POST \"{}\" -H \"Content-Type: application/json\" -d '{}' 2>/dev/null",
@@ -279,7 +272,6 @@ static std::string escape_json(const std::string &s) {
     return out;
 }
 
-// -- Slack ----------------------------------------------------------------
 void Notifier::send_slack(const std::string &webhook, const std::string &msg) {
     std::string json = std::format(
         "{{\"text\":\"{}\"}}", escape_json(msg)
@@ -288,7 +280,6 @@ void Notifier::send_slack(const std::string &webhook, const std::string &msg) {
     NZ_DEBUG("[通知] Slack 结果: {}", resp.empty() ? "ok" : resp);
 }
 
-// -- Discord ----------------------------------------------------------------
 void Notifier::send_discord(const std::string &webhook, const std::string &msg) {
     std::string json = std::format(
         "{{\"embeds\":[{{\"title\":\"NezhaGuard 安全告警\",\"description\":\"{}\","
@@ -298,7 +289,6 @@ void Notifier::send_discord(const std::string &webhook, const std::string &msg) 
     NZ_DEBUG("[通知] Discord 结果: {}", resp.empty() ? "ok" : resp);
 }
 
-// -- 钉钉 ----------------------------------------------------------------
 void Notifier::send_dingtalk(const std::string &webhook, const std::string &msg) {
     std::string json = std::format(
         "{{\"msgtype\":\"markdown\",\"markdown\":{{\"title\":\"NezhaGuard 安全告警\",\"text\":\"{}\"}}}}",
@@ -308,7 +298,6 @@ void Notifier::send_dingtalk(const std::string &webhook, const std::string &msg)
     NZ_DEBUG("[通知] DingTalk 结果: {}", resp.empty() ? "ok" : resp);
 }
 
-// -- 飞书 ----------------------------------------------------------------
 void Notifier::send_feishu(const std::string &webhook, const std::string &msg) {
     std::string json = std::format(
         "{{\"msg_type\":\"interactive\",\"card\":{{\"header\":{{\"title\":{{\"tag\":\"plain_text\","
@@ -319,7 +308,6 @@ void Notifier::send_feishu(const std::string &webhook, const std::string &msg) {
     NZ_DEBUG("[通知] 飞书 结果: {}", resp.empty() ? "ok" : resp);
 }
 
-// -- 企业微信 ----------------------------------------------------------------
 void Notifier::send_wechat(const std::string &webhook, const std::string &msg) {
     std::string json = std::format(
         "{{\"msgtype\":\"markdown\",\"markdown\":{{\"content\":\"{}\"}}}}", escape_json(msg)
@@ -328,7 +316,6 @@ void Notifier::send_wechat(const std::string &webhook, const std::string &msg) {
     NZ_DEBUG("[通知] WeChat 结果: {}", resp.empty() ? "ok" : resp);
 }
 
-// -- 邮件 ----------------------------------------------------------------
 void Notifier::send_email(const std::string &to, const std::string &subject, const std::string &body) {
     std::string cmd = std::format(
         "echo '{}' | mail -s '{}' '{}' 2>/dev/null", body, subject, to
@@ -337,7 +324,6 @@ void Notifier::send_email(const std::string &to, const std::string &subject, con
     NZ_DEBUG("[通知] 邮件 发送至: {}", to);
 }
 
-// -- 本地 GUI 弹窗 ----------------------------------------------------------------
 void Notifier::send_local_gui(const std::string &title, const std::string &body) {
     if (gui_callback_) {
         gui_callback_(title, body);
@@ -359,7 +345,6 @@ void Notifier::send_local_gui(const std::string &title, const std::string &body)
     NZ_DEBUG("[通知] 本地推送: {}", title);
 }
 
-// -- Telegram ----------------------------------------------------------------
 void Notifier::send_telegram(const std::string &token, const std::string &chat, const std::string &msg) {
     std::string url = std::format(
         "https://api.telegram.org/bot{}/sendMessage", token);

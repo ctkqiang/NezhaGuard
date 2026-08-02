@@ -1274,7 +1274,6 @@ void monitor::refresh_quickstats() {
     set_qs(ui->qs_types, QStringLiteral("攻击类型"), active_types_.size(), Theme::CyanLight);
 }
 
-// -- 系统配置页 -----------------------------------------------------------
 static QString read_or_default(const QString &path, const QString &fallback) {
     QFile f(path);
     if (f.open(QIODevice::ReadOnly | QIODevice::Text)) {
