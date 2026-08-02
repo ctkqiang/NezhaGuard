@@ -32,6 +32,7 @@
 #include "src/core/log_watcher.h"
 #include "src/core/application_monitor.h"
 #include "src/service/database_helper.h"
+#include "src/service/notifier.h"
 #include "src/utilities/logger.h"
 
 using namespace Nezha;
@@ -152,7 +153,10 @@ static int run_cli_mode() {
     Core::AlertManager alerter;
     alerter.set_dedup_window(10);
 
+    Service::Notifier::instance().load_rules_from_file("config/notifier.conf");
+
     alerter.set_callback([&](const Core::Alert &a) {
+        Service::Notifier::instance().on_alert(a);
         if (a.level >= Severity::Error && a.count >= 5) {
             std::string ip(a.src_ip);
             std::string host = IPAddress::ipaddr::ResolveHostname(ip);
@@ -401,7 +405,21 @@ static int run_gui_mode(int argc, char *argv[]) {
     Core::AlertManager alerter;
     alerter.set_dedup_window(10);
 
+    Service::Notifier::instance().load_rules_from_file("config/notifier.conf");
+    Service::Notifier::instance().set_gui_callback([](const std::string &title, const std::string &body) {
+#if defined(__APPLE__)
+        std::string cmd = std::format(
+            "osascript -e 'display notification \"{}\" with title \"{}\" sound name \"Glass\"' 2>/dev/null",
+            body, title);
+        std::system(cmd.c_str());
+#elif defined(__linux__)
+        std::string cmd = std::format("notify-send '{}' '{}' 2>/dev/null", title, body);
+        std::system(cmd.c_str());
+#endif
+    });
+
     alerter.set_callback([&](const Core::Alert &a) {
+        Service::Notifier::instance().on_alert(a);
         if (a.level >= Severity::Error && a.count >= 5) {
             std::string ip(a.src_ip);
             std::string host = IPAddress::ipaddr::ResolveHostname(ip);

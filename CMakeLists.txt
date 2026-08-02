@@ -64,6 +64,8 @@ set(NEZHA_CORE_SOURCES
     src/views/radar_widget.h
     src/views/theme.h
     src/contants.h
+        src/service/notifier.cc
+        src/service/notifier.h
 )
 
 if(APPLE)
