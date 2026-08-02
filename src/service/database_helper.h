@@ -1,7 +1,8 @@
+#pragma once
+
 #ifndef NEZHAGUARD_DATABASE_HELPER_H
 #define NEZHAGUARD_DATABASE_HELPER_H
 
-#include <cstdint>
 #include <string>
 #include <vector>
 

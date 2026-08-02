@@ -19,5 +19,4 @@ namespace Nezha::Configuration {
     };
 }
 
-
 #endif //NEZHAGUARD_CONTANTS_H

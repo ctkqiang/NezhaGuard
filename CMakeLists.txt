@@ -43,8 +43,12 @@ set(NEZHA_CORE_SOURCES
     src/core/tor_checker.h
     src/core/geo_ip.cc
     src/core/geo_ip.h
+    src/core/ipcn.cc
+    src/core/ipcn.h
     src/core/active_response.cc
     src/core/active_response.h
+    src/core/application_monitor.cc
+    src/core/application_monitor.h
     src/service/database_helper.cc
     src/service/database_helper.h
     src/views/monitor.cc

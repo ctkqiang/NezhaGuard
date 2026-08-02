@@ -1,6 +1,7 @@
 //
 // Created by 钟智强 on 2026/7/31.
 //
+#pragma once
 
 #ifndef NEZHAGUARD_SEVERITY_H
 #define NEZHAGUARD_SEVERITY_H

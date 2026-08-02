@@ -25,9 +25,12 @@
 #include "src/core/honeypot.h"
 #include "src/core/ipaddr.h"
 #include "src/core/net_util.h"
+#include "src/core/ipcn.h"
+#include "src/core/geo_ip.h"
 #include "src/core/active_response.h"
 #include "src/core/tor_checker.h"
 #include "src/core/log_watcher.h"
+#include "src/core/application_monitor.h"
 #include "src/service/database_helper.h"
 #include "src/utilities/logger.h"
 
@@ -132,6 +135,16 @@ static int run_cli_mode() {
     Core::dump_network_info();
     Core::dump_arp_table();
 
+    {
+        auto ipcn = Core::IpCn::lookup_self();
+        if (ipcn.valid) {
+            std::string loc = ipcn.country;
+            if (!ipcn.province.empty()) loc += std::format(" {}", ipcn.province);
+            if (!ipcn.city.empty()) loc += std::format(" {}", ipcn.city);
+            NZ_INFO("  公网 IPv4:       {}  ({}, {})", ipcn.ip, loc, ipcn.isp);
+        }
+    }
+
     Core::Arena arena(128 * 1024);
     Core::AttackDetector detector;
     detector.load_rules("rules/default.yaml");
@@ -182,6 +195,7 @@ static int run_cli_mode() {
     NZ_INFO("蜜罐引擎已启动: {} 端口", sizeof(honeypots) / sizeof(honeypots[0]));
 
     Core::LogWatcher log_watcher;
+    Core::ApplicationMonitor app_monitor;
     const char *log_paths[] = {
         "/var/log/nginx/access.log",
         "/var/log/apache2/access.log",
@@ -196,6 +210,15 @@ static int run_cli_mode() {
     });
     NZ_INFO("日志引擎已启动: {} 监控源", sizeof(log_paths) / sizeof(log_paths[0]));
 
+    if constexpr (Configuration::ApplicationConstants::ShowOtherApplicationLogs) {
+        int n = app_monitor.load_from_file("config/monitor_apps.conf");
+        if (n > 0) {
+            app_monitor.start();
+            NZ_INFO("应用监控已启动: {} 个外部应用", n);
+        } else {
+            NZ_INFO("应用监控: 未找到配置 (config/monitor_apps.conf), 跳过");
+        }
+    }
     std::signal(SIGINT, on_signal);
     std::signal(SIGTERM, on_signal);
     std::signal(SIGHUP, on_sighup);
@@ -276,6 +299,9 @@ static int run_cli_mode() {
     NZ_INFO("正在停止所有引擎…");
     honeypot.stop();
     log_watcher.stop();
+    if constexpr (Configuration::ApplicationConstants::ShowOtherApplicationLogs) {
+        app_monitor.stop();
+    }
     alerter.flush();
     Log::Logger::instance().flush();
     auto final_qlist = Database::DatabaseHelper::GetQuarantineList();
@@ -350,6 +376,16 @@ static int run_gui_mode(int argc, char *argv[]) {
     );
 
     Core::dump_network_info();
+
+    {
+        auto ipcn = Core::IpCn::lookup_self();
+        if (ipcn.valid) {
+            std::string loc = ipcn.country;
+            if (!ipcn.province.empty()) loc += std::format(" {}", ipcn.province);
+            if (!ipcn.city.empty()) loc += std::format(" {}", ipcn.city);
+            NZ_INFO("  公网 IPv4:       {}  ({}, {})", ipcn.ip, loc, ipcn.isp);
+        }
+    }
 
     monitor window;
     window.init_models();
@@ -440,7 +476,7 @@ static int run_gui_mode(int argc, char *argv[]) {
     NZ_INFO("蜜罐引擎已启动: {} 端口", sizeof(honeypots) / sizeof(honeypots[0]));
 
     Core::LogWatcher log_watcher;
-
+    Core::ApplicationMonitor app_monitor;
 
     for (const char *path: log_paths) {
         log_watcher.add_source({path, EventSource::Log, 0});
@@ -452,6 +488,16 @@ static int run_gui_mode(int argc, char *argv[]) {
         });
     });
     NZ_INFO("日志引擎已启动: {} 监控源", sizeof(log_paths) / sizeof(log_paths[0]));
+
+    if constexpr (Configuration::ApplicationConstants::ShowOtherApplicationLogs) {
+        int n = app_monitor.load_from_file("config/monitor_apps.conf");
+        if (n > 0) {
+            app_monitor.start();
+            NZ_INFO("应用监控已启动: {} 个外部应用", n);
+        } else {
+            NZ_INFO("应用监控: 未找到配置 (config/monitor_apps.conf), 跳过");
+        }
+    }
 
     Core::PacketCapture cap;
     std::thread cap_thread;
@@ -533,6 +579,9 @@ static int run_gui_mode(int argc, char *argv[]) {
     log_watcher.stop();
 
     if (log_thread.joinable()) log_thread.join();
+    if constexpr (Configuration::ApplicationConstants::ShowOtherApplicationLogs) {
+        app_monitor.stop();
+    }
     alerter.flush();
 
     Log::Logger::instance().flush();

@@ -40,11 +40,13 @@ namespace Nezha::Database {
 
         void EnsureDB() {
             if (g_quarantine_db) return;
+
             if (sqlite3_open(kQuarantineDBPath, &g_quarantine_db) != SQLITE_OK) {
                 std::cerr << "[DatabaseHelper] 无法打开隔离数据库: "
                           << sqlite3_errmsg(g_quarantine_db) << '\n';
                 return;
             }
+
             sqlite3_exec(g_quarantine_db, "PRAGMA journal_mode=WAL;", nullptr, nullptr, nullptr);
             char *err = nullptr;
             if (sqlite3_exec(g_quarantine_db, kCreateTableSQL, nullptr, nullptr, &err) != SQLITE_OK) {
@@ -53,6 +55,7 @@ namespace Nezha::Database {
             }
 
             const char *loadSQL = "SELECT ip_address FROM quarantine;";
+
             sqlite3_stmt *stmt = nullptr;
             if (sqlite3_prepare_v2(g_quarantine_db, loadSQL, -1, &stmt, nullptr) == SQLITE_OK) {
                 while (sqlite3_step(stmt) == SQLITE_ROW) {
@@ -95,6 +98,7 @@ namespace Nezha::Database {
             std::cout << "[DatabaseHelper] IP已隔离: " << ip
                       << " 原因: " << reason << '\n';
         }
+
         sqlite3_finalize(stmt);
     }
 

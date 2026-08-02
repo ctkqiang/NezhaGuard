@@ -2,6 +2,8 @@
 // Created by 钟智强 on 2026/7/30.
 //
 
+#pragma once
+
 #ifndef NEZHAGUARD_ALERT_H
 #define NEZHAGUARD_ALERT_H
 

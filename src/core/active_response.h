@@ -1,3 +1,5 @@
+#pragma once
+
 #ifndef NEZHAGUARD_ACTIVE_RESPONSE_H
 #define NEZHAGUARD_ACTIVE_RESPONSE_H
 
