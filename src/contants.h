@@ -13,6 +13,7 @@ namespace Nezha::Configuration {
 
         static constexpr const char *ApplicationVersion = "v0.0.1";
         static constexpr bool ShowGui = true;
+        static constexpr bool ShowOtherApplicationLogs = true;
 
         static constexpr int64_t AnomaliesQuarantineThreshold = 100;
     };

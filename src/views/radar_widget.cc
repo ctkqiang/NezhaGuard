@@ -104,7 +104,7 @@ void RadarWidget::paintEvent(QPaintEvent *) {
 
     // title
     p.setPen(QColor(Theme::Cyan));
-    p.setFont(QFont(QStringLiteral("Inter"), 9));
+    p.setFont(QFont(QStringLiteral("PingFang SC"), 9));
     p.drawText(QRect(8, 4, 200, 16), Qt::AlignLeft,
                QStringLiteral("设备雷达 — %1 台").arg(devices_.size()));
 }

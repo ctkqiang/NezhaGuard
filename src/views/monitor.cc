@@ -14,7 +14,14 @@
 #include <QComboBox>
 #include <QDateTime>
 #include <QDialog>
+#include <QFile>
+#include <QFileDialog>
+#include <QJsonDocument>
+#include <QJsonObject>
 #include <QTextBrowser>
+#include <QTextStream>
+#include <QTreeWidget>
+#include <QTreeWidgetItem>
 #include <QGraphicsDropShadowEffect>
 #include <QHeaderView>
 #include <QLabel>
@@ -52,7 +59,10 @@
 #include <algorithm>
 
 // SparklineWidget
-void SparklineWidget::set_data(const QList<int> &d) { data_ = d; update(); }
+void SparklineWidget::set_data(const QList<int> &d) {
+    data_ = d;
+    update();
+}
 
 void SparklineWidget::paintEvent(QPaintEvent *) {
     QPainter p(this);
@@ -62,12 +72,13 @@ void SparklineWidget::paintEvent(QPaintEvent *) {
     auto fg = QColor(dark ? Theme::Cyan : Theme::CyanDeep);
     auto gr = QColor(dark ? Theme::DkBorder : Theme::LtBorder);
 
-    p.setBrush(bg); p.setPen(Qt::NoPen);
+    p.setBrush(bg);
+    p.setPen(Qt::NoPen);
     p.drawRoundedRect(rect(), 8, 8);
 
     if (data_.isEmpty()) {
         p.setPen(fg);
-        p.setFont(QFont(QStringLiteral("Inter"), 11));
+        p.setFont(QFont(QStringLiteral("PingFang SC"), 11));
         p.drawText(rect(), Qt::AlignCenter, QStringLiteral("—"));
         return;
     }
@@ -79,18 +90,23 @@ void SparklineWidget::paintEvent(QPaintEvent *) {
     double h = static_cast<double>(r.height());
 
     p.setPen(QPen(gr, 0.5, Qt::DotLine));
-    for (int i = 1; i <= 3; ++i)
+    for (int i = 1; i <= 3; ++i) {
         p.drawLine(QPointF(r.left(), r.top() + h * i / 4),
-                   QPointF(r.right(), r.top() + h * i / 4));
+                   QPointF(r.right(), r.top() + h * i / 4)
+        );
+    }
 
     QPainterPath fill;
     fill.moveTo(r.left(), r.bottom());
     for (int i = 0; i < n; ++i)
         fill.lineTo(QPointF(r.left() + w * i, r.bottom() - (data_[i] * h / maxv)));
-    fill.lineTo(r.right(), r.bottom()); fill.closeSubpath();
+    fill.lineTo(r.right(), r.bottom());
+    fill.closeSubpath();
 
     QColor fc = QColor(dark ? Theme::Cyan : Theme::CyanDeep);
-    fc.setAlpha(25); p.setBrush(fc); p.setPen(Qt::NoPen);
+    fc.setAlpha(25);
+    p.setBrush(fc);
+    p.setPen(Qt::NoPen);
     p.drawPath(fill);
 
     p.setPen(QPen(fg, 1.5));
@@ -99,7 +115,7 @@ void SparklineWidget::paintEvent(QPaintEvent *) {
                    QPointF(r.left() + w * i, r.bottom() - (data_[i] * h / maxv)));
 
     p.setPen(fg);
-    p.setFont(QFont(QStringLiteral("Inter"), 9));
+    p.setFont(QFont(QStringLiteral("PingFang SC"), 9));
     p.drawText(QRect(r.left(), r.bottom() + 4, r.width(), 20),
                Qt::AlignRight | Qt::AlignVCenter,
                QStringLiteral("%1 pts  max %2").arg(n).arg(maxv));
@@ -107,10 +123,12 @@ void SparklineWidget::paintEvent(QPaintEvent *) {
 
 // Delegates
 void LogDelegate::paint(QPainter *p, const QStyleOptionViewItem &opt, const QModelIndex &idx) const {
-    QStyleOptionViewItem o = opt; initStyleOption(&o, idx);
+    QStyleOptionViewItem o = opt;
+    initStyleOption(&o, idx);
     p->save();
-    auto bg = dark ? (idx.row() % 2 ? QColor(Theme::DkCard) : QColor(Theme::DkBg))
-                   : (idx.row() % 2 ? QColor(Theme::LtHover) : QColor(Theme::LtCard));
+    auto bg = dark
+                  ? (idx.row() % 2 ? QColor(Theme::DkCard) : QColor(Theme::DkBg))
+                  : (idx.row() % 2 ? QColor(Theme::LtHover) : QColor(Theme::LtCard));
     if (o.state & QStyle::State_Selected) bg = dark ? QColor(Theme::DkSelected) : QColor(Theme::LtSelected);
     p->fillRect(o.rect, bg);
 
@@ -121,7 +139,9 @@ void LogDelegate::paint(QPainter *p, const QStyleOptionViewItem &opt, const QMod
     QString msg = idx.data(LogModel::MessageRole).toString();
     QString lv = idx.data(LogModel::LevelRole).toString();
 
-    QFont mf(QStringLiteral("Menlo"), 10); mf.setStyleHint(QFont::Monospace); p->setFont(mf);
+    QFont mf(QStringLiteral("Menlo"), 10);
+    mf.setStyleHint(QFont::Monospace);
+    p->setFont(mf);
     QRect r = o.rect.adjusted(10, 2, -10, -2);
     int x = r.x();
 
@@ -132,14 +152,19 @@ void LogDelegate::paint(QPainter *p, const QStyleOptionViewItem &opt, const QMod
     auto badgeW = p->fontMetrics().horizontalAdvance(lv) + 14;
     QRect bd(x, r.y() + 3, badgeW, r.height() - 6);
     p->setRenderHint(QPainter::Antialiasing);
-    p->setBrush(fg); p->setPen(Qt::NoPen);
+    p->setBrush(fg);
+    p->setPen(Qt::NoPen);
     p->drawRoundedRect(bd, 5, 5);
     p->setPen(QColor("#fff"));
-    QFont bf = QApplication::font(); bf.setPointSize(8); bf.setBold(true); p->setFont(bf);
+    QFont bf = QApplication::font();
+    bf.setPointSize(8);
+    bf.setBold(true);
+    p->setFont(bf);
     p->drawText(bd, Qt::AlignCenter, lv);
     x += badgeW + 10;
 
-    p->setFont(mf); p->setPen(fg);
+    p->setFont(mf);
+    p->setPen(fg);
     p->drawText(QRect(x, r.y(), r.right() - x, r.height()), Qt::AlignLeft | Qt::AlignVCenter,
                 p->fontMetrics().elidedText(msg, Qt::ElideRight, r.right() - x));
     p->restore();
@@ -148,10 +173,12 @@ void LogDelegate::paint(QPainter *p, const QStyleOptionViewItem &opt, const QMod
 QSize LogDelegate::sizeHint(const QStyleOptionViewItem &, const QModelIndex &) const { return {200, 28}; }
 
 void AlertDelegate::paint(QPainter *p, const QStyleOptionViewItem &opt, const QModelIndex &idx) const {
-    QStyleOptionViewItem o = opt; initStyleOption(&o, idx);
+    QStyleOptionViewItem o = opt;
+    initStyleOption(&o, idx);
     p->save();
-    auto bg = dark ? (idx.row() % 2 ? QColor(Theme::DkCard) : QColor(Theme::DkBg))
-                   : (idx.row() % 2 ? QColor(Theme::LtHover) : QColor(Theme::LtCard));
+    auto bg = dark
+                  ? (idx.row() % 2 ? QColor(Theme::DkCard) : QColor(Theme::DkBg))
+                  : (idx.row() % 2 ? QColor(Theme::LtHover) : QColor(Theme::LtCard));
     if (o.state & QStyle::State_Selected) bg = dark ? QColor(Theme::DkSelected) : QColor(Theme::LtSelected);
     p->fillRect(o.rect, bg);
     QColor fg = idx.data(LogModel::ColorRole).value<QColor>();
@@ -159,18 +186,29 @@ void AlertDelegate::paint(QPainter *p, const QStyleOptionViewItem &opt, const QM
     QString tm = idx.data(LogModel::TimestampRole).toString();
     QString msg = idx.data(LogModel::MessageRole).toString();
     QString lv = idx.data(LogModel::LevelRole).toString();
-    QFont mf(QStringLiteral("Menlo"), 10); mf.setStyleHint(QFont::Monospace); p->setFont(mf);
-    QRect r = o.rect.adjusted(10, 2, -10, -2); int x = r.x();
+    QFont mf(QStringLiteral("Menlo"), 10);
+    mf.setStyleHint(QFont::Monospace);
+    p->setFont(mf);
+    QRect r = o.rect.adjusted(10, 2, -10, -2);
+    int x = r.x();
     p->setPen(dark ? QColor(Theme::DkMuted) : QColor(Theme::LtMuted));
     p->drawText(x, r.y(), r.width(), r.height(), Qt::AlignLeft | Qt::AlignVCenter, tm);
     x += p->fontMetrics().horizontalAdvance(tm) + 10;
     auto badgeW = p->fontMetrics().horizontalAdvance(lv) + 14;
     QRect bd(x, r.y() + 3, badgeW, r.height() - 6);
-    p->setRenderHint(QPainter::Antialiasing); p->setBrush(fg); p->setPen(Qt::NoPen);
-    p->drawRoundedRect(bd, 5, 5); p->setPen(QColor("#fff"));
-    QFont bf = QApplication::font(); bf.setPointSize(8); bf.setBold(true); p->setFont(bf);
-    p->drawText(bd, Qt::AlignCenter, lv); x += badgeW + 10;
-    p->setFont(mf); p->setPen(fg);
+    p->setRenderHint(QPainter::Antialiasing);
+    p->setBrush(fg);
+    p->setPen(Qt::NoPen);
+    p->drawRoundedRect(bd, 5, 5);
+    p->setPen(QColor("#fff"));
+    QFont bf = QApplication::font();
+    bf.setPointSize(8);
+    bf.setBold(true);
+    p->setFont(bf);
+    p->drawText(bd, Qt::AlignCenter, lv);
+    x += badgeW + 10;
+    p->setFont(mf);
+    p->setPen(fg);
     p->drawText(QRect(x, r.y(), r.right() - x, r.height()), Qt::AlignLeft | Qt::AlignVCenter,
                 p->fontMetrics().elidedText(msg, Qt::ElideRight, r.right() - x));
     p->restore();
@@ -224,37 +262,55 @@ monitor::~monitor() { delete ui; }
 // -- animations --
 void monitor::start_animations() {
     auto *glow = new QGraphicsDropShadowEffect(this);
-    glow->setBlurRadius(10); glow->setOffset(0, 0);
+    glow->setBlurRadius(10);
+    glow->setOffset(0, 0);
     glow->setColor(QColor(Theme::CyanLight));
     ui->app_title->setGraphicsEffect(glow);
 
     auto *ga = new QPropertyAnimation(glow, "blurRadius", this);
-    ga->setDuration(2400); ga->setStartValue(6); ga->setEndValue(16);
-    ga->setEasingCurve(QEasingCurve::InOutSine); ga->setLoopCount(-1); ga->start();
+    ga->setDuration(2400);
+    ga->setStartValue(6);
+    ga->setEndValue(16);
+    ga->setEasingCurve(QEasingCurve::InOutSine);
+    ga->setLoopCount(-1);
+    ga->start();
 
     auto *gc = new QPropertyAnimation(glow, "color", this);
     gc->setDuration(3000);
     gc->setStartValue(QColor(Theme::CyanLight));
     gc->setKeyValueAt(0.5, QColor(Theme::Cyan));
     gc->setEndValue(QColor(Theme::CyanLight));
-    gc->setEasingCurve(QEasingCurve::InOutSine); gc->setLoopCount(-1); gc->start();
+    gc->setEasingCurve(QEasingCurve::InOutSine);
+    gc->setLoopCount(-1);
+    gc->start();
 
-    for (auto *s : {ui->status_dot}) {
+    for (auto *s: {ui->status_dot}) {
         auto *a = new QPropertyAnimation(s, "minimumSize", this);
-        a->setDuration(1600); a->setStartValue(QSize(7, 7)); a->setEndValue(QSize(11, 11));
-        a->setEasingCurve(QEasingCurve::InOutSine); a->setLoopCount(-1); a->start();
+        a->setDuration(1600);
+        a->setStartValue(QSize(7, 7));
+        a->setEndValue(QSize(11, 11));
+        a->setEasingCurve(QEasingCurve::InOutSine);
+        a->setLoopCount(-1);
+        a->start();
         auto *b = new QPropertyAnimation(s, "maximumSize", this);
-        b->setDuration(1600); b->setStartValue(QSize(7, 7)); b->setEndValue(QSize(11, 11));
-        b->setEasingCurve(QEasingCurve::InOutSine); b->setLoopCount(-1); b->start();
+        b->setDuration(1600);
+        b->setStartValue(QSize(7, 7));
+        b->setEndValue(QSize(11, 11));
+        b->setEasingCurve(QEasingCurve::InOutSine);
+        b->setLoopCount(-1);
+        b->start();
     }
 
     // card entrance
     QFrame *cards[] = {ui->card_logs, ui->card_alerts, ui->card_threats, ui->card_uptime};
     for (int i = 0; i < 4; ++i) {
         auto *fx = new QGraphicsOpacityEffect(this);
-        fx->setOpacity(0.0); cards[i]->setGraphicsEffect(fx);
+        fx->setOpacity(0.0);
+        cards[i]->setGraphicsEffect(fx);
         auto *anim = new QPropertyAnimation(fx, "opacity", this);
-        anim->setDuration(400); anim->setStartValue(0.0); anim->setEndValue(1.0);
+        anim->setDuration(400);
+        anim->setStartValue(0.0);
+        anim->setEndValue(1.0);
         anim->setEasingCurve(QEasingCurve::OutCubic);
         connect(anim, &QPropertyAnimation::finished, this, [card = cards[i]]() {
             card->setGraphicsEffect(nullptr);
@@ -263,7 +319,7 @@ void monitor::start_animations() {
     }
 }
 
-// -- theme --
+
 void monitor::sync_theme() {
     bool dk;
 #if QT_VERSION >= QT_VERSION_CHECK(6, 5, 0)
@@ -271,7 +327,10 @@ void monitor::sync_theme() {
 #else
     dk = (qApp->palette().color(QPalette::Window).lightness() < 128);
 #endif
-    if (dk != dark_mode_) { dark_mode_ = dk; apply_theme(dk); }
+    if (dk != dark_mode_) {
+        dark_mode_ = dk;
+        apply_theme(dk);
+    }
 }
 
 void monitor::apply_theme(bool d) {
@@ -292,7 +351,7 @@ void monitor::apply_theme(bool d) {
     auto P = d ? Theme::Pink : Theme::PinkDeep;
 
     setStyleSheet(QStringLiteral(R"(
-        * { font-family:"Inter","PingFang SC",sans-serif; }
+        * { font-family:"SF Pro Display","PingFang SC",sans-serif; }
         QMainWindow { background:%1; }
         #header { background:qlineargradient(x1:0,y1:0,x2:1,y2:0,stop:0 %2,stop:1 %10); border-bottom:1px solid %3; }
         QLabel { color:%4; }
@@ -352,19 +411,26 @@ void monitor::apply_theme(bool d) {
 
 // -- setup --
 void monitor::setup_sidebar() { ui->sidebar->setCurrentRow(0); }
+
 void monitor::update_clock() {
     ui->clock_label->setText(QDateTime::currentDateTime().toString(QStringLiteral("yyyy-MM-dd  hh:mm:ss")));
 }
+
 void monitor::setup_log_table(QTableView *v) {
-    v->setShowGrid(false); v->setAlternatingRowColors(false);
+    v->setShowGrid(false);
+    v->setAlternatingRowColors(false);
     v->setSelectionBehavior(QAbstractItemView::SelectRows);
     v->setSelectionMode(QAbstractItemView::SingleSelection);
-    v->verticalHeader()->setDefaultSectionSize(28); v->verticalHeader()->hide();
+    v->verticalHeader()->setDefaultSectionSize(28);
+    v->verticalHeader()->hide();
     v->setMouseTracking(true);
 }
+
 void monitor::setup_network_table(QTableWidget *t) {
-    t->verticalHeader()->hide(); t->horizontalHeader()->setStretchLastSection(true);
-    t->setAlternatingRowColors(true); t->setSelectionBehavior(QAbstractItemView::SelectRows);
+    t->verticalHeader()->hide();
+    t->horizontalHeader()->setStretchLastSection(true);
+    t->setAlternatingRowColors(true);
+    t->setSelectionBehavior(QAbstractItemView::SelectRows);
 }
 
 // -- models --
@@ -383,7 +449,8 @@ void monitor::init_models() {
     setup_log_table(ui->log_view);
     ui->log_view->setModel(log_proxy_);
     ui->log_view->setColumnHidden(1, true);
-    log_delegate_ = new LogDelegate(this); log_delegate_->dark = dark_mode_;
+    log_delegate_ = new LogDelegate(this);
+    log_delegate_->dark = dark_mode_;
     ui->log_view->setItemDelegate(log_delegate_);
     ui->log_view->horizontalHeader()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
     ui->log_view->horizontalHeader()->setSectionResizeMode(2, QHeaderView::Stretch);
@@ -410,17 +477,20 @@ void monitor::init_models() {
 
     setup_log_table(ui->alert_view);
     ui->alert_view->setModel(alert_proxy_);
-    alert_delegate_ = new AlertDelegate(this); alert_delegate_->dark = dark_mode_;
+    alert_delegate_ = new AlertDelegate(this);
+    alert_delegate_->dark = dark_mode_;
     ui->alert_view->setItemDelegate(alert_delegate_);
     ui->alert_view->horizontalHeader()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
     ui->alert_view->horizontalHeader()->setSectionResizeMode(2, QHeaderView::Stretch);
     connect(ui->alert_view, &QTableView::clicked, this, &monitor::show_alert_detail);
-    connect(ui->alert_severity_filter, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &monitor::filter_alert_severity);
+    connect(ui->alert_severity_filter, QOverload<int>::of(&QComboBox::currentIndexChanged), this,
+            &monitor::filter_alert_severity);
 
     // dashboard recent alerts
     setup_log_table(ui->recent_alerts_view);
     ui->recent_alerts_view->setModel(alert_model_);
-    recent_delegate_ = new AlertDelegate(this); recent_delegate_->dark = dark_mode_;
+    recent_delegate_ = new AlertDelegate(this);
+    recent_delegate_->dark = dark_mode_;
     ui->recent_alerts_view->setItemDelegate(recent_delegate_);
     ui->recent_alerts_view->horizontalHeader()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
     ui->recent_alerts_view->horizontalHeader()->setSectionResizeMode(2, QHeaderView::Stretch);
@@ -430,14 +500,15 @@ void monitor::init_models() {
     honey_model_ = new LogModel(this);
     setup_log_table(ui->honey_view);
     ui->honey_view->setModel(honey_model_);
-    honey_delegate_ = new LogDelegate(this); honey_delegate_->dark = dark_mode_;
+    honey_delegate_ = new LogDelegate(this);
+    honey_delegate_->dark = dark_mode_;
     ui->honey_view->setItemDelegate(honey_delegate_);
     ui->honey_view->horizontalHeader()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
     ui->honey_view->horizontalHeader()->setSectionResizeMode(2, QHeaderView::Stretch);
     connect(ui->honey_view, &QTableView::clicked, this, &monitor::show_honey_detail);
 
     // network page
-    for (auto *t : {ui->local_ip_table, ui->arp_table, ui->quarantine_table})
+    for (auto *t: {ui->local_ip_table, ui->arp_table, ui->quarantine_table})
         setup_network_table(t);
 
     // attackers leaderboard
@@ -456,23 +527,30 @@ void monitor::init_models() {
     netTimer->start(30000); // 每 30s 刷新 ARP/雷达/本地接口/隔离列表
 
     // sparkline
-    sparkline_widget_ = new SparklineWidget(); sparkline_widget_->dark = dark_mode_;
+    sparkline_widget_ = new SparklineWidget();
+    sparkline_widget_->dark = dark_mode_;
     if (ui->sparkline_frame->layout()) delete ui->sparkline_frame->layout();
-    auto *vbl = new QVBoxLayout(ui->sparkline_frame); vbl->setContentsMargins(0, 0, 0, 0);
+    auto *vbl = new QVBoxLayout(ui->sparkline_frame);
+    vbl->setContentsMargins(0, 0, 0, 0);
     vbl->addWidget(sparkline_widget_);
 
     // radar
-    radar_widget_ = new RadarWidget(); radar_widget_->dark = dark_mode_;
+    radar_widget_ = new RadarWidget();
+    radar_widget_->dark = dark_mode_;
     if (ui->radar_frame->layout()) delete ui->radar_frame->layout();
-    auto *rvbl = new QVBoxLayout(ui->radar_frame); rvbl->setContentsMargins(0, 0, 0, 0);
+    auto *rvbl = new QVBoxLayout(ui->radar_frame);
+    rvbl->setContentsMargins(0, 0, 0, 0);
     rvbl->addWidget(radar_widget_);
 
     // detail panels
     auto replace = [this](QTextEdit *old, DetailPanel *&panel, int maxH) {
         auto *pl = qobject_cast<QVBoxLayout *>(old->parentWidget()->layout());
         if (!pl) return;
-        int i = pl->indexOf(old); old->hide();
-        panel = new DetailPanel(this); panel->setMaximumHeight(maxH); panel->set_dark(dark_mode_);
+        int i = pl->indexOf(old);
+        old->hide();
+        panel = new DetailPanel(this);
+        panel->setMaximumHeight(maxH);
+        panel->set_dark(dark_mode_);
         if (i >= 0) pl->insertWidget(i, panel);
     };
     replace(ui->log_detail, log_detail_panel_, 180);
@@ -481,46 +559,70 @@ void monitor::init_models() {
 
     // context menus
     auto ctx = [this](const QPoint &pos, QTableView *v, QSortFilterProxyModel *proxy) {
-        auto idx = v->indexAt(pos); if (!idx.isValid()) return;
+        auto idx = v->indexAt(pos);
+        if (!idx.isValid()) return;
         QMenu m(this);
         auto *cpy = m.addAction(QStringLiteral("复制"));
         auto *qip = m.addAction(QStringLiteral("隔离此 IP"));
         if (m.exec(v->viewport()->mapToGlobal(pos)) == cpy)
-            QApplication::clipboard()->setText(proxy ? proxy->data(idx.siblingAtColumn(2), LogModel::MessageRole).toString()
-                                                     : idx.data(LogModel::MessageRole).toString());
+            QApplication::clipboard()->setText(proxy
+                                                   ? proxy->data(idx.siblingAtColumn(2), LogModel::MessageRole).
+                                                   toString()
+                                                   : idx.data(LogModel::MessageRole).toString());
         else if (qip) {
             QRegularExpression rx(R"((\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}))");
-            auto ip = rx.match(proxy ? proxy->data(idx.siblingAtColumn(2), LogModel::MessageRole).toString()
-                                     : idx.data(LogModel::MessageRole).toString()).captured(1);
-            if (!ip.isEmpty()) { Nezha::Database::DatabaseHelper::QuarantineIP(ip.toStdString(), "手动隔离", 50.0); refresh_quarantine_list(); }
+            auto ip = rx.match(proxy
+                                   ? proxy->data(idx.siblingAtColumn(2), LogModel::MessageRole).toString()
+                                   : idx.data(LogModel::MessageRole).toString()).captured(1);
+            if (!ip.isEmpty()) {
+                Nezha::Database::DatabaseHelper::QuarantineIP(ip.toStdString(), "手动隔离", 50.0);
+                refresh_quarantine_list();
+            }
         }
     };
 
-    for (auto &[view, proxy] : {std::pair{ui->log_view, log_search_proxy_}, {ui->alert_view, alert_proxy_}}) {
+    for (auto &[view, proxy]: {std::pair{ui->log_view, log_search_proxy_}, {ui->alert_view, alert_proxy_}}) {
         view->setContextMenuPolicy(Qt::CustomContextMenu);
-        connect(view, &QTableView::customContextMenuRequested, this, [this, view, proxy, ctx](const QPoint &p) { ctx(p, view, proxy); });
+        connect(view, &QTableView::customContextMenuRequested, this, [this, view, proxy, ctx](const QPoint &p) {
+            ctx(p, view, proxy);
+        });
     }
 
     ui->honey_view->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(ui->honey_view, &QTableView::customContextMenuRequested, this, [this](const QPoint &pos) {
-        auto idx = ui->honey_view->indexAt(pos); if (!idx.isValid()) return;
-        QMenu m(this); m.addAction(QStringLiteral("复制"));
-        auto *qip = m.addAction(QStringLiteral("隔离来源 IP"));
-        if (m.exec(ui->honey_view->viewport()->mapToGlobal(pos)) == qip) {
+        auto idx = ui->honey_view->indexAt(pos);
+        if (!idx.isValid()) return;
+
+        QMenu m(this);
+        m.addAction(QStringLiteral("复制"));
+
+        if (auto *qip = m.addAction(QStringLiteral("隔离来源 IP")); m.exec(ui->honey_view->viewport()->mapToGlobal(pos)) == qip) {
             QRegularExpression rx(R"((\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}))");
+
             auto ip = rx.match(idx.data(LogModel::MessageRole).toString()).captured(1);
-            if (!ip.isEmpty()) { Nezha::Database::DatabaseHelper::QuarantineIP(ip.toStdString(), "蜜罐手动隔离", 75.0); refresh_quarantine_list(); }
+
+            if (!ip.isEmpty()) {
+                Nezha::Database::DatabaseHelper::QuarantineIP(ip.toStdString(), "蜜罐手动隔离", 75.0);
+                refresh_quarantine_list();
+            }
         }
     });
 
     ui->quarantine_table->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(ui->quarantine_table, &QTableWidget::customContextMenuRequested, this, [this](const QPoint &pos) {
-        auto *item = ui->quarantine_table->itemAt(pos); if (!item) return;
-        auto ip = ui->quarantine_table->item(item->row(), 0)->text();
-        QMenu m(this); m.addAction(QStringLiteral("复制 IP"));
+        auto *item = ui->quarantine_table->itemAt(pos);
+        if (!item) return;
+
+        const auto ip = ui->quarantine_table->item(item->row(), 0)->text();
+
+        QMenu m(this);
+        m.addAction(QStringLiteral("复制 IP"));
+
         auto *unq = m.addAction(QStringLiteral("取消隔离"));
+
         if (m.exec(ui->quarantine_table->viewport()->mapToGlobal(pos)) == unq) {
-            Nezha::Database::DatabaseHelper::RemoveQuarantine(ip.toStdString()); refresh_quarantine_list();
+            Nezha::Database::DatabaseHelper::RemoveQuarantine(ip.toStdString());
+            refresh_quarantine_list();
         }
     });
 
@@ -536,100 +638,222 @@ void monitor::init_models() {
         auto ipm = iprx.match(msg);
         QString ip = ipm.hasMatch() ? ipm.captured(1) : QString();
 
-        auto *dlg = new QDialog(this);
-        dlg->setWindowTitle(QStringLiteral("告警详情 — %1").arg(ip.isEmpty() ? QStringLiteral("?") : ip));
-        dlg->resize(520, 420);
-        dlg->setStyleSheet(QStringLiteral(
-            "QDialog { background:%1; } QTextBrowser { background:%1; border:none; }"
-        ).arg(dark_mode_ ? Theme::DkBg : Theme::LtBg));
-
-        auto *tb = new QTextBrowser(dlg);
-        tb->setOpenLinks(false);
-        auto *lay = new QVBoxLayout(dlg); lay->setContentsMargins(0, 0, 0, 0); lay->addWidget(tb);
-
         auto text = dark_mode_ ? Theme::DkText : Theme::LtText;
         auto muted = dark_mode_ ? Theme::DkMuted : Theme::LtMuted;
-        auto cyan = dark_mode_ ? Theme::Cyan : Theme::CyanDeep;
+        auto bg = dark_mode_ ? Theme::DkBg : Theme::LtBg;
+        auto card = dark_mode_ ? Theme::DkCard : Theme::LtCard;
+        auto border = dark_mode_ ? Theme::DkBorder : Theme::LtBorder;
 
-        // wireshark-style hex dump
-        auto hex_dump = [](const QString &s) -> QString {
-            QByteArray raw = s.toUtf8();
-            QString out;
-            out += QStringLiteral("<pre style='font-family:\"Menlo\",monospace;font-size:10px;"
-                                  "line-height:1.3;margin:4px 0;'>");
-            for (int i = 0; i < raw.size(); i += 16) {
-                out += QStringLiteral("%1  ").arg(i, 4, 16, QChar('0'));
-                for (int j = 0; j < 16; ++j) {
-                    if (i + j < raw.size())
-                        out += QStringLiteral("%1 ").arg(static_cast<unsigned char>(raw[i + j]), 2, 16, QChar('0'));
-                    else
-                        out += QStringLiteral("   ");
-                }
-                out += QStringLiteral(" ");
-                for (int j = 0; j < 16 && (i + j) < raw.size(); ++j) {
-                    unsigned char c = raw[i + j];
-                    out += (c >= 32 && c < 127) ? QChar(c) : QChar('.');
-                }
-                out += QStringLiteral("\n");
-            }
-            out += QStringLiteral("</pre>");
-            return out;
+        auto *dlg = new QDialog(this);
+        dlg->setWindowTitle(QStringLiteral("告警详情 — %1").arg(ip.isEmpty() ? QStringLiteral("?") : ip));
+        dlg->resize(620, 520);
+        dlg->setStyleSheet(QStringLiteral(
+            "QDialog { background:%1; }"
+        ).arg(bg));
+
+        auto *root = new QVBoxLayout(dlg);
+        root->setContentsMargins(8, 8, 8, 8);
+        root->setSpacing(6);
+
+        // -- detail table (wireshark-style selectable rows) --
+        auto *tree = new QTreeWidget(dlg);
+        tree->setHeaderLabels({QStringLiteral("字段"), QStringLiteral("值")});
+        tree->setRootIsDecorated(true);
+        tree->setAlternatingRowColors(false);
+        tree->setAnimated(true);
+        tree->setStyleSheet(QStringLiteral(
+            "QTreeWidget { background:%1; color:%2; border:1px solid %3; border-radius:8px;"
+            "  font-family:\"Menlo\"; font-size:11px; outline:none; }"
+            "QTreeWidget::item { padding:3px 6px; border-bottom:1px solid %3; }"
+            "QTreeWidget::item:hover { background:%4; }"
+            "QTreeWidget::item:selected { background:%5; color:%6; }"
+            "QHeaderView::section { background:%7; color:%8; padding:5px 10px;"
+            "  border:none; border-bottom:2px solid %3; font-size:10px; font-weight:700; }"
+        ).arg(card, text, border, dark_mode_ ? Theme::DkHover : Theme::LtHover,
+              dark_mode_ ? Theme::DkSelected : Theme::LtSelected,
+              dark_mode_ ? Theme::Cyan : Theme::CyanDeep,
+              card, muted));
+
+        auto add_row = [&](QTreeWidgetItem *parent, const QString &k, const QString &v,
+                           const QString &vc = QString()) {
+            auto *item = new QTreeWidgetItem(parent);
+            item->setText(0, k);
+            item->setText(1, v);
+            if (!vc.isEmpty()) item->setForeground(1, QColor(vc));
         };
 
-        QString html = QStringLiteral(R"(
-            <html><head><style>
-              body { font-family:"Menlo",monospace; font-size:11px; color:%1; background:%2; padding:16px; }
-              h2 { color:%3; font-size:14px; margin:0 0 12px 0; border-bottom:1px solid %4; padding-bottom:6px; }
-              .kv { display:grid; grid-template-columns:80px 1fr; gap:4px 12px; margin-bottom:12px; }
-              .kl { color:%5; font-weight:600; }
-              .kv2 { color:%1; }
-            </style></head><body>
-            <h2>告警详情</h2>
-            <div class='kv'>
-              <div class='kl'>时间</div><div class='kv2'>%6</div>
-              <div class='kl'>级别</div><div class='kv2' style='color:%7'>%8</div>
-              <div class='kl'>内容</div><div class='kv2'>%9</div>
-            </div>
-            <h2 style='color:%3;'>Hex Dump</h2>
-            %10
-            </body></html>
-        )").arg(text, dark_mode_ ? Theme::DkBg : Theme::LtBg, cyan,
-               dark_mode_ ? Theme::DkBorder : Theme::LtBorder, muted,
-               tm.toHtmlEscaped(),
-               color.name(), lv.toHtmlEscaped(), msg.toHtmlEscaped(),
-               hex_dump(msg));
-        tb->setHtml(html);
+        auto *rootItem = tree->invisibleRootItem();
+        add_row(rootItem, QStringLiteral("时间"), tm, text);
+        add_row(rootItem, QStringLiteral("级别"), lv, color.name());
+        add_row(rootItem, QStringLiteral("内容"), msg, text);
+
+        // hex dump as expandable subtree
+        auto *hexItem = new QTreeWidgetItem(rootItem);
+        hexItem->setText(0, QStringLiteral("Hex Dump"));
+        hexItem->setText(1, QStringLiteral("%1 字节").arg(msg.toUtf8().size()));
+        hexItem->setForeground(1, QColor(muted));
+
+        QByteArray raw = msg.toUtf8();
+        for (int i = 0; i < raw.size(); i += 16) {
+            QString hex, asc;
+            for (int j = 0; j < 16; ++j) {
+                if (i + j < raw.size()) {
+                    unsigned char c = raw[i + j];
+                    hex += QStringLiteral("%1 ").arg(c, 2, 16, QChar('0'));
+                    asc += (c >= 32 && c < 127) ? QChar(c) : QChar('.');
+                } else {
+                    hex += QStringLiteral("   ");
+                    asc += QChar(' ');
+                }
+            }
+            auto *row = new QTreeWidgetItem(hexItem);
+            row->setText(0, QStringLiteral("%1").arg(i, 4, 16, QChar('0')));
+            row->setText(1, hex.trimmed() + QStringLiteral("  |  ") + asc);
+            row->setForeground(1, QColor(Theme::Grey));
+        }
+
+        auto *geoItem = new QTreeWidgetItem(rootItem);
+        geoItem->setText(0, QStringLiteral("GeoIP"));
+        geoItem->setText(1, QStringLiteral("查询中..."));
+        geoItem->setForeground(1, QColor(muted));
+
+        tree->expandAll();
+        tree->resizeColumnToContents(0);
+        root->addWidget(tree);
+
+        // button bar
+        auto *btnBar = new QHBoxLayout();
+        btnBar->setSpacing(8);
+        root->addLayout(btnBar);
+
+        auto mkbtn = [&](const QString &label, const QString &color) -> QPushButton * {
+            auto *b = new QPushButton(label);
+            b->setStyleSheet(QStringLiteral(
+                "QPushButton { background:%1; color:%2; border:1px solid %3; border-radius:8px;"
+                "  padding:5px 16px; font-size:10px; font-weight:600; }"
+                "QPushButton:hover { border-color:%2; background:%4; }"
+            ).arg(card, color, border, dark_mode_ ? Theme::DkHover : Theme::LtHover));
+            return b;
+        };
+
+        auto *copyBtn = mkbtn(QStringLiteral("复制全部"), dark_mode_ ? Theme::Cyan : Theme::CyanDeep);
+        connect(copyBtn, &QPushButton::clicked, dlg, [tree, msg, tm, lv]() {
+            QString all;
+            all += QStringLiteral("时间: %1\n级别: %2\n内容: %3\n\n").arg(tm, lv, msg);
+            all += QStringLiteral("── Hex Dump ──\n");
+            QByteArray raw = msg.toUtf8();
+            for (int i = 0; i < raw.size(); i += 16) {
+                all += QStringLiteral("%1  ").arg(i, 4, 16, QChar('0'));
+                for (int j = 0; j < 16 && (i + j) < raw.size(); ++j)
+                    all += QStringLiteral("%1 ").arg(static_cast<unsigned char>(raw[i + j]), 2, 16, QChar('0'));
+                all += QStringLiteral("\n");
+            }
+            QApplication::clipboard()->setText(all);
+        });
+        btnBar->addWidget(copyBtn);
+
+        auto *copyJsonBtn = mkbtn(QStringLiteral("复制 JSON"), Theme::Pink);
+        connect(copyJsonBtn, &QPushButton::clicked, dlg, [msg, tm, lv]() {
+            QJsonObject obj;
+            obj["timestamp"] = tm;
+            obj["level"] = lv;
+            obj["message"] = msg;
+            obj["hex"] = QString::fromLatin1(msg.toUtf8().toHex());
+            QApplication::clipboard()->setText(
+                QString::fromUtf8(QJsonDocument(obj).toJson(QJsonDocument::Indented)));
+        });
+        btnBar->addWidget(copyJsonBtn);
+
+        auto *exportBtn = mkbtn(QStringLiteral("导出 .log"), Theme::Green);
+        connect(exportBtn, &QPushButton::clicked, dlg, [dlg, msg, tm, lv, ip]() {
+            QString path = QFileDialog::getSaveFileName(dlg, QStringLiteral("导出日志"),
+                                                        QStringLiteral("alert_%1.log").arg(
+                                                            QDateTime::currentDateTime().toString("yyyyMMdd_HHmmss")),
+                                                        QStringLiteral("日志文件 (*.log);;所有文件 (*)"));
+            if (path.isEmpty()) return;
+            QFile f(path);
+            if (f.open(QIODevice::WriteOnly | QIODevice::Text)) {
+                QTextStream ts(&f);
+                ts << QStringLiteral("=== NezhaGuard 告警详情 ===\n");
+                ts << QStringLiteral("时间: %1\n").arg(tm);
+                ts << QStringLiteral("级别: %2\n").arg(lv);
+                ts << QStringLiteral("来源: %3\n").arg(ip);
+                ts << QStringLiteral("内容: %1\n\n").arg(msg);
+                ts << QStringLiteral("── Hex Dump ──\n");
+                QByteArray raw = msg.toUtf8();
+                for (int i = 0; i < raw.size(); i += 16) {
+                    ts << QStringLiteral("%1  ").arg(i, 4, 16, QChar('0'));
+                    for (int j = 0; j < 16 && (i + j) < raw.size(); ++j)
+                        ts << QStringLiteral("%1 ").arg(static_cast<unsigned char>(raw[i + j]), 2, 16, QChar('0'));
+                    ts << QStringLiteral("  ");
+                    for (int j = 0; j < 16 && (i + j) < raw.size(); ++j) {
+                        unsigned char c = raw[i + j];
+                        ts << ((c >= 32 && c < 127) ? QChar(c) : QChar('.'));
+                    }
+                    ts << QStringLiteral("\n");
+                }
+                f.close();
+            }
+        });
+        btnBar->addWidget(exportBtn);
+
+        btnBar->addStretch();
+
+        auto *closeBtn = mkbtn(QStringLiteral("关闭"), muted);
+        connect(closeBtn, &QPushButton::clicked, dlg, &QDialog::close);
+        btnBar->addWidget(closeBtn);
+
+        // tree context menu
+        tree->setContextMenuPolicy(Qt::CustomContextMenu);
+        connect(tree, &QTreeWidget::customContextMenuRequested, dlg,
+                [tree](const QPoint &pos) {
+                    auto *item = tree->itemAt(pos);
+                    if (!item) return;
+                    QMenu menu;
+                    auto *cpy = menu.addAction(QStringLiteral("复制行"));
+                    auto *cpyAll = menu.addAction(QStringLiteral("复制子树"));
+                    if (menu.exec(tree->viewport()->mapToGlobal(pos)) == cpy) {
+                        QApplication::clipboard()->setText(
+                            QStringLiteral("%1: %2").arg(item->text(0), item->text(1)));
+                    } else if (cpyAll) {
+                        QString all;
+                        std::function<void(QTreeWidgetItem *, int)> walk = [&](QTreeWidgetItem *it, int depth) {
+                            all += QString(depth * 2, ' ') + it->text(0) + ": " + it->text(1) + "\n";
+                            for (int i = 0; i < it->childCount(); ++i) walk(it->child(i), depth + 1);
+                        };
+                        walk(item, 0);
+                        QApplication::clipboard()->setText(all);
+                    }
+                });
 
         // async GeoIP
         if (!ip.isEmpty()) {
-            auto ipCopy = ip.toStdString();
-            auto _f = QtConcurrent::run([this, tb, ip, text, cyan, muted]() {
+            auto _f = QtConcurrent::run([this, geoItem, ip, muted, text]() {
                 auto geo = Nezha::Core::GeoIP::lookup(ip.toStdString());
                 auto host = Nezha::IPAddress::ipaddr::ResolveHostname(ip.toStdString());
-                QString extra;
-                extra += QStringLiteral("<h2 style='color:%1;'>GeoIP</h2><div class='kv'>").arg(cyan);
-                if (!host.empty() && host != ip.toStdString())
-                    extra += QStringLiteral("<div class='kl'>主机名</div><div class='kv2'>%1</div>")
-                        .arg(QString::fromStdString(host).toHtmlEscaped());
-                if (geo.valid) {
-                    extra += QStringLiteral("<div class='kl'>国家</div><div class='kv2'>%1 (%2)</div>")
-                        .arg(QString::fromStdString(geo.country).toHtmlEscaped(),
-                             QString::fromStdString(geo.country_code).toHtmlEscaped());
-                    if (!geo.city.empty())
-                        extra += QStringLiteral("<div class='kl'>城市</div><div class='kv2'>%1</div>")
-                            .arg(QString::fromStdString(geo.city).toHtmlEscaped());
-                    if (!geo.isp.empty())
-                        extra += QStringLiteral("<div class='kl'>ISP</div><div class='kv2'>%1</div>")
-                            .arg(QString::fromStdString(geo.isp).toHtmlEscaped());
-                    if (geo.lat != 0.0 || geo.lon != 0.0)
-                        extra += QStringLiteral("<div class='kl'>坐标</div><div class='kv2'>%.4f, %.4f</div>")
-                            .arg(geo.lat).arg(geo.lon);
-                }
-                extra += QStringLiteral("</div>");
-                QMetaObject::invokeMethod(this, [tb, extra]() {
-                    QString cur = tb->toHtml();
-                    cur.replace(QStringLiteral("</body>"), extra + QStringLiteral("</body>"));
-                    tb->setHtml(cur);
+                QMetaObject::invokeMethod(this, [geoItem, geo, host, muted, text, ip]() {
+                    while (geoItem->childCount() > 0)
+                        delete geoItem->takeChild(0);
+                    auto add = [&](const QString &k, const QString &v, const QString &c = QString()) {
+                        auto *item = new QTreeWidgetItem(geoItem);
+                        item->setText(0, k);
+                        item->setText(1, v);
+                        if (!c.isEmpty()) item->setForeground(1, QColor(c));
+                    };
+                    geoItem->setText(1, QString());
+                    if (!host.empty() && host != ip.toStdString())
+                        add(QStringLiteral("主机名"), QString::fromStdString(host), text);
+                    if (geo.valid) {
+                        add(QStringLiteral("国家"), QStringLiteral("%1 (%2)")
+                            .arg(QString::fromStdString(geo.country), QString::fromStdString(geo.country_code)), text);
+                        if (!geo.city.empty()) add(QStringLiteral("城市"), QString::fromStdString(geo.city), text);
+                        if (!geo.isp.empty()) add(QStringLiteral("ISP"), QString::fromStdString(geo.isp), text);
+                        if (geo.lat != 0.0 || geo.lon != 0.0)
+                            add(QStringLiteral("坐标"), QStringLiteral("%1, %2").arg(geo.lat, 0, 'f', 4).arg(
+                                    geo.lon, 0, 'f', 4), text);
+                    } else {
+                        add(QStringLiteral("结果"), QStringLiteral("无数据"), muted);
+                    }
                 }, Qt::QueuedConnection);
             });
         }
@@ -643,18 +867,22 @@ void monitor::init_models() {
 
     connect(ui->recent_alerts_view, &QAbstractItemView::doubleClicked, this,
             [this, double_click_detail](const QModelIndex &idx) {
-                double_click_detail(idx, alert_model_); });
+                double_click_detail(idx, alert_model_);
+            });
     connect(ui->attackers_view, &QAbstractItemView::doubleClicked, this,
             [this, double_click_detail](const QModelIndex &idx) {
-                double_click_detail(idx, attackers_model_); });
+                double_click_detail(idx, attackers_model_);
+            });
     connect(ui->alert_view, &QAbstractItemView::doubleClicked, this,
             [this, double_click_detail](const QModelIndex &idx) {
                 auto srcIdx = alert_proxy_ ? alert_proxy_->mapToSource(idx) : idx;
-                double_click_detail(srcIdx, alert_model_); });
+                double_click_detail(srcIdx, alert_model_);
+            });
     connect(ui->log_view, &QAbstractItemView::doubleClicked, this,
             [this, double_click_detail](const QModelIndex &idx) {
                 auto srcIdx = log_search_proxy_ ? log_search_proxy_->mapToSource(idx) : idx;
-                double_click_detail(srcIdx, log_model_); });
+                double_click_detail(srcIdx, log_model_);
+            });
 
     apply_theme(dark_mode_);
 }
@@ -665,10 +893,15 @@ void monitor::update_stats(int log_count, int alert_count) {
     int logRate = std::max(0, log_count - last_log);
     int alertRate = std::max(0, alert_count - last_alert);
     pkt_rate_ = logRate;
-    last_log = log_count; last_alert = alert_count;
+    last_log = log_count;
+    last_alert = alert_count;
     int qc = static_cast<int>(Nezha::Database::DatabaseHelper::GetQuarantineList().size());
 
-    auto threatLvl = alertRate > 10 ? QStringLiteral("危险") : alertRate > 3 ? QStringLiteral("警告") : QStringLiteral("正常");
+    auto threatLvl = alertRate > 10
+                         ? QStringLiteral("危险")
+                         : alertRate > 3
+                               ? QStringLiteral("警告")
+                               : QStringLiteral("正常");
     auto threatColor = alertRate > 10 ? Theme::Red : alertRate > 3 ? Theme::Orange : Theme::Green;
     ui->status_label->setText(QStringLiteral("威胁: %1 | 日志 %2 (+%3/s) | 告警 %4 (+%5/s) | 已隔离 %6")
         .arg(threatLvl).arg(log_count).arg(logRate).arg(alert_count).arg(alertRate).arg(qc));
@@ -687,10 +920,11 @@ void monitor::update_stats(int log_count, int alert_count) {
     refresh_quickstats();
 }
 
-void monitor::append_alert(const QString &time, const QString &type, const QString &ip, int count, double score, const QString &severity) {
+void monitor::append_alert(const QString &time, const QString &type, const QString &ip, int count, double score,
+                           const QString &severity) {
     if (!alert_model_) return;
     alert_model_->append(time, severity,
-        QStringLiteral("%1  |  %2  x%3  %4分").arg(type, ip).arg(count).arg(static_cast<int>(score)));
+                         QStringLiteral("%1  |  %2  x%3  %4分").arg(type, ip).arg(count).arg(static_cast<int>(score)));
     int a = alert_model_->total();
     ui->card_alerts_value->setText(QString::number(a));
     ui->alert_stats_label->setText(QStringLiteral("共 %1 条").arg(a));
@@ -708,27 +942,32 @@ void monitor::append_alert(const QString &time, const QString &type, const QStri
     // track active attack types
     active_types_.insert(type);
     QStringList types;
-    for (const auto &t : active_types_) {
+    for (const auto &t: active_types_) {
         auto color = sev_crit_ > 0 ? Theme::PinkDeep : Theme::Pink;
-        types.append(QStringLiteral("<span style='color:%1;background:%2;border-radius:8px;padding:2px 8px;margin:1px;font-size:10px;font-weight:600;'>%3</span>")
+        types.append(
+            QStringLiteral(
+                "<span style='color:%1;background:%2;border-radius:8px;padding:2px 8px;margin:1px;font-size:10px;font-weight:600;'>%3</span>")
             .arg(Theme::White, Theme::DkCard, t));
     }
     ui->threat_activity->setText(types.isEmpty() ? QString() : types.join(QStringLiteral(" ")));
     ui->threat_activity->setTextFormat(Qt::RichText);
 }
 
-void monitor::append_honeypot(const QString &time, const QString &src_ip, uint16_t sport, uint16_t dport, const QString &service) {
+void monitor::append_honeypot(const QString &time, const QString &src_ip, uint16_t sport, uint16_t dport,
+                              const QString &service) {
     if (!honey_model_) return;
     honey_model_->append(time, QStringLiteral("INFO"),
-        QStringLiteral("%1:%2 → :%3 [%4]").arg(src_ip).arg(sport).arg(dport).arg(service));
+                         QStringLiteral("%1:%2 → :%3 [%4]").arg(src_ip).arg(sport).arg(dport).arg(service));
     ui->honey_stats_label->setText(QStringLiteral("共 %1 次连接").arg(honey_model_->total()));
 }
 
 void monitor::record_attacker(const QString &ip, double score, const QString &type) {
-    auto &a = attackers_[ip]; a.score = std::max(a.score, score); a.count++;
+    auto &a = attackers_[ip];
+    a.score = std::max(a.score, score);
+    a.count++;
     if (!type.isEmpty()) a.type = type;
 
-    QList<std::pair<QString, Attacker>> sorted;
+    QList<std::pair<QString, Attacker> > sorted;
     for (auto it = attackers_.begin(); it != attackers_.end(); ++it)
         sorted.append({it.key(), it.value()});
     std::sort(sorted.begin(), sorted.end(), [](const auto &a, const auto &b) {
@@ -737,7 +976,7 @@ void monitor::record_attacker(const QString &ip, double score, const QString &ty
 
     attackers_model_->clear();
     int rank = 0;
-    for (const auto &[ip, a] : sorted) {
+    for (const auto &[ip, a]: sorted) {
         if (++rank > 10) break;
         attackers_model_->append(
             QStringLiteral("#%1").arg(rank),
@@ -747,9 +986,18 @@ void monitor::record_attacker(const QString &ip, double score, const QString &ty
 }
 
 // -- filters --
-void monitor::apply_log_filter(int idx) { if (log_proxy_) log_proxy_->setFilterFixedString(idx == 0 ? QString() : ui->level_filter->currentText()); }
-void monitor::filter_alert_severity(int idx) { if (alert_proxy_) alert_proxy_->setFilterFixedString(idx == 0 ? QString() : ui->alert_severity_filter->currentText()); }
-void monitor::log_search_changed(const QString &t) { if (log_search_proxy_) log_search_proxy_->setFilterFixedString(t); }
+void monitor::apply_log_filter(int idx) {
+    if (log_proxy_) log_proxy_->setFilterFixedString(idx == 0 ? QString() : ui->level_filter->currentText());
+}
+
+void monitor::filter_alert_severity(int idx) {
+    if (alert_proxy_) alert_proxy_->setFilterFixedString(
+        idx == 0 ? QString() : ui->alert_severity_filter->currentText());
+}
+
+void monitor::log_search_changed(const QString &t) {
+    if (log_search_proxy_) log_search_proxy_->setFilterFixedString(t);
+}
 
 // -- detail --
 void monitor::show_log_detail(const QModelIndex &idx) {
@@ -758,13 +1006,17 @@ void monitor::show_log_detail(const QModelIndex &idx) {
     auto lv = idx.data(LogModel::LevelRole).toString();
     auto msg = idx.data(LogModel::MessageRole).toString();
     QRegularExpression rx(R"((\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}))");
-    QStringList ips; auto it = rx.globalMatch(msg);
-    while (it.hasNext()) { auto ip = it.next().captured(1); if (!ips.contains(ip)) ips.append(ip); }
+    QStringList ips;
+    auto it = rx.globalMatch(msg);
+    while (it.hasNext()) {
+        auto ip = it.next().captured(1);
+        if (!ips.contains(ip)) ips.append(ip);
+    }
     log_detail_panel_->show_log(tm, lv, msg, ips);
     if (!ips.isEmpty()) {
         auto ips2 = ips;
         auto _f = QtConcurrent::run([this, ips2]() {
-            for (const auto &ip : ips2) {
+            for (const auto &ip: ips2) {
                 auto geo = Nezha::Core::GeoIP::lookup(ip.toStdString());
                 auto host = Nezha::IPAddress::ipaddr::ResolveHostname(ip.toStdString());
                 QMetaObject::invokeMethod(this, [this, ip, host, geo]() {
@@ -792,10 +1044,13 @@ void monitor::show_honey_detail(const QModelIndex &idx) {
 
 // -- network --
 void monitor::refresh_local_ips() {
-    auto *t = ui->local_ip_table; t->setRowCount(0);
+    auto *t = ui->local_ip_table;
+    t->setRowCount(0);
     t->setHorizontalHeaderLabels({QStringLiteral("接口"), QStringLiteral("IP 地址")});
-    ifaddrs *ifap = nullptr; if (getifaddrs(&ifap) != 0) return;
-    QFont mf(QStringLiteral("Menlo"), 10); mf.setStyleHint(QFont::Monospace);
+    ifaddrs *ifap = nullptr;
+    if (getifaddrs(&ifap) != 0) return;
+    QFont mf(QStringLiteral("Menlo"), 10);
+    mf.setStyleHint(QFont::Monospace);
     for (auto *ifa = ifap; ifa; ifa = ifa->ifa_next) {
         if (!ifa->ifa_addr || (ifa->ifa_flags & IFF_LOOPBACK)) continue;
         if (ifa->ifa_addr->sa_family != AF_INET) continue;
@@ -803,17 +1058,24 @@ void monitor::refresh_local_ips() {
         auto *s = reinterpret_cast<sockaddr_in *>(ifa->ifa_addr);
         const char *ip = inet_ntop(AF_INET, &s->sin_addr, b, sizeof(b));
         if (!ip) continue;
-        int r = t->rowCount(); t->insertRow(r);
-        auto *n = new QTableWidgetItem(ifa->ifa_name); n->setForeground(QColor(Theme::Pink));
-        auto *i = new QTableWidgetItem(ip); i->setFont(mf); i->setForeground(QColor(Theme::Green));
-        t->setItem(r, 0, n); t->setItem(r, 1, i);
+        int r = t->rowCount();
+        t->insertRow(r);
+        auto *n = new QTableWidgetItem(ifa->ifa_name);
+        n->setForeground(QColor(Theme::Pink));
+        auto *i = new QTableWidgetItem(ip);
+        i->setFont(mf);
+        i->setForeground(QColor(Theme::Green));
+        t->setItem(r, 0, n);
+        t->setItem(r, 1, i);
     }
     freeifaddrs(ifap);
-    t->resizeColumnToContents(0); t->horizontalHeader()->setStretchLastSection(true);
+    t->resizeColumnToContents(0);
+    t->horizontalHeader()->setStretchLastSection(true);
 }
 
 void monitor::refresh_arp_table() {
-    auto *t = ui->arp_table; t->setRowCount(0);
+    auto *t = ui->arp_table;
+    t->setRowCount(0);
     t->setHorizontalHeaderLabels({QStringLiteral("IP 地址"), QStringLiteral("MAC 地址")});
     std::set<std::string> local;
     ifaddrs *ifap = nullptr;
@@ -822,25 +1084,32 @@ void monitor::refresh_arp_table() {
             if (!ifa->ifa_addr || ifa->ifa_addr->sa_family != AF_INET) continue;
             char b[INET_ADDRSTRLEN] = {0};
             auto *s = reinterpret_cast<sockaddr_in *>(ifa->ifa_addr);
-            inet_ntop(AF_INET, &s->sin_addr, b, sizeof(b)); local.insert(b);
+            inet_ntop(AF_INET, &s->sin_addr, b, sizeof(b));
+            local.insert(b);
         }
         freeifaddrs(ifap);
     }
     int mib[6] = {CTL_NET, PF_ROUTE, 0, AF_INET, NET_RT_FLAGS, RTF_LLINFO};
     std::size_t n = 0;
     if (sysctl(mib, 6, nullptr, &n, nullptr, 0) != 0 || n == 0) return;
-    std::vector<char> buf(n * 2); n = buf.size();
+    std::vector<char> buf(n * 2);
+    n = buf.size();
     if (sysctl(mib, 6, buf.data(), &n, nullptr, 0) != 0) return;
     std::set<std::string> seen;
-    QFont mf(QStringLiteral("Menlo"), 10); mf.setStyleHint(QFont::Monospace);
+    QFont mf(QStringLiteral("Menlo"), 10);
+    mf.setStyleHint(QFont::Monospace);
     for (char *p = buf.data(); p < buf.data() + n;) {
         auto *rtm = reinterpret_cast<rt_msghdr *>(p);
         if (rtm->rtm_version != RTM_VERSION) break;
-        if (!(rtm->rtm_flags & RTF_LLINFO) || (rtm->rtm_flags & (RTF_LOCAL | RTF_BROADCAST | RTF_MULTICAST))) { p += rtm->rtm_msglen; continue; }
+        if (!(rtm->rtm_flags & RTF_LLINFO) || (rtm->rtm_flags & (RTF_LOCAL | RTF_BROADCAST | RTF_MULTICAST))) {
+            p += rtm->rtm_msglen;
+            continue;
+        }
         auto *sa = reinterpret_cast<sockaddr *>(rtm + 1);
         int addrs = rtm->rtm_addrs;
         char ipb[INET_ADDRSTRLEN] = {0}, mb[18] = {0};
-        const char *ips = nullptr; bool hm = false;
+        const char *ips = nullptr;
+        bool hm = false;
         for (int i = 0; i < RTAX_MAX; ++i) {
             if (!(addrs & (1 << i))) continue;
             int sl = sa->sa_len > 0 ? sa->sa_len : static_cast<uint8_t>(sizeof(sockaddr));
@@ -852,23 +1121,46 @@ void monitor::refresh_arp_table() {
                 auto *sdl = reinterpret_cast<sockaddr_dl *>(sa);
                 if (sdl->sdl_alen == 6) {
                     const auto *m = reinterpret_cast<const uint8_t *>(LLADDR(sdl));
-                    snprintf(mb, sizeof(mb), "%02x:%02x:%02x:%02x:%02x:%02x", m[0], m[1], m[2], m[3], m[4], m[5]); hm = true;
+                    snprintf(mb, sizeof(mb), "%02x:%02x:%02x:%02x:%02x:%02x", m[0], m[1], m[2], m[3], m[4], m[5]);
+                    hm = true;
                 }
             }
             sa = reinterpret_cast<sockaddr *>(reinterpret_cast<char *>(sa) + sl);
         }
-        if (!ips || !hm) { p += rtm->rtm_msglen; continue; }
-        if (mb[0] == 'f' && mb[1] == 'f') { p += rtm->rtm_msglen; continue; }
-        if ((mb[0] == '0' && mb[1] == '0') || (mb[1] & 1)) { p += rtm->rtm_msglen; continue; }
-        if (local.count(ips)) { p += rtm->rtm_msglen; continue; }
-        if (!seen.insert(std::string(ips) + "@" + mb).second) { p += rtm->rtm_msglen; continue; }
-        int row = t->rowCount(); t->insertRow(row);
-        auto *ipx = new QTableWidgetItem(ips); ipx->setFont(mf); ipx->setForeground(QColor(Theme::Green));
-        auto *mx = new QTableWidgetItem(mb); mx->setFont(mf); mx->setForeground(QColor(Theme::DkMuted));
-        t->setItem(row, 0, ipx); t->setItem(row, 1, mx);
+        if (!ips || !hm) {
+            p += rtm->rtm_msglen;
+            continue;
+        }
+        if (mb[0] == 'f' && mb[1] == 'f') {
+            p += rtm->rtm_msglen;
+            continue;
+        }
+        if ((mb[0] == '0' && mb[1] == '0') || (mb[1] & 1)) {
+            p += rtm->rtm_msglen;
+            continue;
+        }
+        if (local.count(ips)) {
+            p += rtm->rtm_msglen;
+            continue;
+        }
+        if (!seen.insert(std::string(ips) + "@" + mb).second) {
+            p += rtm->rtm_msglen;
+            continue;
+        }
+        int row = t->rowCount();
+        t->insertRow(row);
+        auto *ipx = new QTableWidgetItem(ips);
+        ipx->setFont(mf);
+        ipx->setForeground(QColor(Theme::Green));
+        auto *mx = new QTableWidgetItem(mb);
+        mx->setFont(mf);
+        mx->setForeground(QColor(Theme::DkMuted));
+        t->setItem(row, 0, ipx);
+        t->setItem(row, 1, mx);
         p += rtm->rtm_msglen;
     }
-    t->resizeColumnToContents(0); t->horizontalHeader()->setStretchLastSection(true);
+    t->resizeColumnToContents(0);
+    t->horizontalHeader()->setStretchLastSection(true);
 
     // populate radar
     if (radar_widget_) {
@@ -883,22 +1175,36 @@ void monitor::refresh_arp_table() {
     }
 }
 
-void monitor::refresh_network_info() { refresh_local_ips(); refresh_arp_table(); refresh_quarantine_list(); }
+void monitor::refresh_network_info() {
+    refresh_local_ips();
+    refresh_arp_table();
+    refresh_quarantine_list();
+}
 
 void monitor::refresh_quarantine_list() {
     auto list = Nezha::Database::DatabaseHelper::GetQuarantineList();
     ui->card_threats_value->setText(QString::number(static_cast<int>(list.size())));
-    auto *t = ui->quarantine_table; t->setRowCount(0);
+    auto *t = ui->quarantine_table;
+    t->setRowCount(0);
     t->setHorizontalHeaderLabels({QStringLiteral("IP 地址"), QStringLiteral("隔离原因"), QStringLiteral("威胁评分")});
-    QFont mf(QStringLiteral("Menlo"), 10); mf.setStyleHint(QFont::Monospace);
-    for (const auto &r : list) {
-        int row = t->rowCount(); t->insertRow(row);
-        auto *i1 = new QTableWidgetItem(QString::fromStdString(r.ip_address)); i1->setFont(mf); i1->setForeground(QColor(Theme::Red));
-        auto *i2 = new QTableWidgetItem(QString::fromStdString(r.reason)); i2->setForeground(QColor(Theme::Pink));
-        auto *i3 = new QTableWidgetItem(QString::number(r.threat_score, 'f', 0)); i3->setForeground(QColor(Theme::DkMuted));
-        t->setItem(row, 0, i1); t->setItem(row, 1, i2); t->setItem(row, 2, i3);
+    QFont mf(QStringLiteral("Menlo"), 10);
+    mf.setStyleHint(QFont::Monospace);
+    for (const auto &r: list) {
+        int row = t->rowCount();
+        t->insertRow(row);
+        auto *i1 = new QTableWidgetItem(QString::fromStdString(r.ip_address));
+        i1->setFont(mf);
+        i1->setForeground(QColor(Theme::Red));
+        auto *i2 = new QTableWidgetItem(QString::fromStdString(r.reason));
+        i2->setForeground(QColor(Theme::Pink));
+        auto *i3 = new QTableWidgetItem(QString::number(r.threat_score, 'f', 0));
+        i3->setForeground(QColor(Theme::DkMuted));
+        t->setItem(row, 0, i1);
+        t->setItem(row, 1, i2);
+        t->setItem(row, 2, i3);
     }
-    t->resizeColumnToContents(0); t->horizontalHeader()->setStretchLastSection(true);
+    t->resizeColumnToContents(0);
+    t->horizontalHeader()->setStretchLastSection(true);
 }
 
 // -- misc --
@@ -910,13 +1216,14 @@ void monitor::clear_logs() {
     if (honey_model_) honey_model_->clear();
     ui->card_logs_value->setText(QStringLiteral("0"));
     ui->card_alerts_value->setText(QStringLiteral("0"));
-    for (auto *p : {log_detail_panel_, alert_detail_panel_, honey_detail_panel_}) if (p) p->clear();
+    for (auto *p: {log_detail_panel_, alert_detail_panel_, honey_detail_panel_}) if (p) p->clear();
 }
 
 void monitor::update_sparkline() {
     int cur = log_model_ ? log_model_->total() : 0;
     static int last = 0;
-    int delta = std::max(0, cur - last); last = cur;
+    int delta = std::max(0, cur - last);
+    last = cur;
     sparkline_data_.append(delta);
     if (sparkline_data_.size() > 60) sparkline_data_.removeFirst();
     if (sparkline_widget_) sparkline_widget_->set_data(sparkline_data_);

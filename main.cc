@@ -8,6 +8,9 @@
 #include <ctime>
 #include <format>
 #include <iostream>
+#include <sys/resource.h>
+#include <sys/sysctl.h>
+#include <sys/utsname.h>
 #include <thread>
 #include <unistd.h>
 #include <unordered_map>
@@ -88,22 +91,37 @@ static int run_cli_mode() {
 
     gethostname(hostname, sizeof(hostname));
 
+    // system info
+    struct utsname uts{};
+    long ncpu = sysconf(_SC_NPROCESSORS_ONLN);
+    long page_size = sysconf(_SC_PAGESIZE);
+    long phys_pages = sysconf(_SC_PHYS_PAGES);
+    std::string os_name = uname(&uts) == 0 ? std::format("{} {} {}", uts.sysname, uts.release, uts.machine) : "unknown";
+
     NZ_INFO("");
     NZ_INFO("  哪吒网络安全 SIEM 系统");
     NZ_INFO("  NezhaGuard v{} — 蓝队主动防御平台", Configuration::ApplicationConstants::ApplicationVersion);
     NZ_INFO("");
-    NZ_INFO("  C++26  |  Qt6  |  libpcap  |  SQLite3  |  spdlog");
-    NZ_INFO("  构建: {} {}", __DATE__, __TIME__);
-    NZ_INFO("  主机: {}  |  PID: {}", hostname, getpid());
+    NZ_INFO("  [系统信息]");
+    NZ_INFO("  操作系统:       {}", os_name);
+    NZ_INFO("  CPU 核心:       {}", ncpu);
+    NZ_INFO("  物理内存:       {} MB", (phys_pages * page_size) / (1024 * 1024));
+    NZ_INFO("  主机名:         {}", hostname);
+    NZ_INFO("  进程 PID:       {}", getpid());
+    NZ_INFO("  运行用户:       {}", getenv("USER") ? getenv("USER") : "unknown");
+    NZ_INFO("  构建版本:       {}  {} {}", Configuration::ApplicationConstants::ApplicationVersion, __DATE__, __TIME__);
     NZ_INFO("");
-    NZ_INFO("  [配置摘要]");
-    NZ_INFO("  运行模式:      蓝队 CLI 控制台 (无 GUI)");
-    NZ_INFO("  网卡接口:      {}", get_net_interface());
-    NZ_INFO("  抓包过滤器:    TCP / UDP / ICMP");
-    NZ_INFO("  隔离阈值:      {} 次异常触发自动隔离", Configuration::ApplicationConstants::AnomaliesQuarantineThreshold);
-    NZ_INFO("  告警去重窗口:  10 秒");
-    NZ_INFO("  Arena 块大小:  128 KB (每 30s 回收)");
-    NZ_INFO("  历史隔离记录:  {} 条", qlist.size());
+    NZ_INFO("  [引擎配置]");
+    NZ_INFO("  运行模式:       蓝队 CLI (无头模式)");
+    NZ_INFO("  抓包接口:       {}", get_net_interface());
+    NZ_INFO("  BPF 过滤器:     tcp or udp or icmp");
+    NZ_INFO("  蜜罐端口:       8 (SSH/Telnet/MySQL/Redis/MongoDB/PG/HTTP/HTTPS)");
+    NZ_INFO("  日志监控源:     4 (/var/log/{nginx,apache2}/access.log, auth.log, syslog)");
+    NZ_INFO("  隔离阈值:       {} 次", Configuration::ApplicationConstants::AnomaliesQuarantineThreshold);
+    NZ_INFO("  去重窗口:       10 秒");
+    NZ_INFO("  Arena 块:       128 KB");
+    NZ_INFO("  Tor 节点缓存:   {} 个", tor_checker.total_nodes());
+    NZ_INFO("  历史隔离记录:   {} 条", qlist.size());
 
     if (!qlist.empty()) {
         NZ_INFO("  ── 已隔离 IP 列表 ──");
@@ -208,16 +226,24 @@ static int run_cli_mode() {
             }
             detector.analyze(e, arena, [&](const Core::Alert &a) { alerter.submit(a); });
             if (e.proto == PROTO_ICMP)
-                NZ_DEBUG("[ICMP] {} → {}  len={}",
+                NZ_DEBUG("[ICMP] {} → {}  len={}B",
                      e.src.to_string(), e.dst.to_string(), len);
             else if (e.proto == PROTO_TCP)
-                NZ_TRACE("[TCP] {}:{} → {}:{}  len={}",
+                NZ_TRACE("[TCP] {}:{} → {}:{}  len={}B  payload={}",
                      e.src.to_string(), e.sport,
-                     e.dst.to_string(), e.dport, len);
+                     e.dst.to_string(), e.dport, len, e.msg.size());
             else
-                NZ_TRACE("[UDP] {}:{} → {}:{}  len={}",
+                NZ_TRACE("[UDP] {}:{} → {}:{}  len={}B",
                      e.src.to_string(), e.sport,
                      e.dst.to_string(), e.dport, len);
+
+            static uint64_t pkt_bytes = 0;
+            static uint64_t tcp_pkts = 0, udp_pkts = 0, icmp_pkts = 0;
+            pkt_bytes += len;
+            if (e.proto == PROTO_TCP) ++tcp_pkts;
+            else if (e.proto == PROTO_UDP) ++udp_pkts;
+            else ++icmp_pkts;
+
             static Nanos last_flush = 0;
             if (e.ts_ns - last_flush > 30'000'000'000ULL) {
                 alerter.flush();
@@ -228,10 +254,14 @@ static int run_cli_mode() {
                 auto ql = Database::DatabaseHelper::GetQuarantineList();
                 double elapsed = (e.ts_ns - last_stats) / 1'000'000'000.0;
                 auto arp_count = Core::arp_table_size();
-                NZ_INFO("[统计] 包: {} | 告警: {} | 隔离: {} | 速率: {:.0f} pps | ARP设备: {} | Tor节点: {} | 规则: {}",
-                        pkt_count, alerter.total_alerts(), ql.size(),
-                        pkt_count / elapsed, arp_count, tor_checker.total_nodes(),
-                        detector.rule_count());
+                double mbps = (pkt_bytes * 8.0) / (elapsed * 1'000'000.0);
+                NZ_INFO("[统计] 包: {} | 流量: {:.1f} MB | 速率: {:.0f} pps / {:.2f} Mbps | TCP: {} UDP: {} ICMP: {}",
+                        pkt_count, pkt_bytes / 1'000'000.0,
+                        pkt_count / elapsed, mbps, tcp_pkts, udp_pkts, icmp_pkts);
+                NZ_INFO("[统计] 告警: {} | 隔离: {} | ARP设备: {} | Tor: {} | 规则: {} | Arena: {}KB",
+                        alerter.total_alerts(), ql.size(), arp_count,
+                        tor_checker.total_nodes(), detector.rule_count(),
+                        arena.bytes_used() / 1024);
                 last_stats = e.ts_ns;
             }
         });
@@ -249,15 +279,22 @@ static int run_cli_mode() {
     alerter.flush();
     Log::Logger::instance().flush();
     auto final_qlist = Database::DatabaseHelper::GetQuarantineList();
+    auto arp_count = Core::arp_table_size();
+    struct rusage ru{};
+    getrusage(RUSAGE_SELF, &ru);
     NZ_INFO("");
     NZ_INFO("══════════════════════════════════════════════════════════════");
-    NZ_INFO("");
-    NZ_INFO("  哪 吒 网 络 安 全  SIEM  系 统  已 停 止");
-    NZ_INFO("");
-    NZ_INFO("  ── 本次运行摘要 ──");
-    NZ_INFO("  累计告警:     {}", alerter.total_alerts());
-    NZ_INFO("  当前隔离 IP:  {}", final_qlist.size());
-    NZ_INFO("  Tor 出口节点: {} 个已缓存", tor_checker.total_nodes());
+    NZ_INFO("  哪吒网络安全 SIEM — 运行摘要");
+    NZ_INFO("══════════════════════════════════════════════════════════════");
+    NZ_INFO("  累计告警:        {}", alerter.total_alerts());
+    NZ_INFO("  已隔离 IP:       {}", final_qlist.size());
+    NZ_INFO("  Tor 出口节点:    {}", tor_checker.total_nodes());
+    NZ_INFO("  ARP 活跃设备:    {}", arp_count);
+    NZ_INFO("  签名规则:        {} 条", detector.rule_count());
+    NZ_INFO("  Arena 使用:      {} KB", arena.bytes_used() / 1024);
+    NZ_INFO("  用户 CPU:        {:.2f}s", ru.ru_utime.tv_sec + ru.ru_utime.tv_usec / 1'000'000.0);
+    NZ_INFO("  系统 CPU:        {:.2f}s", ru.ru_stime.tv_sec + ru.ru_stime.tv_usec / 1'000'000.0);
+    NZ_INFO("  最大 RSS:        {} MB", ru.ru_maxrss / 1024);
     NZ_INFO("");
     if (!final_qlist.empty()) {
         NZ_INFO("  ── 隔离列表 ──");
