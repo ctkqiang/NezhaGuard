@@ -925,6 +925,31 @@ void monitor::init_models() {
                 auto srcIdx = log_search_proxy_ ? log_search_proxy_->mapToSource(idx) : idx;
                 double_click_detail(srcIdx, log_model_);
             });
+    // Enter 键 = 双击打开详情
+    auto *log_enter = new QShortcut(QKeySequence(Qt::Key_Return), ui->log_view, nullptr, nullptr, Qt::WidgetShortcut);
+    connect(log_enter, &QShortcut::activated, this, [this]() {
+        auto idx = ui->log_view->currentIndex();
+        if (idx.isValid()) {
+            auto srcIdx = log_search_proxy_ ? log_search_proxy_->mapToSource(idx) : idx;
+            show_log_detail(srcIdx);
+        }
+    });
+    auto *alert_enter = new QShortcut(QKeySequence(Qt::Key_Return), ui->alert_view, nullptr, nullptr, Qt::WidgetShortcut);
+    connect(alert_enter, &QShortcut::activated, this, [this]() {
+        auto idx = ui->alert_view->currentIndex();
+        if (idx.isValid()) {
+            auto srcIdx = alert_proxy_ ? alert_proxy_->mapToSource(idx) : idx;
+            show_alert_detail(srcIdx);
+        }
+    });
+    auto *recent_enter = new QShortcut(QKeySequence(Qt::Key_Return), ui->recent_alerts_view, nullptr, nullptr, Qt::WidgetShortcut);
+    connect(recent_enter, &QShortcut::activated, this, [this]() {
+        show_alert_detail(ui->recent_alerts_view->currentIndex());
+    });
+    auto *honey_enter = new QShortcut(QKeySequence(Qt::Key_Return), ui->honey_view, nullptr, nullptr, Qt::WidgetShortcut);
+    connect(honey_enter, &QShortcut::activated, this, [this]() {
+        show_honey_detail(ui->honey_view->currentIndex());
+    });
 
     apply_theme(dark_mode_);
 }
@@ -1109,30 +1134,76 @@ void monitor::show_honey_detail(const QModelIndex &idx) {
 void monitor::refresh_local_ips() {
     auto *t = ui->local_ip_table;
     t->setRowCount(0);
-    t->setHorizontalHeaderLabels({QStringLiteral("接口"), QStringLiteral("IP 地址")});
+    t->setHorizontalHeaderLabels({
+        QStringLiteral(""), QStringLiteral("接口"),
+        QStringLiteral("IP 地址"), QStringLiteral("子网掩码"),
+        QStringLiteral("类型")
+    });
     ifaddrs *ifap = nullptr;
     if (getifaddrs(&ifap) != 0) return;
+
     QFont mf(QStringLiteral("Menlo"), 10);
     mf.setStyleHint(QFont::Monospace);
+
     for (auto *ifa = ifap; ifa; ifa = ifa->ifa_next) {
         if (!ifa->ifa_addr || (ifa->ifa_flags & IFF_LOOPBACK)) continue;
         if (ifa->ifa_addr->sa_family != AF_INET) continue;
-        char b[INET6_ADDRSTRLEN] = {0};
-        auto *s = reinterpret_cast<sockaddr_in *>(ifa->ifa_addr);
-        const char *ip = inet_ntop(AF_INET, &s->sin_addr, b, sizeof(b));
+
+        auto *sin = reinterpret_cast<sockaddr_in *>(ifa->ifa_addr);
+        char ip_buf[INET_ADDRSTRLEN] = {0};
+        const char *ip = inet_ntop(AF_INET, &sin->sin_addr, ip_buf, sizeof(ip_buf));
         if (!ip) continue;
+
+        char mask_buf[INET_ADDRSTRLEN] = {0};
+        const char *mask = "";
+        if (ifa->ifa_netmask && ifa->ifa_netmask->sa_family == AF_INET) {
+            auto *sm = reinterpret_cast<sockaddr_in *>(ifa->ifa_netmask);
+            mask = inet_ntop(AF_INET, &sm->sin_addr, mask_buf, sizeof(mask_buf));
+            if (!mask) mask = "";
+        }
+
+        bool up = (ifa->ifa_flags & IFF_UP);
+        bool running = (ifa->ifa_flags & IFF_RUNNING);
+
+        const char *iftype = "";
+        if (ifa->ifa_flags & IFF_LOOPBACK) iftype = "Loopback";
+        else if (strstr(ifa->ifa_name, "en") == ifa->ifa_name) iftype = "Ethernet";
+        else if (strstr(ifa->ifa_name, "wl") == ifa->ifa_name) iftype = "WiFi";
+        else if (strstr(ifa->ifa_name, "utun") == ifa->ifa_name) iftype = "Tunnel";
+        else if (strstr(ifa->ifa_name, "bridge") == ifa->ifa_name) iftype = "Bridge";
+        else if (strstr(ifa->ifa_name, "vlan") == ifa->ifa_name) iftype = "VLAN";
+        else if (strstr(ifa->ifa_name, "pktap") == ifa->ifa_name) iftype = "Monitor";
+
         int r = t->rowCount();
         t->insertRow(r);
-        auto *n = new QTableWidgetItem(ifa->ifa_name);
-        n->setForeground(QColor(Theme::Pink));
-        auto *i = new QTableWidgetItem(ip);
-        i->setFont(mf);
-        i->setForeground(QColor(Theme::Green));
-        t->setItem(r, 0, n);
-        t->setItem(r, 1, i);
+
+        auto *status = new QTableWidgetItem(up && running ? QStringLiteral("●") : QStringLiteral("○"));
+        status->setForeground(up && running ? QColor(Theme::Green) : QColor(Theme::Grey));
+        status->setTextAlignment(Qt::AlignCenter);
+
+        auto *name = new QTableWidgetItem(ifa->ifa_name);
+        name->setForeground(QColor(Theme::Pink));
+
+        auto *ip_item = new QTableWidgetItem(ip);
+        ip_item->setFont(mf);
+        ip_item->setForeground(QColor(Theme::Cyan));
+
+        auto *mask_item = new QTableWidgetItem(*mask ? mask : "-");
+        mask_item->setFont(mf);
+        mask_item->setForeground(QColor(Theme::CyanLight));
+
+        auto *type_item = new QTableWidgetItem(*iftype ? iftype : "-");
+        type_item->setForeground(QColor(Theme::Purple));
+
+        t->setItem(r, 0, status);
+        t->setItem(r, 1, name);
+        t->setItem(r, 2, ip_item);
+        t->setItem(r, 3, mask_item);
+        t->setItem(r, 4, type_item);
     }
     freeifaddrs(ifap);
     t->resizeColumnToContents(0);
+    t->setColumnWidth(0, 24);
     t->horizontalHeader()->setStretchLastSection(true);
 }
 
