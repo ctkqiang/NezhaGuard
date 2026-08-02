@@ -53,7 +53,7 @@ QColor GuiSink::level_color(const QString &level, const QString &message) {
     if (level.startsWith(QStringLiteral("INFO")) || level == QStringLiteral("Info"))
         return QColor(Theme::PinkDeep);
     if (level.startsWith(QStringLiteral("DEB")) || level == QStringLiteral("Debug"))
-        return QColor(Theme::PinkLight);
+        return QColor(Theme::CyanLight);
     if (level.startsWith(QStringLiteral("TRA")) || level == QStringLiteral("Trace"))
         return QColor(Theme::Grey);
 
@@ -68,5 +68,5 @@ QColor GuiSink::level_color(const QString &level, const QString &message) {
     if (message.contains(QStringLiteral("蜜罐")) || message.contains(QStringLiteral("honeypot")))
         return QColor(Theme::PinkDeep);
 
-    return QColor(Theme::PinkLight);
+    return QColor(Theme::CyanLight);
 }

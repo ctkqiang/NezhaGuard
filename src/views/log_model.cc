@@ -42,9 +42,9 @@ QColor LogModel::default_color(const QString &level) {
     if (level.startsWith(QStringLiteral("WARN")) || level == QStringLiteral("Warn"))
         return QColor(Theme::Orange);
     if (level.startsWith(QStringLiteral("INFO")) || level == QStringLiteral("Info"))
-        return QColor(Theme::PinkDeep);
+        return QColor(Theme::CyanLight);
     if (level.startsWith(QStringLiteral("DEB")) || level == QStringLiteral("Debug"))
-        return QColor(Theme::PinkLight);
+        return QColor(Theme::CyanLight);
     return QColor(Theme::Grey);
 }
 

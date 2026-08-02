@@ -13,6 +13,8 @@
 #include <QClipboard>
 #include <QComboBox>
 #include <QDateTime>
+#include <QDialog>
+#include <QTextBrowser>
 #include <QGraphicsDropShadowEffect>
 #include <QHeaderView>
 #include <QLabel>
@@ -57,7 +59,7 @@ void SparklineWidget::paintEvent(QPaintEvent *) {
     p.setRenderHint(QPainter::Antialiasing);
 
     auto bg = QColor(dark ? Theme::DkCard : Theme::LtCard);
-    auto fg = QColor(dark ? Theme::Pink : Theme::PinkDeep);
+    auto fg = QColor(dark ? Theme::Cyan : Theme::CyanDeep);
     auto gr = QColor(dark ? Theme::DkBorder : Theme::LtBorder);
 
     p.setBrush(bg); p.setPen(Qt::NoPen);
@@ -87,7 +89,7 @@ void SparklineWidget::paintEvent(QPaintEvent *) {
         fill.lineTo(QPointF(r.left() + w * i, r.bottom() - (data_[i] * h / maxv)));
     fill.lineTo(r.right(), r.bottom()); fill.closeSubpath();
 
-    QColor fc = QColor(dark ? Theme::Pink : Theme::PinkDeep);
+    QColor fc = QColor(dark ? Theme::Cyan : Theme::CyanDeep);
     fc.setAlpha(25); p.setBrush(fc); p.setPen(Qt::NoPen);
     p.drawPath(fill);
 
@@ -113,7 +115,7 @@ void LogDelegate::paint(QPainter *p, const QStyleOptionViewItem &opt, const QMod
     p->fillRect(o.rect, bg);
 
     QColor fg = idx.data(LogModel::ColorRole).value<QColor>();
-    if (!fg.isValid()) fg = dark ? QColor(Theme::PinkLight) : QColor(Theme::PinkDeep);
+    if (!fg.isValid()) fg = dark ? QColor(Theme::CyanLight) : QColor(Theme::CyanDeep);
 
     QString tm = idx.data(LogModel::TimestampRole).toString();
     QString msg = idx.data(LogModel::MessageRole).toString();
@@ -152,32 +154,22 @@ void AlertDelegate::paint(QPainter *p, const QStyleOptionViewItem &opt, const QM
                    : (idx.row() % 2 ? QColor(Theme::LtHover) : QColor(Theme::LtCard));
     if (o.state & QStyle::State_Selected) bg = dark ? QColor(Theme::DkSelected) : QColor(Theme::LtSelected);
     p->fillRect(o.rect, bg);
-
     QColor fg = idx.data(LogModel::ColorRole).value<QColor>();
     if (!fg.isValid()) fg = dark ? QColor(Theme::Pink) : QColor(Theme::PinkDeep);
-
     QString tm = idx.data(LogModel::TimestampRole).toString();
     QString msg = idx.data(LogModel::MessageRole).toString();
     QString lv = idx.data(LogModel::LevelRole).toString();
-
     QFont mf(QStringLiteral("Menlo"), 10); mf.setStyleHint(QFont::Monospace); p->setFont(mf);
-    QRect r = o.rect.adjusted(10, 2, -10, -2);
-    int x = r.x();
-
+    QRect r = o.rect.adjusted(10, 2, -10, -2); int x = r.x();
     p->setPen(dark ? QColor(Theme::DkMuted) : QColor(Theme::LtMuted));
     p->drawText(x, r.y(), r.width(), r.height(), Qt::AlignLeft | Qt::AlignVCenter, tm);
     x += p->fontMetrics().horizontalAdvance(tm) + 10;
-
     auto badgeW = p->fontMetrics().horizontalAdvance(lv) + 14;
     QRect bd(x, r.y() + 3, badgeW, r.height() - 6);
-    p->setRenderHint(QPainter::Antialiasing);
-    p->setBrush(fg); p->setPen(Qt::NoPen);
-    p->drawRoundedRect(bd, 5, 5);
-    p->setPen(QColor("#fff"));
+    p->setRenderHint(QPainter::Antialiasing); p->setBrush(fg); p->setPen(Qt::NoPen);
+    p->drawRoundedRect(bd, 5, 5); p->setPen(QColor("#fff"));
     QFont bf = QApplication::font(); bf.setPointSize(8); bf.setBold(true); p->setFont(bf);
-    p->drawText(bd, Qt::AlignCenter, lv);
-    x += badgeW + 10;
-
+    p->drawText(bd, Qt::AlignCenter, lv); x += badgeW + 10;
     p->setFont(mf); p->setPen(fg);
     p->drawText(QRect(x, r.y(), r.right() - x, r.height()), Qt::AlignLeft | Qt::AlignVCenter,
                 p->fontMetrics().elidedText(msg, Qt::ElideRight, r.right() - x));
@@ -532,6 +524,138 @@ void monitor::init_models() {
         }
     });
 
+    // double-click → comprehensive detail dialog
+    auto double_click_detail = [this](const QModelIndex &idx, LogModel *model) {
+        if (!idx.isValid() || !model) return;
+        auto tm = idx.data(LogModel::TimestampRole).toString();
+        auto lv = idx.data(LogModel::LevelRole).toString();
+        auto msg = idx.data(LogModel::MessageRole).toString();
+        auto color = idx.data(LogModel::ColorRole).value<QColor>();
+
+        QRegularExpression iprx(R"((\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}))");
+        auto ipm = iprx.match(msg);
+        QString ip = ipm.hasMatch() ? ipm.captured(1) : QString();
+
+        auto *dlg = new QDialog(this);
+        dlg->setWindowTitle(QStringLiteral("告警详情 — %1").arg(ip.isEmpty() ? QStringLiteral("?") : ip));
+        dlg->resize(520, 420);
+        dlg->setStyleSheet(QStringLiteral(
+            "QDialog { background:%1; } QTextBrowser { background:%1; border:none; }"
+        ).arg(dark_mode_ ? Theme::DkBg : Theme::LtBg));
+
+        auto *tb = new QTextBrowser(dlg);
+        tb->setOpenLinks(false);
+        auto *lay = new QVBoxLayout(dlg); lay->setContentsMargins(0, 0, 0, 0); lay->addWidget(tb);
+
+        auto text = dark_mode_ ? Theme::DkText : Theme::LtText;
+        auto muted = dark_mode_ ? Theme::DkMuted : Theme::LtMuted;
+        auto cyan = dark_mode_ ? Theme::Cyan : Theme::CyanDeep;
+
+        // wireshark-style hex dump
+        auto hex_dump = [](const QString &s) -> QString {
+            QByteArray raw = s.toUtf8();
+            QString out;
+            out += QStringLiteral("<pre style='font-family:\"Menlo\",monospace;font-size:10px;"
+                                  "line-height:1.3;margin:4px 0;'>");
+            for (int i = 0; i < raw.size(); i += 16) {
+                out += QStringLiteral("%1  ").arg(i, 4, 16, QChar('0'));
+                for (int j = 0; j < 16; ++j) {
+                    if (i + j < raw.size())
+                        out += QStringLiteral("%1 ").arg(static_cast<unsigned char>(raw[i + j]), 2, 16, QChar('0'));
+                    else
+                        out += QStringLiteral("   ");
+                }
+                out += QStringLiteral(" ");
+                for (int j = 0; j < 16 && (i + j) < raw.size(); ++j) {
+                    unsigned char c = raw[i + j];
+                    out += (c >= 32 && c < 127) ? QChar(c) : QChar('.');
+                }
+                out += QStringLiteral("\n");
+            }
+            out += QStringLiteral("</pre>");
+            return out;
+        };
+
+        QString html = QStringLiteral(R"(
+            <html><head><style>
+              body { font-family:"Menlo",monospace; font-size:11px; color:%1; background:%2; padding:16px; }
+              h2 { color:%3; font-size:14px; margin:0 0 12px 0; border-bottom:1px solid %4; padding-bottom:6px; }
+              .kv { display:grid; grid-template-columns:80px 1fr; gap:4px 12px; margin-bottom:12px; }
+              .kl { color:%5; font-weight:600; }
+              .kv2 { color:%1; }
+            </style></head><body>
+            <h2>告警详情</h2>
+            <div class='kv'>
+              <div class='kl'>时间</div><div class='kv2'>%6</div>
+              <div class='kl'>级别</div><div class='kv2' style='color:%7'>%8</div>
+              <div class='kl'>内容</div><div class='kv2'>%9</div>
+            </div>
+            <h2 style='color:%3;'>Hex Dump</h2>
+            %10
+            </body></html>
+        )").arg(text, dark_mode_ ? Theme::DkBg : Theme::LtBg, cyan,
+               dark_mode_ ? Theme::DkBorder : Theme::LtBorder, muted,
+               tm.toHtmlEscaped(),
+               color.name(), lv.toHtmlEscaped(), msg.toHtmlEscaped(),
+               hex_dump(msg));
+        tb->setHtml(html);
+
+        // async GeoIP
+        if (!ip.isEmpty()) {
+            auto ipCopy = ip.toStdString();
+            auto _f = QtConcurrent::run([this, tb, ip, text, cyan, muted]() {
+                auto geo = Nezha::Core::GeoIP::lookup(ip.toStdString());
+                auto host = Nezha::IPAddress::ipaddr::ResolveHostname(ip.toStdString());
+                QString extra;
+                extra += QStringLiteral("<h2 style='color:%1;'>GeoIP</h2><div class='kv'>").arg(cyan);
+                if (!host.empty() && host != ip.toStdString())
+                    extra += QStringLiteral("<div class='kl'>主机名</div><div class='kv2'>%1</div>")
+                        .arg(QString::fromStdString(host).toHtmlEscaped());
+                if (geo.valid) {
+                    extra += QStringLiteral("<div class='kl'>国家</div><div class='kv2'>%1 (%2)</div>")
+                        .arg(QString::fromStdString(geo.country).toHtmlEscaped(),
+                             QString::fromStdString(geo.country_code).toHtmlEscaped());
+                    if (!geo.city.empty())
+                        extra += QStringLiteral("<div class='kl'>城市</div><div class='kv2'>%1</div>")
+                            .arg(QString::fromStdString(geo.city).toHtmlEscaped());
+                    if (!geo.isp.empty())
+                        extra += QStringLiteral("<div class='kl'>ISP</div><div class='kv2'>%1</div>")
+                            .arg(QString::fromStdString(geo.isp).toHtmlEscaped());
+                    if (geo.lat != 0.0 || geo.lon != 0.0)
+                        extra += QStringLiteral("<div class='kl'>坐标</div><div class='kv2'>%.4f, %.4f</div>")
+                            .arg(geo.lat).arg(geo.lon);
+                }
+                extra += QStringLiteral("</div>");
+                QMetaObject::invokeMethod(this, [tb, extra]() {
+                    QString cur = tb->toHtml();
+                    cur.replace(QStringLiteral("</body>"), extra + QStringLiteral("</body>"));
+                    tb->setHtml(cur);
+                }, Qt::QueuedConnection);
+            });
+        }
+
+        dlg->setAttribute(Qt::WA_DeleteOnClose);
+        dlg->setWindowFlags(Qt::Window | Qt::WindowStaysOnTopHint);
+        dlg->show();
+        dlg->raise();
+        dlg->activateWindow();
+    };
+
+    connect(ui->recent_alerts_view, &QAbstractItemView::doubleClicked, this,
+            [this, double_click_detail](const QModelIndex &idx) {
+                double_click_detail(idx, alert_model_); });
+    connect(ui->attackers_view, &QAbstractItemView::doubleClicked, this,
+            [this, double_click_detail](const QModelIndex &idx) {
+                double_click_detail(idx, attackers_model_); });
+    connect(ui->alert_view, &QAbstractItemView::doubleClicked, this,
+            [this, double_click_detail](const QModelIndex &idx) {
+                auto srcIdx = alert_proxy_ ? alert_proxy_->mapToSource(idx) : idx;
+                double_click_detail(srcIdx, alert_model_); });
+    connect(ui->log_view, &QAbstractItemView::doubleClicked, this,
+            [this, double_click_detail](const QModelIndex &idx) {
+                auto srcIdx = log_search_proxy_ ? log_search_proxy_->mapToSource(idx) : idx;
+                double_click_detail(srcIdx, log_model_); });
+
     apply_theme(dark_mode_);
 }
 
@@ -806,5 +930,5 @@ void monitor::refresh_quickstats() {
     set_qs(ui->qs_tor, QStringLiteral("攻击者"), attackers_.size(), Theme::Pink);
     set_qs(ui->qs_blocked, QStringLiteral("已隔离"), qc, Theme::PinkDeep);
     set_qs(ui->qs_engines, QStringLiteral("引擎数"), 3, Theme::Green);
-    set_qs(ui->qs_types, QStringLiteral("攻击类型"), active_types_.size(), Theme::PinkLight);
+    set_qs(ui->qs_types, QStringLiteral("攻击类型"), active_types_.size(), Theme::CyanLight);
 }

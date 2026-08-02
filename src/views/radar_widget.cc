@@ -54,15 +54,15 @@ void RadarWidget::paintEvent(QPaintEvent *) {
 
     // sweep line
     double rad = qDegreesToRadians(static_cast<double>(sweep_angle_));
-    QPen sweepPen(QColor(Theme::PinkLight), 1.5);
+    QPen sweepPen(QColor(Theme::Cyan), 1.5);
     p.setPen(sweepPen);
     p.drawLine(cx, cy, cx + static_cast<int>(r * std::cos(rad)), cy - static_cast<int>(r * std::sin(rad)));
 
     // sweep arc glow
     QConicalGradient cone(cx, cy, -sweep_angle_);
-    cone.setColorAt(0.0, QColor(Theme::Pink).darker(180));
-    cone.setColorAt(0.1, QColor(Theme::Pink).lighter(120));
-    cone.setColorAt(0.2, QColor(Theme::Pink).darker(180));
+    cone.setColorAt(0.0, QColor(Theme::Cyan).darker(180));
+    cone.setColorAt(0.1, QColor(Theme::Cyan).lighter(120));
+    cone.setColorAt(0.2, QColor(Theme::Cyan).darker(180));
     p.setPen(Qt::NoPen);
     p.setBrush(cone);
     p.drawPie(QRect(cx - r, cy - r, r * 2, r * 2), (sweep_angle_ - 30) * 16, 60 * 16);
@@ -98,12 +98,12 @@ void RadarWidget::paintEvent(QPaintEvent *) {
     }
 
     // center dot
-    p.setBrush(QColor(Theme::Pink));
+    p.setBrush(QColor(Theme::Cyan));
     p.setPen(Qt::NoPen);
     p.drawEllipse(QPoint(cx, cy), 5, 5);
 
     // title
-    p.setPen(QColor(Theme::Pink));
+    p.setPen(QColor(Theme::Cyan));
     p.setFont(QFont(QStringLiteral("Inter"), 9));
     p.drawText(QRect(8, 4, 200, 16), Qt::AlignLeft,
                QStringLiteral("设备雷达 — %1 台").arg(devices_.size()));

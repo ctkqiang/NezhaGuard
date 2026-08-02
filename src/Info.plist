@@ -11,7 +11,7 @@
 	<key>CFBundleIdentifier</key>
 	<string>com.nezhaguard.siem</string>
 	<key>CFBundleName</key>
-	<string>NezhaGuard</string>
+	<string>哪吒网络安全 SIEM</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>

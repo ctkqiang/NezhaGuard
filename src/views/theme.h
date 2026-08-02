@@ -9,6 +9,7 @@ namespace Theme {
 
     // soft pink accent
     inline constexpr auto Pink         = "#ffb3cc";
+    inline constexpr auto PinkLight    = "#ffccdd";
     inline constexpr auto PinkDeep     = "#f0a0b8";
 
     // semantic
