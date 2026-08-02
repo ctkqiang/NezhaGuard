@@ -11,6 +11,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <filesystem>
 #include <format>
 #include <fstream>
 #include <memory>
@@ -28,8 +29,21 @@ const char *channel_name(NotifyChannel ch) noexcept {
         case NotifyChannel::Email:    return "Email";
         case NotifyChannel::LocalGui: return "LocalGui";
         case NotifyChannel::Feishu:   return "Feishu";
+        case NotifyChannel::Telegram: return "Telegram";
         default:                      return "???";
     }
+}
+
+NotifyChannel channel_from_name(const std::string &name) {
+    if (name == "slack")    return NotifyChannel::Slack;
+    if (name == "discord")  return NotifyChannel::Discord;
+    if (name == "wechat")   return NotifyChannel::WeChat;
+    if (name == "dingtalk") return NotifyChannel::DingTalk;
+    if (name == "email")    return NotifyChannel::Email;
+    if (name == "local")    return NotifyChannel::LocalGui;
+    if (name == "feishu")   return NotifyChannel::Feishu;
+    if (name == "telegram") return NotifyChannel::Telegram;
+    return NotifyChannel::LocalGui; // fallback
 }
 
 // -- 单例 ----------------------------------------------------------------
@@ -38,104 +52,122 @@ Notifier &Notifier::instance() noexcept {
     return inst;
 }
 
-// -- 配置 ----------------------------------------------------------------
+// -- 静态工具 ----------------------------------------------------------------
+static std::string trim(const std::string &s) {
+    auto start = s.find_first_not_of(" \t\r\n");
+    if (start == std::string::npos) return {};
+    auto end = s.find_last_not_of(" \t\r\n");
+    return s.substr(start, end - start + 1);
+}
+
+static std::vector<std::string> split_csv(const std::string &s) {
+    std::vector<std::string> out;
+    std::istringstream ss(s);
+    std::string item;
+    while (std::getline(ss, item, ',')) {
+        auto t = trim(item);
+        if (!t.empty()) out.push_back(t);
+    }
+    return out;
+}
+
+static Severity parse_severity(const std::string &s) {
+    auto t = trim(s);
+    std::string lower = t;
+    std::transform(lower.begin(), lower.end(), lower.begin(),
+                   [](unsigned char c) { return std::tolower(c); });
+    if (lower == "critical" || lower == "crit") return Severity::Critical;
+    if (lower == "error" || lower == "err")     return Severity::Error;
+    if (lower == "warn" || lower == "warning")  return Severity::Warn;
+    if (lower == "info")                        return Severity::Info;
+    if (lower == "debug")                       return Severity::Debug;
+    return Severity::Warn;
+}
+
+// -- 配置加载 ----------------------------------------------------------------
 void Notifier::configure_channel(const ChannelConfig &cfg) {
     std::lock_guard<std::mutex> lock(mtx_);
     channels_[cfg.channel] = cfg;
     if (cfg.enabled)
-        NZ_INFO("[通知] 渠道已配置: {} -> {}", channel_name(cfg.channel), cfg.webhook_url);
+        NZ_INFO("[通知] {} — 已启用, 关键词: {} 个", channel_name(cfg.channel), cfg.keywords.size());
 }
 
-void Notifier::add_trigger(const TriggerRule &rule) {
-    std::lock_guard<std::mutex> lock(mtx_);
-    rules_.push_back(rule);
+int Notifier::load_config_dir(const std::string &dir_path) {
+    namespace fs = std::filesystem;
+    std::error_code ec;
+
+    if (!fs::is_directory(dir_path, ec)) {
+        NZ_INFO("[通知] 配置目录不存在: {}", dir_path);
+        return 0;
+    }
+
+    int loaded = 0;
+    for (const auto &entry: fs::directory_iterator(dir_path, ec)) {
+        if (!entry.is_regular_file()) continue;
+        auto ext = entry.path().extension().string();
+        if (ext != ".conf") continue;
+
+        std::string stem = entry.path().stem().string();
+        NotifyChannel ch = channel_from_name(stem);
+
+        std::ifstream f(entry.path());
+        if (!f.is_open()) continue;
+
+        ChannelConfig cfg;
+        cfg.channel = ch;
+        cfg.enabled = false;
+
+        std::string line;
+        while (std::getline(f, line)) {
+            if (line.empty() || line[0] == '#') continue;
+
+            auto eq = line.find('=');
+            if (eq == std::string::npos) continue;
+
+            std::string key = trim(line.substr(0, eq));
+            std::string val = trim(line.substr(eq + 1));
+
+            if (key == "webhook" || key == "url")
+                cfg.webhook_url = val;
+            else if (key == "chat_id")
+                cfg.chat_id = val;
+            else if (key == "enabled")
+                cfg.enabled = (val == "true" || val == "1" || val == "yes");
+            else if (key == "keywords")
+                cfg.keywords = split_csv(val);
+            else if (key == "min_severity" || key == "min_level")
+                cfg.min_level = parse_severity(val);
+        }
+
+        if (cfg.enabled && !cfg.webhook_url.empty() && !cfg.chat_id.empty()) {
+            // Telegram 需要 token + chat_id
+            configure_channel(cfg);
+            ++loaded;
+        } else if (cfg.enabled && !cfg.webhook_url.empty()) {
+            configure_channel(cfg);
+            ++loaded;
+        } else if (cfg.enabled && ch == NotifyChannel::LocalGui) {
+            configure_channel(cfg);
+            ++loaded;
+        } else if (cfg.enabled && ch == NotifyChannel::Email) {
+            configure_channel(cfg);
+            ++loaded;
+        } else if (!cfg.webhook_url.empty() && !cfg.chat_id.empty()) {
+            configure_channel(cfg);
+            ++loaded;
+        } else if (!cfg.webhook_url.empty()) {
+            configure_channel(cfg);
+            ++loaded;
+        }
+    }
+
+    NZ_INFO("[通知] 已加载 {} 个渠道配置", loaded);
+    return loaded;
 }
 
 void Notifier::set_gui_callback(std::function<void(const std::string &, const std::string &)> cb) {
     std::lock_guard<std::mutex> lock(mtx_);
     gui_callback_ = std::move(cb);
-}
-
-// -- 配置加载 ----------------------------------------------------------------
-int Notifier::load_rules_from_file(const std::string &path) {
-    std::ifstream f(path);
-    if (!f.is_open()) return -1;
-
-    int loaded = 0;
-    std::string line;
-    while (std::getline(f, line)) {
-        if (line.empty() || line[0] == '#') continue;
-
-        // channel=webhook_url
-        if (line.starts_with("slack=")) {
-            configure_channel({NotifyChannel::Slack, line.substr(6), true});
-            ++loaded;
-        } else if (line.starts_with("discord=")) {
-            configure_channel({NotifyChannel::Discord, line.substr(8), true});
-            ++loaded;
-        } else if (line.starts_with("dingtalk=")) {
-            configure_channel({NotifyChannel::DingTalk, line.substr(9), true});
-            ++loaded;
-        } else if (line.starts_with("feishu=")) {
-            configure_channel({NotifyChannel::Feishu, line.substr(7), true});
-            ++loaded;
-        } else if (line.starts_with("wechat=")) {
-            configure_channel({NotifyChannel::WeChat, line.substr(7), true});
-            ++loaded;
-        } else if (line.starts_with("email=")) {
-            configure_channel({NotifyChannel::Email, line.substr(6), true});
-            ++loaded;
-        } else if (line.starts_with("local=")) {
-            configure_channel({NotifyChannel::LocalGui, {}, line.substr(6) == "true" || line.substr(6) == "1"});
-            ++loaded;
-        } else if (line.starts_with("rule:")) {
-            // rule: keyword1,keyword2,... -> slack,discord,local
-            auto arrow = line.find("->");
-            if (arrow == std::string::npos) continue;
-
-            std::string kw_part = line.substr(5, arrow - 5);
-            std::string ch_part = line.substr(arrow + 2);
-
-            TriggerRule rule;
-            rule.min_level = Severity::Warn;
-
-            // 解析关键词
-            std::istringstream kw_ss(kw_part);
-            std::string kw;
-            while (std::getline(kw_ss, kw, ',')) {
-                // trim
-                auto s = kw.find_first_not_of(" \t");
-                auto e = kw.find_last_not_of(" \t");
-                if (s != std::string::npos)
-                    rule.keywords.push_back(kw.substr(s, e - s + 1));
-            }
-
-            // 解析渠道
-            std::istringstream ch_ss(ch_part);
-            std::string ch;
-            while (std::getline(ch_ss, ch, ',')) {
-                auto s = ch.find_first_not_of(" \t");
-                auto e = ch.find_last_not_of(" \t");
-                if (s == std::string::npos) continue;
-                std::string cn = ch.substr(s, e - s + 1);
-
-                if (cn == "slack") rule.channels.push_back(NotifyChannel::Slack);
-                else if (cn == "discord") rule.channels.push_back(NotifyChannel::Discord);
-                else if (cn == "dingtalk") rule.channels.push_back(NotifyChannel::DingTalk);
-                else if (cn == "feishu") rule.channels.push_back(NotifyChannel::Feishu);
-                else if (cn == "wechat") rule.channels.push_back(NotifyChannel::WeChat);
-                else if (cn == "email") rule.channels.push_back(NotifyChannel::Email);
-                else if (cn == "local") rule.channels.push_back(NotifyChannel::LocalGui);
-            }
-
-            if (!rule.keywords.empty() && !rule.channels.empty()) {
-                add_trigger(rule);
-                ++loaded;
-            }
-        }
-    }
-    NZ_INFO("[通知] 已加载 {} 条配置", loaded);
-    return loaded;
 }
 
 // -- 关键词匹配 ----------------------------------------------------------------
@@ -169,7 +201,7 @@ void Notifier::on_alert(const Core::Alert &alert) {
             case Severity::Critical: return "致命";
             case Severity::Error:    return "严重";
             case Severity::Warn:     return "警告";
-            default:                       return "信息";
+            default:                 return "信息";
         }
     }(alert.level);
 
@@ -186,43 +218,35 @@ void Notifier::on_alert(const Core::Alert &alert) {
 
     std::lock_guard<std::mutex> lock(mtx_);
 
-    for (const auto &rule: rules_) {
-        if (alert.level < rule.min_level) continue;
-        if (!keyword_match(combined, rule.keywords)) continue;
+    for (const auto &[ch, cfg]: channels_) {
+        if (!cfg.enabled) continue;
+        if (alert.level < cfg.min_level) continue;
+        if (cfg.keywords.empty()) continue;
+        if (!keyword_match(combined, cfg.keywords)) continue;
 
-        NZ_INFO("[通知] 触发规则: {} -> {}",
-                rule.keywords.empty() ? "*" : rule.keywords[0],
-                rule.channels.empty() ? "?" : channel_name(rule.channels[0]));
-
-        dispatch(rule, title, body);
+        NZ_INFO("[通知] 触发: {} -> {}", channel_name(ch), cfg.keywords[0]);
+        dispatch(cfg, title, body);
     }
 }
 
 // -- 分发 ----------------------------------------------------------------
-void Notifier::dispatch(const TriggerRule &rule, const std::string &title, const std::string &body) {
-    for (auto ch: rule.channels) {
-        auto it = channels_.find(ch);
-        if (it == channels_.end() || !it->second.enabled) {
-            if (ch == NotifyChannel::LocalGui) {
-                send_local_gui(title, body);
-            }
-            continue;
-        }
+void Notifier::dispatch(const ChannelConfig &cfg, const std::string &title, const std::string &body) {
+    auto ch = cfg.channel;
+    std::string url = cfg.webhook_url;
+    std::string chat = cfg.chat_id;
 
-        const auto &cfg = it->second;
-        // 后台线程发送，不阻塞主线程
-        std::thread([this, ch, url = cfg.webhook_url, title, body]() {
-            switch (ch) {
-                case NotifyChannel::Slack:    send_slack(url, body); break;
-                case NotifyChannel::Discord:  send_discord(url, body); break;
-                case NotifyChannel::DingTalk: send_dingtalk(url, body); break;
-                case NotifyChannel::Feishu:   send_feishu(url, body); break;
-                case NotifyChannel::WeChat:   send_wechat(url, body); break;
-                case NotifyChannel::Email:    send_email(url, title, body); break;
-                default: break;
-            }
-        }).detach();
-    }
+    std::thread([this, ch, url, chat, title, body]() {
+        switch (ch) {
+            case NotifyChannel::Slack:    send_slack(url, body); break;
+            case NotifyChannel::Discord:  send_discord(url, body); break;
+            case NotifyChannel::DingTalk: send_dingtalk(url, body); break;
+            case NotifyChannel::Feishu:   send_feishu(url, body); break;
+            case NotifyChannel::WeChat:   send_wechat(url, body); break;
+            case NotifyChannel::Email:    send_email(url, title, body); break;
+            case NotifyChannel::LocalGui: send_local_gui(title, body); break;
+            case NotifyChannel::Telegram: send_telegram(url, chat, body); break;
+        }
+    }).detach();
 }
 
 // -- HTTP 工具 ----------------------------------------------------------------
@@ -240,96 +264,75 @@ std::string Notifier::http_post(const std::string &url, const std::string &json)
     return out;
 }
 
+static std::string escape_json(const std::string &s) {
+    std::string out;
+    for (char c: s) {
+        switch (c) {
+            case '"':  out += "\\\""; break;
+            case '\\': out += "\\\\"; break;
+            case '\n': out += "\\n";  break;
+            case '\r': out += "\\r";  break;
+            case '\t': out += "\\t";  break;
+            default:   out += c;
+        }
+    }
+    return out;
+}
+
 // -- Slack ----------------------------------------------------------------
 void Notifier::send_slack(const std::string &webhook, const std::string &msg) {
-    std::string escaped = msg;
-    for (std::size_t i = 0; i < escaped.size(); ++i) {
-        if (escaped[i] == '"') { escaped.insert(i, "\\"); ++i; }
-        if (escaped[i] == '\n') { escaped.replace(i, 1, "\\n"); ++i; }
-    }
-
     std::string json = std::format(
-        "{{\"text\":\"{}\"}}", escaped
+        "{{\"text\":\"{}\"}}", escape_json(msg)
     );
     std::string resp = http_post(webhook, json);
-    NZ_DEBUG("[通知] Slack 发送结果: {}", resp.empty() ? "ok" : resp);
+    NZ_DEBUG("[通知] Slack 结果: {}", resp.empty() ? "ok" : resp);
 }
 
 // -- Discord ----------------------------------------------------------------
 void Notifier::send_discord(const std::string &webhook, const std::string &msg) {
-    std::string escaped = msg;
-    for (std::size_t i = 0; i < escaped.size(); ++i) {
-        if (escaped[i] == '"') { escaped.insert(i, "\\"); ++i; }
-        if (escaped[i] == '\n') { escaped.replace(i, 1, "\\n"); ++i; }
-    }
-
     std::string json = std::format(
         "{{\"embeds\":[{{\"title\":\"NezhaGuard 安全告警\",\"description\":\"{}\","
-        "\"color\":16711680}}]}}", escaped
+        "\"color\":16711680}}]}}", escape_json(msg)
     );
     std::string resp = http_post(webhook, json);
-    NZ_DEBUG("[通知] Discord 发送结果: {}", resp.empty() ? "ok" : resp);
+    NZ_DEBUG("[通知] Discord 结果: {}", resp.empty() ? "ok" : resp);
 }
 
 // -- 钉钉 ----------------------------------------------------------------
 void Notifier::send_dingtalk(const std::string &webhook, const std::string &msg) {
-    std::string escaped = msg;
-    for (std::size_t i = 0; i < escaped.size(); ++i) {
-        if (escaped[i] == '"') { escaped.insert(i, "\\"); ++i; }
-        if (escaped[i] == '\n') { escaped.replace(i, 1, "\\n"); ++i; }
-    }
-
     std::string json = std::format(
         "{{\"msgtype\":\"markdown\",\"markdown\":{{\"title\":\"NezhaGuard 安全告警\",\"text\":\"{}\"}}}}",
-        escaped
+        escape_json(msg)
     );
     std::string resp = http_post(webhook, json);
-    NZ_DEBUG("[通知] DingTalk 发送结果: {}", resp.empty() ? "ok" : resp);
+    NZ_DEBUG("[通知] DingTalk 结果: {}", resp.empty() ? "ok" : resp);
 }
 
 // -- 飞书 ----------------------------------------------------------------
 void Notifier::send_feishu(const std::string &webhook, const std::string &msg) {
-    std::string escaped = msg;
-    for (std::size_t i = 0; i < escaped.size(); ++i) {
-        if (escaped[i] == '"') { escaped.insert(i, "\\"); ++i; }
-        if (escaped[i] == '\n') { escaped.replace(i, 1, "\\n"); ++i; }
-    }
-
     std::string json = std::format(
         "{{\"msg_type\":\"interactive\",\"card\":{{\"header\":{{\"title\":{{\"tag\":\"plain_text\","
         "\"content\":\"NezhaGuard 安全告警\"}},\"template\":\"red\"}},\"elements\":[{{\"tag\":\"markdown\","
-        "\"content\":\"{}\"}}]}}}}", escaped
+        "\"content\":\"{}\"}}]}}}}", escape_json(msg)
     );
     std::string resp = http_post(webhook, json);
-    NZ_DEBUG("[通知] 飞书 发送结果: {}", resp.empty() ? "ok" : resp);
+    NZ_DEBUG("[通知] 飞书 结果: {}", resp.empty() ? "ok" : resp);
 }
 
 // -- 企业微信 ----------------------------------------------------------------
 void Notifier::send_wechat(const std::string &webhook, const std::string &msg) {
-    std::string escaped = msg;
-    for (std::size_t i = 0; i < escaped.size(); ++i) {
-        if (escaped[i] == '"') { escaped.insert(i, "\\"); ++i; }
-        if (escaped[i] == '\n') { escaped.replace(i, 1, "\\n"); ++i; }
-    }
-
     std::string json = std::format(
-        "{{\"msgtype\":\"markdown\",\"markdown\":{{\"content\":\"{}\"}}}}", escaped
+        "{{\"msgtype\":\"markdown\",\"markdown\":{{\"content\":\"{}\"}}}}", escape_json(msg)
     );
     std::string resp = http_post(webhook, json);
-    NZ_DEBUG("[通知] WeChat 发送结果: {}", resp.empty() ? "ok" : resp);
+    NZ_DEBUG("[通知] WeChat 结果: {}", resp.empty() ? "ok" : resp);
 }
 
 // -- 邮件 ----------------------------------------------------------------
 void Notifier::send_email(const std::string &to, const std::string &subject, const std::string &body) {
-#if defined(__APPLE__)
     std::string cmd = std::format(
         "echo '{}' | mail -s '{}' '{}' 2>/dev/null", body, subject, to
     );
-#else
-    std::string cmd = std::format(
-        "echo '{}' | mail -s '{}' '{}' 2>/dev/null", body, subject, to
-    );
-#endif
     std::system(cmd.c_str());
     NZ_DEBUG("[通知] 邮件 发送至: {}", to);
 }
@@ -342,16 +345,9 @@ void Notifier::send_local_gui(const std::string &title, const std::string &body)
     }
 
 #if defined(__APPLE__)
-    std::string escaped_title = title;
-    std::string escaped_body = body;
-    for (std::size_t i = 0; i < escaped_title.size(); ++i)
-        if (escaped_title[i] == '"') { escaped_title.insert(i, "\\"); ++i; }
-    for (std::size_t i = 0; i < escaped_body.size(); ++i)
-        if (escaped_body[i] == '"') { escaped_body.insert(i, "\\"); ++i; }
-
     std::string cmd = std::format(
         "osascript -e 'display notification \"{}\" with title \"{}\" sound name \"Glass\"' 2>/dev/null",
-        escaped_body, escaped_title
+        escape_json(body), escape_json(title)
     );
     std::system(cmd.c_str());
 #elif defined(__linux__)
@@ -361,6 +357,17 @@ void Notifier::send_local_gui(const std::string &title, const std::string &body)
     std::system(cmd.c_str());
 #endif
     NZ_DEBUG("[通知] 本地推送: {}", title);
+}
+
+// -- Telegram ----------------------------------------------------------------
+void Notifier::send_telegram(const std::string &token, const std::string &chat, const std::string &msg) {
+    std::string url = std::format(
+        "https://api.telegram.org/bot{}/sendMessage", token);
+    std::string json = std::format(
+        "{{\"chat_id\":\"{}\",\"text\":\"{}\",\"parse_mode\":\"Markdown\"}}",
+        chat, escape_json(msg));
+    std::string resp = http_post(url, json);
+    NZ_DEBUG("[通知] Telegram 结果: {}", resp.empty() ? "ok" : resp);
 }
 
 } // namespace Nezha::Service

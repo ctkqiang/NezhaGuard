@@ -153,7 +153,7 @@ static int run_cli_mode() {
     Core::AlertManager alerter;
     alerter.set_dedup_window(10);
 
-    Service::Notifier::instance().load_rules_from_file("config/notifier.conf");
+    Service::Notifier::instance().load_config_dir("config/notifier");
 
     alerter.set_callback([&](const Core::Alert &a) {
         Service::Notifier::instance().on_alert(a);
@@ -405,7 +405,7 @@ static int run_gui_mode(int argc, char *argv[]) {
     Core::AlertManager alerter;
     alerter.set_dedup_window(10);
 
-    Service::Notifier::instance().load_rules_from_file("config/notifier.conf");
+    Service::Notifier::instance().load_config_dir("config/notifier");
     Service::Notifier::instance().set_gui_callback([](const std::string &title, const std::string &body) {
 #if defined(__APPLE__)
         std::string cmd = std::format(

@@ -26,21 +26,20 @@ enum class NotifyChannel : std::uint8_t {
     DingTalk,
     Email,
     LocalGui,
-    Feishu
+    Feishu,
+    Telegram
 };
 
 const char *channel_name(NotifyChannel ch) noexcept;
+NotifyChannel channel_from_name(const std::string &name);
 
 struct ChannelConfig {
     NotifyChannel channel;
     std::string webhook_url;
-    bool enabled = false;
-};
-
-struct TriggerRule {
+    std::string chat_id;
     std::vector<std::string> keywords;
-    std::vector<NotifyChannel> channels;
     Severity min_level = Severity::Warn;
+    bool enabled = false;
 };
 
 class Notifier {
@@ -51,8 +50,7 @@ public:
     Notifier &operator=(const Notifier &) = delete;
 
     void configure_channel(const ChannelConfig &cfg);
-    void add_trigger(const TriggerRule &rule);
-    int load_rules_from_file(const std::string &path);
+    int load_config_dir(const std::string &dir_path);
 
     void set_gui_callback(std::function<void(const std::string &, const std::string &)> cb);
 
@@ -61,7 +59,7 @@ public:
 private:
     Notifier() = default;
 
-    void dispatch(const TriggerRule &rule, const std::string &title, const std::string &body);
+    void dispatch(const ChannelConfig &cfg, const std::string &title, const std::string &body);
     void send_slack(const std::string &webhook, const std::string &msg);
     void send_discord(const std::string &webhook, const std::string &msg);
     void send_dingtalk(const std::string &webhook, const std::string &msg);
@@ -69,13 +67,13 @@ private:
     void send_wechat(const std::string &webhook, const std::string &msg);
     void send_email(const std::string &to, const std::string &subject, const std::string &body);
     void send_local_gui(const std::string &title, const std::string &body);
+    void send_telegram(const std::string &token, const std::string &chat, const std::string &msg);
 
     static bool keyword_match(const std::string &text, const std::vector<std::string> &keywords);
     static std::string http_post(const std::string &url, const std::string &json);
 
     std::mutex mtx_;
     std::unordered_map<NotifyChannel, ChannelConfig> channels_;
-    std::vector<TriggerRule> rules_;
     std::function<void(const std::string &, const std::string &)> gui_callback_;
 };
 

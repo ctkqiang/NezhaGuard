@@ -60,6 +60,7 @@
          <item><property name="text"><string>  安全告警</string></property></item>
          <item><property name="text"><string>  蜜罐监控</string></property></item>
          <item><property name="text"><string>  网络信息</string></property></item>
+         <item><property name="text"><string>  系统配置</string></property></item>
         </widget>
        </item>
        <item>
@@ -268,6 +269,157 @@
            <item><widget class="QTableWidget" name="arp_table"><property name="maximumHeight"><number>180</number></property><property name="frameShape"><enum>QFrame::NoFrame</enum></property><property name="alternatingRowColors"><bool>true</bool></property><property name="showGrid"><bool>false</bool></property><property name="columnCount"><number>2</number></property><property name="editTriggers"><set>QAbstractItemView::NoEditTriggers</set></property><property name="selectionMode"><enum>QAbstractItemView::SingleSelection</enum></property><property name="selectionBehavior"><enum>QAbstractItemView::SelectRows</enum></property><attribute name="horizontalHeaderVisible"><bool>true</bool></attribute><attribute name="horizontalHeaderStretchLastSection"><bool>true</bool></attribute><attribute name="verticalHeaderVisible"><bool>false</bool></attribute><column><property name="text"><string>IP 地址</string></property></column><column><property name="text"><string>MAC 地址</string></property></column></widget></item>
            <item><widget class="QLabel" name="quarantine_label"><property name="text"><string>隔离列表</string></property></widget></item>
            <item><widget class="QTableWidget" name="quarantine_table"><property name="maximumHeight"><number>180</number></property><property name="frameShape"><enum>QFrame::NoFrame</enum></property><property name="alternatingRowColors"><bool>true</bool></property><property name="showGrid"><bool>false</bool></property><property name="columnCount"><number>3</number></property><property name="editTriggers"><set>QAbstractItemView::NoEditTriggers</set></property><property name="selectionMode"><enum>QAbstractItemView::SingleSelection</enum></property><property name="selectionBehavior"><enum>QAbstractItemView::SelectRows</enum></property><attribute name="horizontalHeaderVisible"><bool>true</bool></attribute><attribute name="horizontalHeaderStretchLastSection"><bool>true</bool></attribute><attribute name="verticalHeaderVisible"><bool>false</bool></attribute><column><property name="text"><string>IP 地址</string></property></column><column><property name="text"><string>隔离原因</string></property></column><column><property name="text"><string>威胁评分</string></property></column></widget></item>
+          </layout>
+         </widget>
+         <!-- ============ 系统配置 ============ -->
+         <widget class="QWidget" name="page_settings">
+          <layout class="QVBoxLayout" name="settings_layout">
+           <property name="spacing"><number>12</number></property>
+           <property name="leftMargin"><number>24</number></property>
+           <property name="topMargin"><number>24</number></property>
+           <property name="rightMargin"><number>24</number></property>
+           <property name="bottomMargin"><number>24</number></property>
+           <item>
+            <widget class="QLabel" name="settings_title">
+             <property name="text"><string>系统配置</string></property>
+             <property name="styleSheet"><string>font-size:18px;font-weight:700;</string></property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QTabWidget" name="settings_tabs">
+             <property name="currentIndex"><number>0</number></property>
+             <widget class="QWidget" name="tab_monitor">
+              <attribute name="title"><string>应用监控</string></attribute>
+              <layout class="QVBoxLayout" name="monitor_tab_layout">
+               <property name="spacing"><number>8</number></property>
+               <item>
+                <widget class="QPlainTextEdit" name="monitor_conf_edit">
+                 <property name="placeholderText"><string># 一行一个应用: 名称 端口 [日志路径...]
+# 示例: Spring-8000 8000 /var/log/spring.log
+# 仅端口监控（无日志）: Express 5000</string></property>
+                </widget>
+               </item>
+               <item>
+                <layout class="QHBoxLayout" name="monitor_btn_layout">
+                 <item><spacer><property name="orientation"><enum>Qt::Horizontal</enum></property></spacer></item>
+                 <item><widget class="QPushButton" name="monitor_conf_load"><property name="text"><string>重新加载</string></property></widget></item>
+                 <item><widget class="QPushButton" name="monitor_conf_save"><property name="text"><string>保存配置</string></property></widget></item>
+                </layout>
+               </item>
+              </layout>
+             </widget>
+             <widget class="QWidget" name="tab_slack">
+              <attribute name="title"><string>Slack</string></attribute>
+              <layout class="QVBoxLayout" name="slack_tab_layout"><property name="spacing"><number>8</number></property>
+               <item><widget class="QPlainTextEdit" name="slack_conf_edit"/></item>
+               <item>
+                <layout class="QHBoxLayout" name="slack_btn_layout">
+                 <item><spacer><property name="orientation"><enum>Qt::Horizontal</enum></property></spacer></item>
+                 <item><widget class="QPushButton" name="slack_conf_load"><property name="text"><string>重新加载</string></property></widget></item>
+                 <item><widget class="QPushButton" name="slack_conf_save"><property name="text"><string>保存配置</string></property></widget></item>
+                </layout>
+               </item>
+              </layout>
+             </widget>
+             <widget class="QWidget" name="tab_discord">
+              <attribute name="title"><string>Discord</string></attribute>
+              <layout class="QVBoxLayout" name="discord_tab_layout"><property name="spacing"><number>8</number></property>
+               <item><widget class="QPlainTextEdit" name="discord_conf_edit"/></item>
+               <item>
+                <layout class="QHBoxLayout" name="discord_btn_layout">
+                 <item><spacer><property name="orientation"><enum>Qt::Horizontal</enum></property></spacer></item>
+                 <item><widget class="QPushButton" name="discord_conf_load"><property name="text"><string>重新加载</string></property></widget></item>
+                 <item><widget class="QPushButton" name="discord_conf_save"><property name="text"><string>保存配置</string></property></widget></item>
+                </layout>
+               </item>
+              </layout>
+             </widget>
+             <widget class="QWidget" name="tab_dingtalk">
+              <attribute name="title"><string>钉钉</string></attribute>
+              <layout class="QVBoxLayout" name="dingtalk_tab_layout"><property name="spacing"><number>8</number></property>
+               <item><widget class="QPlainTextEdit" name="dingtalk_conf_edit"/></item>
+               <item>
+                <layout class="QHBoxLayout" name="dingtalk_btn_layout">
+                 <item><spacer><property name="orientation"><enum>Qt::Horizontal</enum></property></spacer></item>
+                 <item><widget class="QPushButton" name="dingtalk_conf_load"><property name="text"><string>重新加载</string></property></widget></item>
+                 <item><widget class="QPushButton" name="dingtalk_conf_save"><property name="text"><string>保存配置</string></property></widget></item>
+                </layout>
+               </item>
+              </layout>
+             </widget>
+             <widget class="QWidget" name="tab_feishu">
+              <attribute name="title"><string>飞书</string></attribute>
+              <layout class="QVBoxLayout" name="feishu_tab_layout"><property name="spacing"><number>8</number></property>
+               <item><widget class="QPlainTextEdit" name="feishu_conf_edit"/></item>
+               <item>
+                <layout class="QHBoxLayout" name="feishu_btn_layout">
+                 <item><spacer><property name="orientation"><enum>Qt::Horizontal</enum></property></spacer></item>
+                 <item><widget class="QPushButton" name="feishu_conf_load"><property name="text"><string>重新加载</string></property></widget></item>
+                 <item><widget class="QPushButton" name="feishu_conf_save"><property name="text"><string>保存配置</string></property></widget></item>
+                </layout>
+               </item>
+              </layout>
+             </widget>
+             <widget class="QWidget" name="tab_wechat">
+              <attribute name="title"><string>企业微信</string></attribute>
+              <layout class="QVBoxLayout" name="wechat_tab_layout"><property name="spacing"><number>8</number></property>
+               <item><widget class="QPlainTextEdit" name="wechat_conf_edit"/></item>
+               <item>
+                <layout class="QHBoxLayout" name="wechat_btn_layout">
+                 <item><spacer><property name="orientation"><enum>Qt::Horizontal</enum></property></spacer></item>
+                 <item><widget class="QPushButton" name="wechat_conf_load"><property name="text"><string>重新加载</string></property></widget></item>
+                 <item><widget class="QPushButton" name="wechat_conf_save"><property name="text"><string>保存配置</string></property></widget></item>
+                </layout>
+               </item>
+              </layout>
+             </widget>
+             <widget class="QWidget" name="tab_email">
+              <attribute name="title"><string>邮件</string></attribute>
+              <layout class="QVBoxLayout" name="email_tab_layout"><property name="spacing"><number>8</number></property>
+               <item><widget class="QPlainTextEdit" name="email_conf_edit"/></item>
+               <item>
+                <layout class="QHBoxLayout" name="email_btn_layout">
+                 <item><spacer><property name="orientation"><enum>Qt::Horizontal</enum></property></spacer></item>
+                 <item><widget class="QPushButton" name="email_conf_load"><property name="text"><string>重新加载</string></property></widget></item>
+                 <item><widget class="QPushButton" name="email_conf_save"><property name="text"><string>保存配置</string></property></widget></item>
+                </layout>
+               </item>
+              </layout>
+             </widget>
+             <widget class="QWidget" name="tab_telegram">
+              <attribute name="title"><string>Telegram</string></attribute>
+              <layout class="QVBoxLayout" name="telegram_tab_layout"><property name="spacing"><number>8</number></property>
+               <item><widget class="QPlainTextEdit" name="telegram_conf_edit"/></item>
+               <item>
+                <layout class="QHBoxLayout" name="telegram_btn_layout">
+                 <item><spacer><property name="orientation"><enum>Qt::Horizontal</enum></property></spacer></item>
+                 <item><widget class="QPushButton" name="telegram_conf_load"><property name="text"><string>重新加载</string></property></widget></item>
+                 <item><widget class="QPushButton" name="telegram_conf_save"><property name="text"><string>保存配置</string></property></widget></item>
+                </layout>
+               </item>
+              </layout>
+             </widget>
+             <widget class="QWidget" name="tab_local">
+              <attribute name="title"><string>本地通知</string></attribute>
+              <layout class="QVBoxLayout" name="local_tab_layout"><property name="spacing"><number>8</number></property>
+               <item><widget class="QPlainTextEdit" name="local_conf_edit"/></item>
+               <item>
+                <layout class="QHBoxLayout" name="local_btn_layout">
+                 <item><spacer><property name="orientation"><enum>Qt::Horizontal</enum></property></spacer></item>
+                 <item><widget class="QPushButton" name="local_conf_load"><property name="text"><string>重新加载</string></property></widget></item>
+                 <item><widget class="QPushButton" name="local_conf_save"><property name="text"><string>保存配置</string></property></widget></item>
+                </layout>
+               </item>
+              </layout>
+             </widget>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="settings_version">
+             <property name="text"><string>NezhaGuard v0.0.1 — 哪吒网络安全 SIEM</string></property>
+             <property name="alignment"><set>Qt::AlignCenter</set></property>
+            </widget>
+           </item>
           </layout>
          </widget>
         </widget>

@@ -87,6 +87,9 @@ private slots:
     void refresh_network_info();
     void update_clock();
     void sync_theme();
+    void load_settings_configs();
+    void save_monitor_conf();
+    void save_notifier_conf();
     void log_search_changed(const QString &text);
     void clear_logs();
     void update_sparkline();

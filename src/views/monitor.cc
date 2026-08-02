@@ -53,7 +53,9 @@
 #include <sys/sysctl.h>
 
 #include <cstring>
+#include <fstream>
 #include <set>
+#include <sstream>
 #include <string>
 #include <vector>
 #include <algorithm>
@@ -238,6 +240,38 @@ monitor::monitor(QWidget *parent) : QMainWindow(parent), ui(new Ui::monitor) {
     setup_sidebar();
     start_animations();
 
+    // 系统配置页 — 切换到配置页时自动加载
+    connect(ui->sidebar, &QListWidget::currentRowChanged, this, [this](int row) {
+        if (row == 5) load_settings_configs();
+    });
+    // 应用监控
+    connect(ui->monitor_conf_save, &QPushButton::clicked, this, &monitor::save_monitor_conf);
+    connect(ui->monitor_conf_load, &QPushButton::clicked, this, &monitor::load_settings_configs);
+    // Slack
+    connect(ui->slack_conf_save, &QPushButton::clicked, this, [this]{ save_notifier_conf(); });
+    connect(ui->slack_conf_load, &QPushButton::clicked, this, &monitor::load_settings_configs);
+    // Discord
+    connect(ui->discord_conf_save, &QPushButton::clicked, this, [this]{ save_notifier_conf(); });
+    connect(ui->discord_conf_load, &QPushButton::clicked, this, &monitor::load_settings_configs);
+    // 钉钉
+    connect(ui->dingtalk_conf_save, &QPushButton::clicked, this, [this]{ save_notifier_conf(); });
+    connect(ui->dingtalk_conf_load, &QPushButton::clicked, this, &monitor::load_settings_configs);
+    // 飞书
+    connect(ui->feishu_conf_save, &QPushButton::clicked, this, [this]{ save_notifier_conf(); });
+    connect(ui->feishu_conf_load, &QPushButton::clicked, this, &monitor::load_settings_configs);
+    // 企业微信
+    connect(ui->wechat_conf_save, &QPushButton::clicked, this, [this]{ save_notifier_conf(); });
+    connect(ui->wechat_conf_load, &QPushButton::clicked, this, &monitor::load_settings_configs);
+    // 邮件
+    connect(ui->email_conf_save, &QPushButton::clicked, this, [this]{ save_notifier_conf(); });
+    connect(ui->email_conf_load, &QPushButton::clicked, this, &monitor::load_settings_configs);
+    // Telegram
+    connect(ui->telegram_conf_save, &QPushButton::clicked, this, [this]{ save_notifier_conf(); });
+    connect(ui->telegram_conf_load, &QPushButton::clicked, this, &monitor::load_settings_configs);
+    // 本地通知
+    connect(ui->local_conf_save, &QPushButton::clicked, this, [this]{ save_notifier_conf(); });
+    connect(ui->local_conf_load, &QPushButton::clicked, this, &monitor::load_settings_configs);
+
     // shortcuts
     new QShortcut(QKeySequence(QStringLiteral("Ctrl+F")), this, [this]() {
         ui->pages->setCurrentWidget(ui->page_logs);
@@ -245,7 +279,7 @@ monitor::monitor(QWidget *parent) : QMainWindow(parent), ui(new Ui::monitor) {
         ui->log_search_box->setFocus();
     });
     new QShortcut(QKeySequence(QStringLiteral("Ctrl+L")), this, [this]() { clear_logs(); });
-    for (int k = 1; k <= 5; ++k) {
+    for (int k = 1; k <= 6; ++k) {
         new QShortcut(QKeySequence(QStringLiteral("Ctrl+%1").arg(k)), this, [this, k]() {
             ui->sidebar->setCurrentRow(k - 1);
             ui->pages->setCurrentIndex(k - 1);
@@ -1238,4 +1272,202 @@ void monitor::refresh_quickstats() {
     set_qs(ui->qs_blocked, QStringLiteral("已隔离"), qc, Theme::PinkDeep);
     set_qs(ui->qs_engines, QStringLiteral("引擎数"), 3, Theme::Green);
     set_qs(ui->qs_types, QStringLiteral("攻击类型"), active_types_.size(), Theme::CyanLight);
+}
+
+// -- 系统配置页 -----------------------------------------------------------
+static QString read_or_default(const QString &path, const QString &fallback) {
+    QFile f(path);
+    if (f.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        QTextStream in(&f);
+        in.setEncoding(QStringConverter::Utf8);
+        QString content = in.readAll();
+        if (!content.trimmed().isEmpty()) return content;
+    }
+    return fallback;
+}
+
+static bool write_file_utf8(const QString &path, const QString &content) {
+    QFile f(path);
+    if (!f.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate)) return false;
+    QTextStream out(&f);
+    out.setEncoding(QStringConverter::Utf8);
+    out << content;
+    return true;
+}
+
+// 各平台默认配置模板
+#define MONITOR_TEMPLATE \
+"# ============================================================\n"\
+"# NezhaGuard — 应用监控配置\n"\
+"# ============================================================\n"\
+"# 格式: 名称 端口 [日志路径...]\n"\
+"#   名称:     应用名称（用于日志显示）\n"\
+"#   端口:     监听端口（用于检测应用是否在线）\n"\
+"#   日志路径: 可选，应用日志文件路径\n"\
+"#\n"\
+"# 仅端口监控（无日志文件，如 Express.js / Gin 等 stdout 输出）:\n"\
+"#   Express 5000\n"\
+"#   Gin 7000\n"\
+"#\n"\
+"# 端口 + 日志文件监控:\n"\
+"#   Spring-8000 8000 /var/log/spring8000/app.log\n"\
+"# ============================================================\n"
+
+#define CONF_HEADER(label, url_help, url_fmt) \
+"# ============================================================\n"\
+"# NezhaGuard — " label " 通知配置\n"\
+"# ============================================================\n"\
+"#\n"\
+"# webhook:    " url_help "\n"\
+"#             " url_fmt "\n"\
+"#\n"\
+"# enabled:    是否启用 (true 或 false)\n"\
+"#\n"\
+"# keywords:   触发关键词（逗号分隔，大小写不敏感）\n"\
+"#             当告警内容包含任一关键词时触发通知\n"\
+"#\n"\
+"# min_severity: 最低告警级别 — trace, debug, info, warn, error, critical\n"\
+"#               只有 >= 此级别的告警才会触发\n"\
+"# ============================================================\n"
+
+void monitor::load_settings_configs() {
+    ui->monitor_conf_edit->setPlainText(
+        read_or_default(QStringLiteral("config/monitor_apps.conf"),
+                        QStringLiteral(MONITOR_TEMPLATE)));
+
+    ui->slack_conf_edit->setPlainText(
+        read_or_default(QStringLiteral("config/notifier/slack.conf"),
+            QStringLiteral(CONF_HEADER("Slack",
+                "Slack Incoming Webhook URL",
+                "获取: https://api.slack.com/messaging/webhooks")
+                "webhook=https://hooks.slack.com/services/TXXXXX/BXXXXX/xxxxxxxxxxxx\n"
+                "enabled=false\n"
+                "keywords=sql,注入,暴力,端口扫描,xss,木马,log4j,critical,致命\n"
+                "min_severity=warn\n")));
+
+    ui->discord_conf_edit->setPlainText(
+        read_or_default(QStringLiteral("config/notifier/discord.conf"),
+            QStringLiteral(CONF_HEADER("Discord",
+                "Discord Webhook URL",
+                "获取: 服务器设置 → 整合 → Webhooks")
+                "webhook=https://discord.com/api/webhooks/YOUR/CHANNEL_TOKEN\n"
+                "enabled=false\n"
+                "keywords=sql,注入,暴力,端口扫描,xss,webshell,木马,critical\n"
+                "min_severity=warn\n")));
+
+    ui->dingtalk_conf_edit->setPlainText(
+        read_or_default(QStringLiteral("config/notifier/dingtalk.conf"),
+            QStringLiteral(CONF_HEADER("钉钉",
+                "钉钉群机器人 Webhook URL",
+                "获取: 群设置 → 智能群助手 → 添加机器人")
+                "webhook=https://oapi.dingtalk.com/robot/send?access_token=YOUR_TOKEN\n"
+                "enabled=false\n"
+                "keywords=sql,注入,暴力,端口扫描,webshell,木马,critical\n"
+                "min_severity=warn\n")));
+
+    ui->feishu_conf_edit->setPlainText(
+        read_or_default(QStringLiteral("config/notifier/feishu.conf"),
+            QStringLiteral(CONF_HEADER("飞书",
+                "飞书群机器人 Webhook URL",
+                "获取: 群设置 → 群机器人 → 添加自定义机器人")
+                "webhook=https://open.feishu.cn/open-apis/bot/v2/hook/YOUR_HOOK_ID\n"
+                "enabled=false\n"
+                "keywords=sql,注入,暴力,端口扫描,webshell,木马,critical\n"
+                "min_severity=warn\n")));
+
+    ui->wechat_conf_edit->setPlainText(
+        read_or_default(QStringLiteral("config/notifier/wechat.conf"),
+            QStringLiteral(CONF_HEADER("企业微信",
+                "企业微信群机器人 Webhook URL",
+                "获取: 群设置 → 群机器人 → 添加机器人")
+                "webhook=https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=YOUR_KEY\n"
+                "enabled=false\n"
+                "keywords=sql,注入,暴力,端口扫描,critical\n"
+                "min_severity=warn\n")));
+
+    ui->email_conf_edit->setPlainText(
+        read_or_default(QStringLiteral("config/notifier/email.conf"),
+            QStringLiteral(CONF_HEADER("邮件",
+                "接收告警的邮箱地址",
+                "格式: admin@example.com (需系统 mail 命令)")
+                "webhook=admin@example.com\n"
+                "enabled=false\n"
+                "keywords=critical,致命,隔离,quarantine,阻断\n"
+                "min_severity=critical\n")));
+
+    ui->telegram_conf_edit->setPlainText(
+        read_or_default(QStringLiteral("config/notifier/telegram.conf"),
+            QStringLiteral(CONF_HEADER("Telegram",
+                "Bot Token (从 @BotFather 获取)",
+                "格式: 123456:ABC-DEF1234ghijkl")
+                "# chat_id:   目标 Chat/Channel ID\n"
+                "#             获取: 将 @getidsbot 拉入群后发送 /id\n"
+                "webhook=123456:ABC-DEF1234ghijkl\n"
+                "chat_id=-1001234567890\n"
+                "enabled=false\n"
+                "keywords=sql,注入,暴力,端口扫描,xss,webshell,木马,critical,致命\n"
+                "min_severity=warn\n")));
+
+    ui->local_conf_edit->setPlainText(
+        read_or_default(QStringLiteral("config/notifier/local.conf"),
+            QStringLiteral(
+                "# ============================================================\n"
+                "# NezhaGuard — 本地桌面通知 配置\n"
+                "# ============================================================\n"
+                "# 无需 webhook — macOS 系统通知 / Linux notify-send\n"
+                "#\n"
+                "# enabled:    是否启用 (true 或 false)\n"
+                "# keywords:   触发关键词（逗号分隔，大小写不敏感）\n"
+                "# min_severity: 最低告警级别 — trace, debug, info, warn, error, critical\n"
+                "# ============================================================\n"
+                "enabled=true\n"
+                "keywords=sql,注入,暴力,SSH,爆破,端口扫描,扫描,xss,webshell,木马,log4j,critical,致命,隔离,阻断\n"
+                "min_severity=warn\n")));
+}
+
+void monitor::save_monitor_conf() {
+    if (write_file_utf8(QStringLiteral("config/monitor_apps.conf"),
+                         ui->monitor_conf_edit->toPlainText())) {
+        ui->status_label->setText(QStringLiteral("应用监控配置已保存"));
+    } else {
+        ui->status_label->setText(QStringLiteral("保存失败"));
+    }
+}
+
+void monitor::save_notifier_conf() {
+    auto *tw = ui->settings_tabs;
+    auto *w = tw->currentWidget();
+    if (w == ui->tab_monitor) {
+        save_monitor_conf();
+        return;
+    }
+    QPlainTextEdit *edits[] = {
+        nullptr,
+        ui->slack_conf_edit,
+        ui->discord_conf_edit,
+        ui->dingtalk_conf_edit,
+        ui->feishu_conf_edit,
+        ui->wechat_conf_edit,
+        ui->email_conf_edit,
+        ui->telegram_conf_edit,
+        ui->local_conf_edit
+    };
+    const char *paths[] = {
+        nullptr,
+        "config/notifier/slack.conf",
+        "config/notifier/discord.conf",
+        "config/notifier/dingtalk.conf",
+        "config/notifier/feishu.conf",
+        "config/notifier/wechat.conf",
+        "config/notifier/email.conf",
+        "config/notifier/telegram.conf",
+        "config/notifier/local.conf"
+    };
+    int idx = tw->currentIndex();
+    if (idx >= 0 && idx < 9 && edits[idx] && paths[idx]) {
+        if (write_file_utf8(QString::fromUtf8(paths[idx]), edits[idx]->toPlainText()))
+            ui->status_label->setText(QString::fromUtf8(paths[idx]) + QStringLiteral(" — 已保存"));
+        else
+            ui->status_label->setText(QStringLiteral("保存失败"));
+    }
 }
