@@ -1027,6 +1027,27 @@ void monitor::record_attacker(const QString &ip, double score, const QString &ty
     }
 }
 
+void monitor::refresh_attackers() {
+    if (!attackers_model_) return;
+    attackers_model_->clear();
+
+    QList<std::pair<QString, Attacker>> sorted;
+    for (auto it = attackers_.cbegin(); it != attackers_.cend(); ++it)
+        sorted.append({it.key(), it.value()});
+    std::sort(sorted.begin(), sorted.end(), [](const auto &a, const auto &b) {
+        return a.second.score * a.second.count > b.second.score * b.second.count;
+    });
+
+    int rank = 0;
+    for (const auto &[ip, a]: sorted) {
+        if (++rank > 10) break;
+        attackers_model_->append(
+            QStringLiteral("#%1").arg(rank),
+            a.score > 80 ? QStringLiteral("CRIT") : a.score > 50 ? QStringLiteral("WARN") : QStringLiteral("INFO"),
+            QStringLiteral("%1  |  %2分  x%3  [%4]").arg(ip).arg(static_cast<int>(a.score)).arg(a.count).arg(a.type));
+    }
+}
+
 // -- filters --
 void monitor::apply_log_filter(int idx) {
     if (log_proxy_) log_proxy_->setFilterFixedString(idx == 0 ? QString() : ui->level_filter->currentText());
@@ -1554,17 +1575,10 @@ void monitor::tray_quit() {
 
 void monitor::export_nzc() {
     QString path = QFileDialog::getSaveFileName(
-        this, QStringLiteral("导出 NezhaGuard 配置"),
-        QStringLiteral("NezhaGuard_Config.nzc"),
-        QStringLiteral("NezhaGuard 配置文件 (*.nzc)"));
+        this, QStringLiteral("导出 NezhaGuard 完整状态"),
+        QStringLiteral("NezhaGuard_Snapshot.nzc"),
+        QStringLiteral("NezhaGuard 状态文件 (*.nzc)"));
     if (path.isEmpty()) return;
-
-    QJsonObject meta;
-    meta[QStringLiteral("format")] = QStringLiteral("nzc");
-    meta[QStringLiteral("version")] = QStringLiteral("1.0");
-    meta[QStringLiteral("author")] = QString::fromUtf8("钟智强");
-    meta[QStringLiteral("contact")] = QStringLiteral("johnmelodymel@qq.com");
-    meta[QStringLiteral("created_at")] = QDateTime::currentDateTimeUtc().toString(Qt::ISODate);
 
     auto read_conf = [](const QString &p) {
         QFile f(p);
@@ -1574,27 +1588,98 @@ void monitor::export_nzc() {
         return in.readAll();
     };
 
-    QJsonObject data;
-    data[QStringLiteral("monitor_apps")] = read_conf(QStringLiteral("config/monitor_apps.conf"));
-    data[QStringLiteral("database")] = read_conf(QStringLiteral("config/database.conf"));
-    data[QStringLiteral("notifier_slack")] = read_conf(QStringLiteral("config/notifier/slack.conf"));
-    data[QStringLiteral("notifier_discord")] = read_conf(QStringLiteral("config/notifier/discord.conf"));
-    data[QStringLiteral("notifier_dingtalk")] = read_conf(QStringLiteral("config/notifier/dingtalk.conf"));
-    data[QStringLiteral("notifier_feishu")] = read_conf(QStringLiteral("config/notifier/feishu.conf"));
-    data[QStringLiteral("notifier_wechat")] = read_conf(QStringLiteral("config/notifier/wechat.conf"));
-    data[QStringLiteral("notifier_email")] = read_conf(QStringLiteral("config/notifier/email.conf"));
-    data[QStringLiteral("notifier_telegram")] = read_conf(QStringLiteral("config/notifier/telegram.conf"));
-    data[QStringLiteral("notifier_local")] = read_conf(QStringLiteral("config/notifier/local.conf"));
+    auto model_to_json = [](LogModel *m) {
+        QJsonArray arr;
+        if (!m) return arr;
+        for (int i = 0; i < m->rowCount(); ++i) {
+            QModelIndex idx = m->index(i);
+            QJsonObject e;
+            e[QStringLiteral("ts")] = m->data(idx, LogModel::TimestampRole).toString();
+            e[QStringLiteral("level")] = m->data(idx, LogModel::LevelRole).toString();
+            e[QStringLiteral("msg")] = m->data(idx, LogModel::MessageRole).toString();
+            arr.append(e);
+        }
+        return arr;
+    };
+
+    int uptime = start_time_.secsTo(QTime::currentTime());
+
+    QJsonObject meta;
+    meta[QStringLiteral("format")] = QStringLiteral("nzc");
+    meta[QStringLiteral("version")] = QStringLiteral("1.0");
+    meta[QStringLiteral("author")] = QString::fromUtf8("钟智强");
+    meta[QStringLiteral("contact")] = QStringLiteral("johnmelodymel@qq.com");
+    meta[QStringLiteral("created_at")] = QDateTime::currentDateTimeUtc().toString(Qt::ISODate);
+    meta[QStringLiteral("uptime_secs")] = uptime;
+    meta[QStringLiteral("log_count")] = log_model_ ? log_model_->total() : 0;
+    meta[QStringLiteral("alert_count")] = alert_model_ ? alert_model_->total() : 0;
+    meta[QStringLiteral("honey_count")] = honey_model_ ? honey_model_->total() : 0;
+
+    QJsonObject config;
+    config[QStringLiteral("monitor_apps")] = read_conf(QStringLiteral("config/monitor_apps.conf"));
+    config[QStringLiteral("database")] = read_conf(QStringLiteral("config/database.conf"));
+    config[QStringLiteral("notifier_slack")] = read_conf(QStringLiteral("config/notifier/slack.conf"));
+    config[QStringLiteral("notifier_discord")] = read_conf(QStringLiteral("config/notifier/discord.conf"));
+    config[QStringLiteral("notifier_dingtalk")] = read_conf(QStringLiteral("config/notifier/dingtalk.conf"));
+    config[QStringLiteral("notifier_feishu")] = read_conf(QStringLiteral("config/notifier/feishu.conf"));
+    config[QStringLiteral("notifier_wechat")] = read_conf(QStringLiteral("config/notifier/wechat.conf"));
+    config[QStringLiteral("notifier_email")] = read_conf(QStringLiteral("config/notifier/email.conf"));
+    config[QStringLiteral("notifier_telegram")] = read_conf(QStringLiteral("config/notifier/telegram.conf"));
+    config[QStringLiteral("notifier_local")] = read_conf(QStringLiteral("config/notifier/local.conf"));
+
+    QJsonObject state;
+    state[QStringLiteral("logs")] = model_to_json(log_model_);
+    state[QStringLiteral("alerts")] = model_to_json(alert_model_);
+    state[QStringLiteral("honeypots")] = model_to_json(honey_model_);
+
+    QJsonArray attackers_arr;
+    for (auto it = attackers_.cbegin(); it != attackers_.cend(); ++it) {
+        QJsonObject a;
+        a[QStringLiteral("ip")] = it.key();
+        a[QStringLiteral("score")] = it.value().score;
+        a[QStringLiteral("count")] = it.value().count;
+        a[QStringLiteral("type")] = it.value().type;
+        attackers_arr.append(a);
+    }
+    state[QStringLiteral("attackers")] = attackers_arr;
+
+    QJsonArray quarantine_arr;
+    for (const auto &r: Nezha::Database::DatabaseHelper::GetQuarantineList()) {
+        QJsonObject q;
+        q[QStringLiteral("ip")] = QString::fromStdString(r.ip_address);
+        q[QStringLiteral("reason")] = QString::fromStdString(r.reason);
+        q[QStringLiteral("score")] = r.threat_score;
+        q[QStringLiteral("date")] = QString::fromStdString(r.quarantined_at);
+        quarantine_arr.append(q);
+    }
+    state[QStringLiteral("quarantine")] = quarantine_arr;
+
+    QJsonObject stats;
+    stats[QStringLiteral("sev_crit")] = sev_crit_;
+    stats[QStringLiteral("sev_error")] = sev_error_;
+    stats[QStringLiteral("sev_warn")] = sev_warn_;
+    stats[QStringLiteral("sev_info")] = sev_info_;
+    QJsonArray types_arr;
+    for (const auto &t: active_types_)
+        types_arr.append(t);
+    stats[QStringLiteral("active_types")] = types_arr;
+    stats[QStringLiteral("sparkline")] = [&]() {
+        QJsonArray a;
+        for (int v: sparkline_data_) a.append(v);
+        return a;
+    }();
+    state[QStringLiteral("stats")] = stats;
 
     QJsonObject root;
     root[QStringLiteral("meta")] = meta;
-    root[QStringLiteral("data")] = data;
+    root[QStringLiteral("config")] = config;
+    root[QStringLiteral("state")] = state;
 
     QJsonDocument doc(root);
     QFile out(path);
     if (out.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate)) {
         out.write(doc.toJson(QJsonDocument::Indented));
-        ui->status_label->setText(QStringLiteral("配置已导出至 ") + path);
+        ui->status_label->setText(QStringLiteral("状态已导出至 ") + path);
     } else {
         QMessageBox::warning(this, QStringLiteral("导出失败"), QStringLiteral("无法写入文件:\n") + path);
     }
@@ -1602,8 +1687,8 @@ void monitor::export_nzc() {
 
 void monitor::import_nzc() {
     QString path = QFileDialog::getOpenFileName(
-        this, QStringLiteral("导入 NezhaGuard 配置"),
-        QString(), QStringLiteral("NezhaGuard 配置文件 (*.nzc)"));
+        this, QStringLiteral("导入 NezhaGuard 状态"),
+        QString(), QStringLiteral("NezhaGuard 状态文件 (*.nzc)"));
     if (path.isEmpty()) return;
 
     QFile in(path);
@@ -1622,7 +1707,6 @@ void monitor::import_nzc() {
 
     QJsonObject root = doc.object();
     QJsonObject meta = root[QStringLiteral("meta")].toObject();
-    QJsonObject data = root[QStringLiteral("data")].toObject();
 
     if (meta[QStringLiteral("format")].toString() != QStringLiteral("nzc")) {
         QMessageBox::warning(this, QStringLiteral("导入失败"), QStringLiteral("不是有效的 .nzc 文件"));
@@ -1639,22 +1723,81 @@ void monitor::import_nzc() {
         }
     };
 
-    write_conf(QStringLiteral("config/monitor_apps.conf"), data[QStringLiteral("monitor_apps")].toString());
-    write_conf(QStringLiteral("config/database.conf"), data[QStringLiteral("database")].toString());
-    write_conf(QStringLiteral("config/notifier/slack.conf"), data[QStringLiteral("notifier_slack")].toString());
-    write_conf(QStringLiteral("config/notifier/discord.conf"), data[QStringLiteral("notifier_discord")].toString());
-    write_conf(QStringLiteral("config/notifier/dingtalk.conf"), data[QStringLiteral("notifier_dingtalk")].toString());
-    write_conf(QStringLiteral("config/notifier/feishu.conf"), data[QStringLiteral("notifier_feishu")].toString());
-    write_conf(QStringLiteral("config/notifier/wechat.conf"), data[QStringLiteral("notifier_wechat")].toString());
-    write_conf(QStringLiteral("config/notifier/email.conf"), data[QStringLiteral("notifier_email")].toString());
-    write_conf(QStringLiteral("config/notifier/telegram.conf"), data[QStringLiteral("notifier_telegram")].toString());
-    write_conf(QStringLiteral("config/notifier/local.conf"), data[QStringLiteral("notifier_local")].toString());
+    QJsonObject config = root[QStringLiteral("config")].toObject();
+    write_conf(QStringLiteral("config/monitor_apps.conf"), config[QStringLiteral("monitor_apps")].toString());
+    write_conf(QStringLiteral("config/database.conf"), config[QStringLiteral("database")].toString());
+    write_conf(QStringLiteral("config/notifier/slack.conf"), config[QStringLiteral("notifier_slack")].toString());
+    write_conf(QStringLiteral("config/notifier/discord.conf"), config[QStringLiteral("notifier_discord")].toString());
+    write_conf(QStringLiteral("config/notifier/dingtalk.conf"), config[QStringLiteral("notifier_dingtalk")].toString());
+    write_conf(QStringLiteral("config/notifier/feishu.conf"), config[QStringLiteral("notifier_feishu")].toString());
+    write_conf(QStringLiteral("config/notifier/wechat.conf"), config[QStringLiteral("notifier_wechat")].toString());
+    write_conf(QStringLiteral("config/notifier/email.conf"), config[QStringLiteral("notifier_email")].toString());
+    write_conf(QStringLiteral("config/notifier/telegram.conf"), config[QStringLiteral("notifier_telegram")].toString());
+    write_conf(QStringLiteral("config/notifier/local.conf"), config[QStringLiteral("notifier_local")].toString());
 
     load_settings_configs();
-    ui->status_label->setText(QStringLiteral("配置已从 ") + path + QStringLiteral(" 导入"));
+
+    QJsonObject state = root[QStringLiteral("state")].toObject();
+
+    auto restore_model = [](LogModel *m, const QJsonArray &arr) {
+        if (!m) return;
+        m->clear();
+        for (const auto &v: arr) {
+            QJsonObject e = v.toObject();
+            m->append(
+                e[QStringLiteral("ts")].toString(),
+                e[QStringLiteral("level")].toString(),
+                e[QStringLiteral("msg")].toString());
+        }
+    };
+
+    restore_model(log_model_, state[QStringLiteral("logs")].toArray());
+    restore_model(alert_model_, state[QStringLiteral("alerts")].toArray());
+    restore_model(honey_model_, state[QStringLiteral("honeypots")].toArray());
+
+    attackers_.clear();
+    for (const auto &v: state[QStringLiteral("attackers")].toArray()) {
+        QJsonObject a = v.toObject();
+        Attacker at;
+        at.score = a[QStringLiteral("score")].toDouble();
+        at.count = a[QStringLiteral("count")].toInt();
+        at.type = a[QStringLiteral("type")].toString();
+        attackers_[a[QStringLiteral("ip")].toString()] = at;
+    }
+
+    QJsonObject stats = state[QStringLiteral("stats")].toObject();
+    sev_crit_ = stats[QStringLiteral("sev_crit")].toInt();
+    sev_error_ = stats[QStringLiteral("sev_error")].toInt();
+    sev_warn_ = stats[QStringLiteral("sev_warn")].toInt();
+    sev_info_ = stats[QStringLiteral("sev_info")].toInt();
+    active_types_.clear();
+    for (const auto &v: stats[QStringLiteral("active_types")].toArray())
+        active_types_.insert(v.toString());
+    sparkline_data_.clear();
+    for (const auto &v: stats[QStringLiteral("sparkline")].toArray())
+        sparkline_data_.append(v.toInt());
+
+    refresh_attackers();
+    refresh_quickstats();
+
+    int log_n = state[QStringLiteral("logs")].toArray().size();
+    int alert_n = state[QStringLiteral("alerts")].toArray().size();
+    int q_n = state[QStringLiteral("quarantine")].toArray().size();
+
+    ui->status_label->setText(QStringLiteral("状态已从 ") + path + QStringLiteral(" 导入"));
 
     QString author = meta[QStringLiteral("author")].toString();
     QString contact = meta[QStringLiteral("contact")].toString();
+    int uptime = meta[QStringLiteral("uptime_secs")].toInt();
     QMessageBox::information(this, QStringLiteral("导入成功"),
-        QStringLiteral("配置已恢复\n\n作者: %1\n联系: %2").arg(author, contact));
+        QStringLiteral("状态已恢复\n\n"
+                       "作者: %1\n联系: %2\n"
+                       "快照时间: %3\n运行时长: %4 秒\n"
+                       "日志: %5 条 | 告警: %6 条 | 隔离: %7 条")
+            .arg(author, contact,
+                 meta[QStringLiteral("created_at")].toString(),
+                 QString::number(uptime),
+                 QString::number(log_n),
+                 QString::number(alert_n),
+                 QString::number(q_n)));
 }
