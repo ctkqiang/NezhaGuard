@@ -81,7 +81,7 @@ void SparklineWidget::paintEvent(QPaintEvent *) {
     p.setRenderHint(QPainter::Antialiasing);
 
     auto bg = QColor(dark ? Theme::DkCard : Theme::LtCard);
-    auto fg = QColor(dark ? Theme::CyanNeon : Theme::CyanDeep);
+    auto fg = QColor(dark ? Theme::Cyan : Theme::CyanDeep);
     auto gr = QColor(dark ? Theme::DkBorder : Theme::LtBorder);
 
     p.setBrush(bg);
@@ -115,7 +115,7 @@ void SparklineWidget::paintEvent(QPaintEvent *) {
     fill.lineTo(r.right(), r.bottom());
     fill.closeSubpath();
 
-    QColor fc = QColor(dark ? Theme::CyanNeon : Theme::CyanDeep);
+    QColor fc = QColor(dark ? Theme::Cyan : Theme::CyanDeep);
     fc.setAlpha(25);
     p.setBrush(fc);
     p.setPen(Qt::NoPen);
@@ -378,7 +378,7 @@ void monitor::start_animations() {
     auto *glow = new QGraphicsDropShadowEffect(this);
     glow->setBlurRadius(8);
     glow->setOffset(0, 0);
-    glow->setColor(QColor(Theme::PinkNeon));
+    glow->setColor(QColor(Theme::Pink));
     ui->app_title->setGraphicsEffect(glow);
 
     auto *ga = new QPropertyAnimation(glow, "blurRadius", this);
@@ -392,11 +392,11 @@ void monitor::start_animations() {
 
     auto *gc = new QPropertyAnimation(glow, "color", this);
     gc->setDuration(4000);
-    gc->setStartValue(QColor(Theme::PinkNeon));
-    gc->setKeyValueAt(0.25, QColor(Theme::CyanNeon));
+    gc->setStartValue(QColor(Theme::Pink));
+    gc->setKeyValueAt(0.25, QColor(Theme::Cyan));
     gc->setKeyValueAt(0.5, QColor(Theme::PinkLight));
-    gc->setKeyValueAt(0.75, QColor(Theme::CyanNeon));
-    gc->setEndValue(QColor(Theme::PinkNeon));
+    gc->setKeyValueAt(0.75, QColor(Theme::Cyan));
+    gc->setEndValue(QColor(Theme::Pink));
     gc->setEasingCurve(QEasingCurve::InOutSine);
     gc->setLoopCount(-1);
     gc->start();
@@ -509,9 +509,9 @@ void monitor::apply_theme(bool d) {
     auto M  = d ? Theme::DkMuted   : Theme::LtMuted;
     auto S  = d ? Theme::DkSelected: Theme::LtSelected;
     auto H  = d ? Theme::DkHover   : Theme::LtHover;
-    auto P  = d ? Theme::PinkNeon  : Theme::PinkDeep;    // ♡ pink accent
+    auto P  = d ? Theme::Pink      : Theme::PinkDeep;    // pink accent
     auto Pl = d ? Theme::PinkLight : Theme::PinkDeep;
-    auto Cy = d ? Theme::CyanNeon  : Theme::CyanDeep;    // ♡ cyan accent
+    auto Cy = d ? Theme::Cyan      : Theme::CyanDeep;    // cyan accent
     auto Cl = d ? Theme::CyanLight : Theme::CyanDeep;
 
     QString s;

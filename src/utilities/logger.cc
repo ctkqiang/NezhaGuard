@@ -23,48 +23,42 @@ namespace Nezha::Log {
 
             void write(Level lv, const char *line, std::size_t len) override {
                 if (color_) {
-                    // ♡ pink + cyan kawaii ANSI ♡
-                    const char *level_fg  = "\033[38;2;94;240;209m";   // cyan neon
+                    // ♡ pink + cyan kawaii ANSI — readable on any terminal bg ♡
+                    const char *level_fg  = "\033[38;2;48;200;160m";    // readable cyan
                     const char *level_bg  = "";
                     const char *icon      = "♡";
                     switch (lv) {
                         case Level::Trace:
-                            level_fg = "\033[38;2;160;140;200m";  // lavender
-                            level_bg = "";
+                            level_fg = "\033[38;2;140;120;180m";  // muted lavender
                             icon     = "·";
                             break;
                         case Level::Debug:
-                            level_fg = "\033[38;2;143;255;228m";  // cyan ice
-                            level_bg = "";
+                            level_fg = "\033[38;2;80;200;170m";   // medium cyan
                             icon     = "◇";
                             break;
                         case Level::Info:
-                            level_fg = "\033[38;2;94;240;209m";   // cyan neon
-                            level_bg = "";
+                            level_fg = "\033[38;2;30;190;150m";   // readable cyan
                             icon     = "♡";
                             break;
                         case Level::Warn:
-                            level_fg = "\033[38;2;255;143;199m";  // kawaii pink
-                            level_bg = "";
+                            level_fg = "\033[38;2;240;96;160m";   // readable pink
                             icon     = "⚡";
                             break;
                         case Level::Error:
-                            level_fg = "\033[38;2;255;94;122m";   // cherry red
-                            level_bg = "";
+                            level_fg = "\033[38;2;230;64;96m";    // readable cherry
                             icon     = "✘";
                             break;
                         case Level::Critical:
                             level_fg = "\033[38;2;255;255;255m";
-                            level_bg = "\033[48;2;255;94;160m";   // hot pink bg
+                            level_bg = "\033[48;2;230;64;96m";    // cherry bg
                             icon     = "♡";
                             break;
                         default: break;
                     }
-                    // cute prefix: pink sparkle + level icon
                     std::fprintf(stderr,
-                        "\033[38;2;255;143;199m♡\033[0m "
+                        "\033[38;2;240;96;160m♡\033[0m "
                         "%s%s%s\033[0m "
-                        "\033[38;2;94;240;209m%s\033[0m  %s%.*s\033[0m\n",
+                        "\033[38;2;30;190;150m%s\033[0m  %s%.*s\033[0m\n",
                         level_bg, level_fg, icon, icon,
                         level_fg, static_cast<int>(len), line);
                 } else {
