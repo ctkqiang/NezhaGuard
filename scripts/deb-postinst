@@ -1,0 +1,6 @@
+#!/bin/sh
+set -e
+mkdir -p /var/log/nezhaguard /var/lib/nezhaguard
+chown root:root /usr/bin/nezhaguard 2>/dev/null || true
+setcap cap_net_raw,cap_net_admin=eip /usr/bin/nezhaguard 2>/dev/null || true
+echo "哪吒网络安全 SIEM 安装完成 — 运行 nezhaguard 启动"

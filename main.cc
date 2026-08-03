@@ -1,3 +1,4 @@
+
 //
 // 哪吒网络安全 SIEM — 主入口
 // 串联：抓包采集 + 日志监控 + 蜜罐监听 → 攻击检测引擎 → 告警管理
@@ -7,13 +8,15 @@
 #include <cstdlib>
 #include <ctime>
 #include <format>
-#include <iostream>
 #include <sys/resource.h>
-#include <sys/sysctl.h>
 #include <sys/utsname.h>
 #include <thread>
 #include <unistd.h>
 #include <unordered_map>
+
+#if defined(__APPLE__)
+#include <sys/sysctl.h>
+#endif
 
 #include "src/contants.h"
 #include "src/core/alert.h"
@@ -57,10 +60,11 @@ static void on_sighup(int) {
 
 static std::string quarantine_detail(const std::string &ip) {
     for (const auto &r: Database::DatabaseHelper::GetQuarantineList()) {
-        if (r.ip_address == ip)
-            return std::format("threat={:.0f} reason=\"{}\" since={}",
-                               r.threat_score, r.reason, r.quarantined_at);
+        if (r.ip_address == ip) {
+            return std::format("threat={:.0f} reason=\"{}\" since={}", r.threat_score, r.reason, r.quarantined_at);
+        }
     }
+
     return {};
 }
 
@@ -129,8 +133,9 @@ static int run_cli_mode() {
 
     if (!qlist.empty()) {
         NZ_INFO("  ── 已隔离 IP 列表 ──");
-        for (const auto &r: qlist)
+        for (const auto &r: qlist) {
             NZ_INFO("    {}  [{}]  score={:.0f}", r.ip_address, r.reason, r.threat_score);
+        }
     }
 
     Core::dump_network_info();
@@ -148,8 +153,10 @@ static int run_cli_mode() {
 
     Core::Arena arena(128 * 1024);
     Core::AttackDetector detector;
+
     detector.load_rules("rules/default.yaml");
     g_detector = &detector;
+
     Core::AlertManager alerter;
     alerter.set_dedup_window(10);
 
@@ -157,15 +164,16 @@ static int run_cli_mode() {
 
     alerter.set_callback([&](const Core::Alert &a) {
         Service::Notifier::instance().on_alert(a);
+
         if (a.level >= Severity::Error && a.count >= 5) {
             std::string ip(a.src_ip);
             std::string host = IPAddress::ipaddr::ResolveHostname(ip);
+
             if (host != ip)
                 NZ_WARN("[聚合] {}  {} ({}), {} 次, 评分 {:.0f}",
                     attack_type_cstr(a.type), ip, host, a.count, a.score);
             else
-                NZ_WARN("[聚合] {}  {}, {} 次, 评分 {:.0f}",
-                    attack_type_cstr(a.type), ip, a.count, a.score);
+                NZ_WARN("[聚合] {}  {}, {} 次, 评分 {:.0f}", attack_type_cstr(a.type), ip, a.count, a.score);
         }
     });
 
@@ -196,7 +204,7 @@ static int run_cli_mode() {
             NZ_DEBUG("蜜罐连接 {}:{} → :{}", e.src.to_string(), e.sport, e.dport);
         }
     });
-    NZ_INFO("蜜罐引擎已启动: {} 端口", sizeof(honeypots) / sizeof(honeypots[0]));
+    NZ_INFO("蜜罐引擎已启动: {} 端口", std::size(honeypots));
 
     Core::LogWatcher log_watcher;
     Core::ApplicationMonitor app_monitor;
@@ -324,7 +332,11 @@ static int run_cli_mode() {
     NZ_INFO("  Arena 使用:      {} KB", arena.bytes_used() / 1024);
     NZ_INFO("  用户 CPU:        {:.2f}s", ru.ru_utime.tv_sec + ru.ru_utime.tv_usec / 1'000'000.0);
     NZ_INFO("  系统 CPU:        {:.2f}s", ru.ru_stime.tv_sec + ru.ru_stime.tv_usec / 1'000'000.0);
+#if defined(__APPLE__)
+    NZ_INFO("  最大 RSS:        {} MB", ru.ru_maxrss / (1024 * 1024));
+#else
     NZ_INFO("  最大 RSS:        {} MB", ru.ru_maxrss / 1024);
+#endif
     NZ_INFO("");
     if (!final_qlist.empty()) {
         NZ_INFO("  ── 隔离列表 ──");
@@ -491,7 +503,7 @@ static int run_gui_mode(int argc, char *argv[]) {
         });
     });
 
-    NZ_INFO("蜜罐引擎已启动: {} 端口", sizeof(honeypots) / sizeof(honeypots[0]));
+    NZ_INFO("蜜罐引擎已启动: {} 端口", std::size(honeypots));
 
     Core::LogWatcher log_watcher;
     Core::ApplicationMonitor app_monitor;
@@ -610,15 +622,19 @@ static int run_gui_mode(int argc, char *argv[]) {
 
 
 int main(const int argc, char *argv[]) {
+    bool no_gui = false;
+
     for (int i = 1; i < argc; ++i) {
         if (std::strcmp(argv[i], "-v") == 0 || std::strcmp(argv[i], "--verbose") == 0) {
             Log::Logger::instance().set_level(Log::Level::Debug);
+        } else if (std::strcmp(argv[i], "--no-gui") == 0) {
+            no_gui = true;
         }
     }
 
-    bool show_gui = Configuration::ApplicationConstants::ShowGui;
+    bool show_gui = !no_gui && Configuration::ApplicationConstants::ShowGui;
     const char *gui_env = std::getenv("NEZHA_SHOW_GUI");
-    if (gui_env) show_gui = (std::strcmp(gui_env, "0") != 0 && std::strcmp(gui_env, "false") != 0);
+    if (gui_env && !no_gui) show_gui = (std::strcmp(gui_env, "0") != 0 && std::strcmp(gui_env, "false") != 0);
 
     if (show_gui) return run_gui_mode(argc, argv);
 

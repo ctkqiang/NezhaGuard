@@ -115,3 +115,50 @@ find_path(SQLITE3_INCLUDE_DIR sqlite3.h REQUIRED
 )
 target_include_directories(NezhaGuard PRIVATE ${SQLITE3_INCLUDE_DIR})
 target_link_libraries(NezhaGuard PRIVATE ${PCAP_LIB} Qt6::Widgets Qt6::Concurrent ${SQLITE3_LIB})
+
+# ============================================================
+# 安装规则
+# ============================================================
+include(GNUInstallDirs)
+
+if(APPLE)
+    set(INSTALL_BIN_DIR .)
+    set(INSTALL_DATA_DIR "Contents/Resources")
+    install(TARGETS NezhaGuard BUNDLE DESTINATION .)
+    install(FILES rules/default.yaml DESTINATION "Contents/Resources/rules")
+else()
+    install(TARGETS NezhaGuard RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+    install(FILES rules/default.yaml DESTINATION /etc/nezhaguard/rules)
+    install(DIRECTORY config/ DESTINATION /etc/nezhaguard/config
+            FILES_MATCHING PATTERN "*.conf"
+            PATTERN "notifier" EXCLUDE)
+    install(DIRECTORY config/notifier/ DESTINATION /etc/nezhaguard/config/notifier
+            FILES_MATCHING PATTERN "*.conf")
+endif()
+
+# ============================================================
+# CPack DEB / macOS 打包
+# ============================================================
+set(CPACK_PACKAGE_NAME "nezhaguard")
+set(CPACK_PACKAGE_VERSION "0.0.1")
+set(CPACK_PACKAGE_VENDOR "钟智强")
+set(CPACK_PACKAGE_CONTACT "johnmelodymel@qq.com")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "哪吒网络安全 SIEM — 蓝队主动防御平台")
+set(CPACK_PACKAGE_HOMEPAGE_URL "https://github.com/ctkqiang/NezhaGuard")
+set(CPACK_RESOURCE_FILE_README "${CMAKE_SOURCE_DIR}/README.md")
+
+if(NOT APPLE)
+    set(CPACK_GENERATOR "DEB")
+    set(CPACK_DEBIAN_PACKAGE_NAME "nezhaguard")
+    set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "amd64")
+    set(CPACK_DEBIAN_PACKAGE_MAINTAINER "钟智强 <johnmelodymel@qq.com>")
+    set(CPACK_DEBIAN_PACKAGE_SECTION "net")
+    set(CPACK_DEBIAN_PACKAGE_PRIORITY "optional")
+    set(CPACK_DEBIAN_PACKAGE_DEPENDS
+        "libqt6widgets6t64 (>= 6.5.0), libpcap0.8t64 (>= 1.10.0), libsqlite3-0 (>= 3.40.0)")
+    set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
+    set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA
+        "${CMAKE_SOURCE_DIR}/scripts/deb-postinst;${CMAKE_SOURCE_DIR}/scripts/deb-postrm")
+endif()
+
+include(CPack)

@@ -49,11 +49,14 @@
 #include <arpa/inet.h>
 #include <ifaddrs.h>
 #include <net/if.h>
-#include <net/if_dl.h>
-#include <net/route.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
+
+#if defined(__APPLE__)
+#include <net/if_dl.h>
+#include <net/route.h>
 #include <sys/sysctl.h>
+#endif
 
 #include <cstring>
 #include <fstream>
@@ -1211,6 +1214,10 @@ void monitor::refresh_arp_table() {
     auto *t = ui->arp_table;
     t->setRowCount(0);
     t->setHorizontalHeaderLabels({QStringLiteral("IP 地址"), QStringLiteral("MAC 地址")});
+    QFont mf(QStringLiteral("Menlo"), 10);
+    mf.setStyleHint(QFont::Monospace);
+
+#if defined(__APPLE__)
     std::set<std::string> local;
     ifaddrs *ifap = nullptr;
     if (getifaddrs(&ifap) == 0) {
@@ -1230,8 +1237,6 @@ void monitor::refresh_arp_table() {
     n = buf.size();
     if (sysctl(mib, 6, buf.data(), &n, nullptr, 0) != 0) return;
     std::set<std::string> seen;
-    QFont mf(QStringLiteral("Menlo"), 10);
-    mf.setStyleHint(QFont::Monospace);
     for (char *p = buf.data(); p < buf.data() + n;) {
         auto *rtm = reinterpret_cast<rt_msghdr *>(p);
         if (rtm->rtm_version != RTM_VERSION) break;
@@ -1261,26 +1266,11 @@ void monitor::refresh_arp_table() {
             }
             sa = reinterpret_cast<sockaddr *>(reinterpret_cast<char *>(sa) + sl);
         }
-        if (!ips || !hm) {
-            p += rtm->rtm_msglen;
-            continue;
-        }
-        if (mb[0] == 'f' && mb[1] == 'f') {
-            p += rtm->rtm_msglen;
-            continue;
-        }
-        if ((mb[0] == '0' && mb[1] == '0') || (mb[1] & 1)) {
-            p += rtm->rtm_msglen;
-            continue;
-        }
-        if (local.count(ips)) {
-            p += rtm->rtm_msglen;
-            continue;
-        }
-        if (!seen.insert(std::string(ips) + "@" + mb).second) {
-            p += rtm->rtm_msglen;
-            continue;
-        }
+        if (!ips || !hm) { p += rtm->rtm_msglen; continue; }
+        if (mb[0] == 'f' && mb[1] == 'f') { p += rtm->rtm_msglen; continue; }
+        if ((mb[0] == '0' && mb[1] == '0') || (mb[1] & 1)) { p += rtm->rtm_msglen; continue; }
+        if (local.count(ips)) { p += rtm->rtm_msglen; continue; }
+        if (!seen.insert(std::string(ips) + "@" + mb).second) { p += rtm->rtm_msglen; continue; }
         int row = t->rowCount();
         t->insertRow(row);
         auto *ipx = new QTableWidgetItem(ips);
@@ -1293,6 +1283,31 @@ void monitor::refresh_arp_table() {
         t->setItem(row, 1, mx);
         p += rtm->rtm_msglen;
     }
+#else
+    std::ifstream arp("/proc/net/arp");
+    if (!arp.is_open()) return;
+    std::string line;
+    std::getline(arp, line);
+    while (std::getline(arp, line)) {
+        if (line.empty()) continue;
+        std::istringstream iss(line);
+        std::string ip, hw_type, flags, mac, mask, dev;
+        if (!(iss >> ip >> hw_type >> flags >> mac >> mask >> dev)) continue;
+        if (flags.find('L') != std::string::npos) continue;
+        if (mac == "00:00:00:00:00:00") continue;
+        int row = t->rowCount();
+        t->insertRow(row);
+        auto *ipx = new QTableWidgetItem(QString::fromStdString(ip));
+        ipx->setFont(mf);
+        ipx->setForeground(QColor(Theme::Green));
+        auto *mx = new QTableWidgetItem(QString::fromStdString(mac));
+        mx->setFont(mf);
+        mx->setForeground(QColor(Theme::DkMuted));
+        t->setItem(row, 0, ipx);
+        t->setItem(row, 1, mx);
+    }
+#endif
+}
     t->resizeColumnToContents(0);
     t->horizontalHeader()->setStretchLastSection(true);
 
