@@ -20,6 +20,7 @@
 #include <QJsonObject>
 #include <QMenuBar>
 #include <QMessageBox>
+#include <QProcess>
 #include <QSystemTrayIcon>
 #include <QTextBrowser>
 #include <QTextStream>
@@ -228,6 +229,7 @@ QSize AlertDelegate::sizeHint(const QStyleOptionViewItem &, const QModelIndex &)
 monitor::monitor(QWidget *parent) : QMainWindow(parent), ui(new Ui::monitor) {
     ui->setupUi(this);
     setAttribute(Qt::WA_QuitOnClose, true);
+    setWindowFlags(windowFlags() | Qt::WindowStaysOnTopHint);
     start_time_ = QTime::currentTime();
 
 #if QT_VERSION >= QT_VERSION_CHECK(6, 5, 0)
@@ -396,7 +398,7 @@ void monitor::apply_theme(bool d) {
     auto P = d ? Theme::Pink : Theme::PinkDeep;
 
     setStyleSheet(QStringLiteral(R"(
-        * { font-family:"SF Pro Display","PingFang SC",sans-serif; }
+        * { font-family:"PingFang SC","SF Pro Display",sans-serif; }
         QMainWindow { background:%1; }
         #header { background:qlineargradient(x1:0,y1:0,x2:1,y2:0,stop:0 %2,stop:1 %10); border-bottom:1px solid %3; }
         QLabel { color:%4; }
@@ -809,6 +811,14 @@ void monitor::init_models() {
         });
         btnBar->addWidget(copyJsonBtn);
 
+        if (!ip.isEmpty()) {
+            auto *nmapBtn = mkbtn(QStringLiteral("Nmap 扫描"), Theme::Purple);
+            connect(nmapBtn, &QPushButton::clicked, dlg, [this, ip]() {
+                run_nmap_scan(ip);
+            });
+            btnBar->addWidget(nmapBtn);
+        }
+
         auto *exportBtn = mkbtn(QStringLiteral("导出 .log"), Theme::Green);
         connect(exportBtn, &QPushButton::clicked, dlg, [dlg, msg, tm, lv, ip]() {
             QString path = QFileDialog::getSaveFileName(dlg, QStringLiteral("导出日志"),
@@ -928,30 +938,29 @@ void monitor::init_models() {
                 auto srcIdx = log_search_proxy_ ? log_search_proxy_->mapToSource(idx) : idx;
                 double_click_detail(srcIdx, log_model_);
             });
-    // Enter 键 = 双击打开详情
     auto *log_enter = new QShortcut(QKeySequence(Qt::Key_Return), ui->log_view, nullptr, nullptr, Qt::WidgetShortcut);
-    connect(log_enter, &QShortcut::activated, this, [this]() {
+    connect(log_enter, &QShortcut::activated, this, [this, double_click_detail]() {
         auto idx = ui->log_view->currentIndex();
         if (idx.isValid()) {
             auto srcIdx = log_search_proxy_ ? log_search_proxy_->mapToSource(idx) : idx;
-            show_log_detail(srcIdx);
+            double_click_detail(srcIdx, log_model_);
         }
     });
     auto *alert_enter = new QShortcut(QKeySequence(Qt::Key_Return), ui->alert_view, nullptr, nullptr, Qt::WidgetShortcut);
-    connect(alert_enter, &QShortcut::activated, this, [this]() {
+    connect(alert_enter, &QShortcut::activated, this, [this, double_click_detail]() {
         auto idx = ui->alert_view->currentIndex();
         if (idx.isValid()) {
             auto srcIdx = alert_proxy_ ? alert_proxy_->mapToSource(idx) : idx;
-            show_alert_detail(srcIdx);
+            double_click_detail(srcIdx, alert_model_);
         }
     });
     auto *recent_enter = new QShortcut(QKeySequence(Qt::Key_Return), ui->recent_alerts_view, nullptr, nullptr, Qt::WidgetShortcut);
-    connect(recent_enter, &QShortcut::activated, this, [this]() {
-        show_alert_detail(ui->recent_alerts_view->currentIndex());
+    connect(recent_enter, &QShortcut::activated, this, [this, double_click_detail]() {
+        double_click_detail(ui->recent_alerts_view->currentIndex(), alert_model_);
     });
     auto *honey_enter = new QShortcut(QKeySequence(Qt::Key_Return), ui->honey_view, nullptr, nullptr, Qt::WidgetShortcut);
-    connect(honey_enter, &QShortcut::activated, this, [this]() {
-        show_honey_detail(ui->honey_view->currentIndex());
+    connect(honey_enter, &QShortcut::activated, this, [this, double_click_detail]() {
+        double_click_detail(ui->honey_view->currentIndex(), honey_model_);
     });
 
     apply_theme(dark_mode_);
@@ -1307,11 +1316,8 @@ void monitor::refresh_arp_table() {
         t->setItem(row, 1, mx);
     }
 #endif
-}
     t->resizeColumnToContents(0);
     t->horizontalHeader()->setStretchLastSection(true);
-
-    // populate radar
     if (radar_widget_) {
         QVector<RadarDevice> devices;
         for (int r = 0; r < t->rowCount(); ++r) {
@@ -1619,8 +1625,13 @@ void monitor::save_database_conf() {
 }
 
 void monitor::setup_tray() {
+    QIcon app_icon(QStringLiteral("src/views/app_icon.svg"));
+    if (app_icon.isNull())
+        app_icon = qApp->style()->standardIcon(QStyle::SP_ComputerIcon);
+    qApp->setWindowIcon(app_icon);
+
     tray_ = new QSystemTrayIcon(this);
-    tray_->setIcon(qApp->windowIcon());
+    tray_->setIcon(app_icon);
     tray_->setToolTip(QStringLiteral("哪吒网络安全 SIEM"));
 
     tray_menu_ = new QMenu(this);
@@ -1886,4 +1897,90 @@ void monitor::import_nzc() {
                  QString::number(log_n),
                  QString::number(alert_n),
                  QString::number(q_n)));
+}
+
+void monitor::run_nmap_scan(const QString &ip) {
+    auto *dlg = new QDialog(this);
+    dlg->setWindowTitle(QStringLiteral("Nmap 扫描 — %1").arg(ip));
+    dlg->resize(720, 560);
+    dlg->setAttribute(Qt::WA_DeleteOnClose);
+    dlg->setWindowFlags(dlg->windowFlags() | Qt::WindowStaysOnTopHint);
+    dlg->setStyleSheet(QStringLiteral(
+        "QDialog { background:#0a0a0a; border:1px solid #0f0; }"));
+
+    auto *root = new QVBoxLayout(dlg);
+    root->setContentsMargins(8, 8, 8, 8);
+    root->setSpacing(6);
+
+    auto *header = new QLabel(QStringLiteral(
+        "╔══════════════════════════════════════════════╗\n"
+        "║  哪吒 Nmap 扫描引擎                              ║\n"
+        "║  TARGET: %1                                     ║\n"
+        "╚══════════════════════════════════════════════╝").arg(ip));
+    header->setStyleSheet(QStringLiteral(
+        "color:#0f0; font-family:\"Menlo\",\"JetBrains Mono\",monospace; font-size:10px;"
+        "background:transparent;"));
+    root->addWidget(header);
+
+    auto *output = new QTextEdit(dlg);
+    output->setReadOnly(true);
+    output->setStyleSheet(QStringLiteral(
+        "QTextEdit { background:#050505; color:#0f0; border:1px solid #0a0; border-radius:4px;"
+        "  font-family:\"Menlo\",\"JetBrains Mono\",monospace; font-size:11px; padding:8px;"
+        "  selection-background-color:#0a0; selection-color:#000; }"
+        "QScrollBar:vertical { background:#0a0a0a; width:8px; border:none; }"
+        "QScrollBar::handle:vertical { background:#0a0; border-radius:4px; min-height:20px; }"
+        "QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical { height:0; }"));
+    output->setText(QStringLiteral(
+        "[*] 初始化扫描引擎...\n"
+        "[*] 目标: %1\n"
+        "[*] 参数: -sT -sV -v\n"
+        "[*] 启动 nmap 子进程...\n"
+        "──────────────────────────────────────────\n").arg(ip));
+    root->addWidget(output);
+
+    auto *btnBar = new QHBoxLayout();
+    btnBar->setSpacing(8);
+    root->addLayout(btnBar);
+    btnBar->addStretch();
+
+    auto mkbtn = [](const QString &label, const QString &fg, const QString &bg) -> QPushButton * {
+        auto *b = new QPushButton(label);
+        b->setStyleSheet(QStringLiteral(
+            "QPushButton { background:%1; color:%2; border:1px solid %3; border-radius:4px;"
+            "  padding:5px 14px; font-family:\"Menlo\",\"JetBrains Mono\",monospace;"
+            "  font-size:10px; font-weight:600; }"
+            "QPushButton:hover { background:%3; color:%1; }")
+            .arg(bg, fg, fg));
+        return b;
+    };
+
+    auto *closeBtn = mkbtn(QStringLiteral("[ 关闭 ]"), QStringLiteral("#0f0"), QStringLiteral("#0a0a0a"));
+    connect(closeBtn, &QPushButton::clicked, dlg, &QDialog::close);
+    btnBar->addWidget(closeBtn);
+
+    dlg->show();
+
+    auto *proc = new QProcess(dlg);
+    proc->setProgram(QStringLiteral("nmap"));
+    proc->setArguments({QStringLiteral("-sT"), QStringLiteral("-sV"), QStringLiteral("-v"), ip});
+    proc->setProcessChannelMode(QProcess::MergedChannels);
+
+    connect(proc, &QProcess::readyRead, dlg, [proc, output]() {
+        output->append(QString::fromUtf8(proc->readAll()));
+    });
+    connect(proc, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
+            dlg, [output, ip](int code, QProcess::ExitStatus) {
+        output->append(QStringLiteral("──────────────────────────────────────────"));
+        if (code == 0) {
+            output->append(QStringLiteral("[+] 扫描完成 — %1").arg(ip));
+            output->append(QStringLiteral("[+] Nmap done. All packets processed."));
+        } else {
+            output->append(QStringLiteral("[!] nmap 退出码: %1").arg(code));
+        }
+        output->append(QStringLiteral("══════════════════════════════════════════════"));
+        output->moveCursor(QTextCursor::End);
+    });
+
+    proc->start();
 }

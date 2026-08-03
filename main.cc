@@ -632,9 +632,13 @@ int main(const int argc, char *argv[]) {
         }
     }
 
-    bool show_gui = !no_gui && Configuration::ApplicationConstants::ShowGui;
+    if (no_gui) {
+        return run_cli_mode();
+    }
+
+    bool show_gui = Configuration::ApplicationConstants::ShowGui;
     const char *gui_env = std::getenv("NEZHA_SHOW_GUI");
-    if (gui_env && !no_gui) show_gui = (std::strcmp(gui_env, "0") != 0 && std::strcmp(gui_env, "false") != 0);
+    if (gui_env) show_gui = (std::strcmp(gui_env, "0") != 0 && std::strcmp(gui_env, "false") != 0);
 
     if (show_gui) return run_gui_mode(argc, argv);
 
