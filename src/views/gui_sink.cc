@@ -88,7 +88,7 @@ QColor GuiSink::level_color(const QString &level, const QString &message) {
     if (message.contains(QStringLiteral("Tor")))
         return QColor(Theme::Lilac);
     if (message.contains(QStringLiteral("蜜罐")) || message.contains(QStringLiteral("honeypot")))
-        return QColor(Theme::PinkBlush);
+        return QColor(Theme::PinkDeep);
 
-    return QColor(Theme::BabyBlue);
+    return QColor(Theme::Cyan);
 }
