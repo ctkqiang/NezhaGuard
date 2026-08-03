@@ -2,63 +2,74 @@
 #define NEZHAGUARD_THEME_H
 
 namespace Theme {
-    // ── ♡ pastel kawaii palette ♡ ──
+    // ♡ ═══════════════════════════════════════════ ♡
+    // ♡  femboy kawaii palette — pink & cyan first ♡
+    // ♡ ═══════════════════════════════════════════ ♡
 
-    // soft pinks
-    inline constexpr auto Pink         = "#ffb6d3";
-    inline constexpr auto PinkLight    = "#ffd1e3";
-    inline constexpr auto PinkDeep     = "#f4a0c0";
-    inline constexpr auto PinkBlush    = "#ffe4ed";
-    inline constexpr auto PinkHot      = "#ff8bb3";
+    // ── pink family (primary accent) ──
+    inline constexpr auto Pink         = "#ff8fc7";   // bright kawaii pink
+    inline constexpr auto PinkLight    = "#ffb8da";   // soft petal pink
+    inline constexpr auto PinkDeep     = "#f472b6";   // deep rose pink
+    inline constexpr auto PinkBlush    = "#ffe0ef";   // blush (light bg tint)
+    inline constexpr auto PinkHot      = "#ff5ea0";   // hot pink (crit/alert)
+    inline constexpr auto PinkNeon     = "#ff66b2";   // neon pop pink
 
-    // lavender / purple
-    inline constexpr auto Lavender     = "#d4bfff";
-    inline constexpr auto LavenderLight= "#e8d9ff";
-    inline constexpr auto LavenderDeep = "#b89fef";
-    inline constexpr auto Lilac        = "#c9a9ff";
+    // ── cyan family (secondary accent) ──
+    inline constexpr auto Cyan         = "#5ef0d1";   // bright kawaii cyan
+    inline constexpr auto CyanLight    = "#8fffe4";   // soft mint cyan
+    inline constexpr auto CyanDeep     = "#3dd6b4";   // deep teal cyan
+    inline constexpr auto CyanNeon     = "#00ffcc";   // neon cyan glow
+    inline constexpr auto CyanIce      = "#bffff3";   // ice cyan
 
-    // baby blue / cyan
-    inline constexpr auto Cyan         = "#8edbda";
-    inline constexpr auto CyanLight    = "#c0f0ef";
-    inline constexpr auto CyanDeep     = "#6abfbe";
-    inline constexpr auto BabyBlue     = "#a3d9f7";
-    inline constexpr auto SkyBlue      = "#c4e8fa";
+    // ── lavender / purple ──
+    inline constexpr auto Lavender     = "#c9a0ff";   // soft lavender
+    inline constexpr auto LavenderLight= "#e0ccff";
+    inline constexpr auto LavenderDeep = "#b080f0";
+    inline constexpr auto Lilac        = "#d4b8ff";
 
-    // mint / spring
-    inline constexpr auto Mint         = "#b3e8c6";
-    inline constexpr auto MintLight    = "#d6f5e0";
-    inline constexpr auto MintDeep     = "#8dd4a6";
+    // ── baby blue ──
+    inline constexpr auto BabyBlue     = "#7ecfff";
+    inline constexpr auto BabyBlueLight= "#b0e4ff";
 
-    // peach / coral
-    inline constexpr auto Peach        = "#ffd6bf";
-    inline constexpr auto PeachLight   = "#ffe8da";
-    inline constexpr auto PeachDeep    = "#f7c4a0";
+    // ── mint / green ──
+    inline constexpr auto Mint         = "#7ef0b8";
+    inline constexpr auto MintLight    = "#b0ffd8";
+    inline constexpr auto MintDeep     = "#5ad498";
 
-    // semantic (soft)
-    inline constexpr auto Red          = "#f8727d";   // soft cherry
-    inline constexpr auto Orange       = "#f5a885";   // soft tangerine
-    inline constexpr auto Green        = "#8cd4a6";   // soft mint green
-    inline constexpr auto Purple       = "#c5a3f0";   // soft wisteria
-    inline constexpr auto White        = "#f5eff7";   // soft cream white
-    inline constexpr auto Grey         = "#b8a9c0";   // soft mauve grey
+    // ── peach / coral ──
+    inline constexpr auto Peach        = "#ffc8a8";
+    inline constexpr auto PeachLight   = "#ffe0d0";
+    inline constexpr auto PeachDeep    = "#f0a878";
 
-    // dark — dreamy
-    inline constexpr auto DkBg         = "#1a111c";   // deep plum
-    inline constexpr auto DkCard       = "#251d28";   // muted mauve card
-    inline constexpr auto DkBorder     = "#3d3340";   // plum border
-    inline constexpr auto DkHover      = "#2d2530";
-    inline constexpr auto DkSelected   = "#352d3a";
-    inline constexpr auto DkText       = "#f0e6f6";
-    inline constexpr auto DkMuted      = "#bdaccc";
+    // ── semantic (soft) ──
+    inline constexpr auto Red          = "#ff5e7a";   // cherry red
+    inline constexpr auto Orange       = "#ffa070";   // soft tangerine
+    inline constexpr auto Green        = "#6ae0a0";   // mint green
+    inline constexpr auto Purple       = "#c090f0";   // wisteria
+    inline constexpr auto White        = "#fff5fa";   // cream pink-white
+    inline constexpr auto Grey         = "#a090a8";   // mauve grey
 
-    // light — soft
-    inline constexpr auto LtBg         = "#fdf6fb";   // barely pink
+    // ═══════════════════════════════════════════
+    // ♡ DARK THEME — pink-tinted, vibrant ♡
+    // ═══════════════════════════════════════════
+    inline constexpr auto DkBg         = "#1a0a14";   // deep rose black (NOT plum)
+    inline constexpr auto DkCard       = "#261420";   // pink-tinted dark card
+    inline constexpr auto DkBorder     = "#4d2d3d";   // visible pink border
+    inline constexpr auto DkHover      = "#301d28";
+    inline constexpr auto DkSelected   = "#3d1d33";   // pink selection glow
+    inline constexpr auto DkText       = "#fce8f2";   // warm pink-white text
+    inline constexpr auto DkMuted      = "#c090a8";   // pink-mauve muted
+
+    // ═══════════════════════════════════════════
+    // ♡ LIGHT THEME — soft pink dream ♡
+    // ═══════════════════════════════════════════
+    inline constexpr auto LtBg         = "#fff0f6";   // blush pink bg
     inline constexpr auto LtCard       = "#ffffff";
-    inline constexpr auto LtBorder     = "#e8d6eb";   // lavender border
-    inline constexpr auto LtHover      = "#f9f0f8";   // pink-white hover
-    inline constexpr auto LtSelected   = "#f3e4f2";
-    inline constexpr auto LtText       = "#3d2b40";   // deep plum text
-    inline constexpr auto LtMuted      = "#9b84a8";
+    inline constexpr auto LtBorder     = "#f0c8dd";   // pink border
+    inline constexpr auto LtHover      = "#fff5fa";
+    inline constexpr auto LtSelected   = "#ffe0ef";
+    inline constexpr auto LtText       = "#2d1020";   // deep rose text
+    inline constexpr auto LtMuted      = "#b088a0";
 }
 
 #endif
