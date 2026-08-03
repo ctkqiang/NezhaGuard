@@ -51,6 +51,7 @@ namespace Nezha::Service {
         auto start = s.find_first_not_of(" \t\r\n");
         if (start == std::string::npos) return {};
         auto end = s.find_last_not_of(" \t\r\n");
+
         return s.substr(start, end - start + 1);
     }
 
@@ -124,16 +125,21 @@ namespace Nezha::Service {
                 std::string key = trim(line.substr(0, eq));
                 std::string val = trim(line.substr(eq + 1));
 
-                if (key == "webhook" || key == "url")
+                if (key == "webhook" || key == "url") {
                     cfg.webhook_url = val;
-                else if (key == "chat_id")
+                }
+                else if (key == "chat_id") {
                     cfg.chat_id = val;
-                else if (key == "enabled")
+                }
+                else if (key == "enabled") {
                     cfg.enabled = (val == "true" || val == "1" || val == "yes");
-                else if (key == "keywords")
+                }
+                else if (key == "keywords") {
                     cfg.keywords = split_csv(val);
-                else if (key == "min_severity" || key == "min_level")
+                }
+                else if (key == "min_severity" || key == "min_level") {
                     cfg.min_level = parse_severity(val);
+                }
             }
 
             if (cfg.enabled && !cfg.webhook_url.empty() && !cfg.chat_id.empty()) {
