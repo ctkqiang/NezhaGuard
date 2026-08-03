@@ -202,6 +202,17 @@ namespace Nezha::Log {
         return std::make_shared<StderrSink>(color);
     }
 
+    Level level_from_string(std::string_view s) noexcept {
+        if (s == "trace") return Level::Trace;
+        if (s == "debug") return Level::Debug;
+        if (s == "info") return Level::Info;
+        if (s == "warn" || s == "warning") return Level::Warn;
+        if (s == "error") return Level::Error;
+        if (s == "critical" || s == "crit") return Level::Critical;
+        if (s == "off") return Level::Off;
+        return Level::Info;
+    }
+
     std::shared_ptr<ISink> make_file_sink(
         const std::string &path,
         std::size_t max_bytes,

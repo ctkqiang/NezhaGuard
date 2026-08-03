@@ -317,7 +317,7 @@ monitor::monitor(QWidget *parent) : QMainWindow(parent), ui(new Ui::monitor) {
 
     sparkline_timer_ = new QTimer(this);
     connect(sparkline_timer_, &QTimer::timeout, this, &monitor::update_sparkline);
-    sparkline_timer_->start(1000);
+    sparkline_timer_->start(2000);
 
     apply_theme(dark_mode_);
 }
@@ -502,12 +502,22 @@ void monitor::apply_theme(bool d) {
         QScrollBar::handle:vertical { background:%3; border-radius:2px; min-height:20px; }
         QScrollBar::handle:vertical:hover { background:%5; }
         QScrollBar::add-line:vertical,QScrollBar::sub-line:vertical { height:0; }
+        QTabWidget::pane { background:%2; border:1px solid %3; border-radius:10px; }
+        QTabBar::tab { background:%1; color:%6; padding:8px 18px; border:1px solid %3;
+                       border-bottom:none; border-top-left-radius:8px; border-top-right-radius:8px; font-size:11px; }
+        QTabBar::tab:selected { background:%2; color:%5; font-weight:600; border-bottom:2px solid %5; }
+        QTabBar::tab:hover:!selected { background:%10; color:%4; }
+        QPlainTextEdit { background:%1; color:%4; border:1px solid %3; border-radius:10px;
+                         font-family:"Menlo","SF Mono",monospace; font-size:11px; padding:8px; }
+        QPlainTextEdit:focus { border-color:%5; }
         #sev_crit,#sev_error,#sev_warn,#sev_info { border-radius:10px; font-family:"Menlo"; font-size:10px;
             font-weight:700; padding:4px 0; background:%2; }
         #sev_crit { color:#ff6b6b; } #sev_error { color:#ff9966; }
         #sev_warn { color:%9; } #sev_info { color:%6; }
         #qs_tor,#qs_blocked,#qs_engines,#qs_types { border-radius:10px; font-family:"Menlo"; font-size:9px;
             font-weight:700; padding:4px 6px; background:%2; color:%6; border:1px solid %3; }
+        #settings_title { font-size:18px; font-weight:700; color:%5; }
+        #settings_version { font-size:10px; color:%6; }
     )").arg(B, C, Br, T, A, M, S, H, P, C));
 }
 
@@ -1024,12 +1034,18 @@ void monitor::init_models() {
 // -- stats --
 void monitor::update_stats(int log_count, int alert_count) {
     static int last_log = 0, last_alert = 0;
+    static int cached_qc = -1;
+    static int qc_refresh_counter = 0;
     int logRate = std::max(0, log_count - last_log);
     int alertRate = std::max(0, alert_count - last_alert);
     pkt_rate_ = logRate;
     last_log = log_count;
     last_alert = alert_count;
-    int qc = static_cast<int>(Nezha::Database::DatabaseHelper::GetQuarantineList().size());
+    if (cached_qc < 0 || ++qc_refresh_counter >= 5) {
+        cached_qc = static_cast<int>(Nezha::Database::DatabaseHelper::GetQuarantineList().size());
+        qc_refresh_counter = 0;
+    }
+    int qc = cached_qc;
 
     auto threatLvl = alertRate > 10
                          ? QStringLiteral("危险")

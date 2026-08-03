@@ -1056,7 +1056,7 @@ YYYY-MM-DD HH:MM:SS  [哪吒] [LEVEL]  message
 
 ### 11.3 GuiSink 日志解析
 
-`GuiSink::write()` 解析 spdlog 输出:
+`GuiSink::write()` 解析日志输出:
 
 ```
 输入: "2026-07-31 14:44:29  [哪吒] [WARN ]  已隔离 IP 被拦截: 192.168.1.75\n"
@@ -1174,7 +1174,7 @@ cat data/tor_exits.cache | wc -l
 
 | 文件 | 内容 |
 |------|------|
-| `logs/nezha.log` | 应用主日志 (spdlog 输出) |
+| `logs/nezha.log` | 应用主日志 |
 | `data/quarantine.db` | SQLite 隔离数据库 |
 | `data/tor_exits.cache` | Tor 出口节点本地缓存 |
 
@@ -1202,7 +1202,7 @@ cmake --build cmake-build-debug/test -j$(sysctl -n hw.ncpu)
 
 ## 16. 开发指南
 
-### 15.1 添加新攻击签名
+### 16.1 添加新攻击签名
 
 编辑 `src/core/detector.cc`, 在签名数组中添加规则:
 
@@ -1217,7 +1217,7 @@ cmake --build cmake-build-debug/test -j$(sysctl -n hw.ncpu)
 - `score` 建议 40-98 范围, 与攻击严重性成正比
 - 模式区分大小写, 如需不区分请在检测循环中处理
 
-### 15.2 添加新蜜罐端口
+### 16.2 添加新蜜罐端口
 
 编辑 `main.cc`, 在 `honeypots[]` 数组中添加:
 
@@ -1225,14 +1225,14 @@ cmake --build cmake-build-debug/test -j$(sysctl -n hw.ncpu)
 {.port = 新端口, .proto = PROTO_TCP, .service = "服务名"},
 ```
 
-### 15.3 添加新侧边栏页面
+### 16.3 添加新侧边栏页面
 
 1. 在 `monitor.ui` 中添加新的 `QWidget` 到 `QStackedWidget`
 2. 在 `sidebar` `QListWidget` 中添加对应项
 3. 在 `monitor.h/cc` 中实现页面逻辑
 4. 更新键盘快捷键映射
 
-### 15.4 代码风格
+### 16.4 代码风格
 
 - **命名空间**: `Nezha::Core::`, `Nezha::Log::`, `Nezha::Database::`
 - **类命名**: PascalCase (`AttackDetector`, `HoneypotListener`)
@@ -1242,7 +1242,7 @@ cmake --build cmake-build-debug/test -j$(sysctl -n hw.ncpu)
 - **头文件**: `#pragma once` + include guard 双保护 (历史兼容)
 - **Indent**: 4 spaces, no tabs
 
-### 15.5 提交规范
+as### 16.5 提交规范
 
 ```
 (type) 中文描述
@@ -1256,7 +1256,7 @@ cmake --build cmake-build-debug/test -j$(sysctl -n hw.ncpu)
 (perf) 签名匹配改用 Aho-Corasick 算法
 ```
 
-### 15.6 PlantUML 架构图生成
+### 16.6 PlantUML 架构图生成
 
 项目使用 **PlantUML** 描述系统架构、数据流和部署拓扑。所有源文件位于 `docs/UML/`，导出 PNG 存放于 `docs/images/`。
 
@@ -1328,8 +1328,8 @@ open https://www.plantuml.com/plantuml/uml/
 
 
 
+
 ```
-NezhaGuard/
 ├── main.cc                          # 主入口: CLI / GUI 双模式路由
 ├── CMakeLists.txt                   # CMake 构建 (C++26, Qt6, libpcap, SQLite3)
 ├── Makefile                         # 构建快捷命令
@@ -1344,12 +1344,6 @@ NezhaGuard/
 │   ├── daemonset.yaml               # DaemonSet: hostNetwork, privileged, probes
 │   ├── service.yaml                 # Headless Service (Prometheus 服务发现)
 │   └── kustomization.yaml           # Kustomize 聚合 + commonLabels + image tag
-│   ├── namespace.yaml               # nezhaguard 命名空间
-│   ├── rbac.yaml                    # ServiceAccount + ClusterRole + CRB
-│   ├── configmap.yaml               # 环境变量配置
-│   ├── daemonset.yaml               # DaemonSet (hostNetwork, 每节点一个)
-│   ├── service.yaml                 # ClusterIP Service
-│   └── kustomization.yaml           # Kustomize 聚合
 │
 ├── scripts/                         # 辅助脚本
 │   ├── docker-build.sh              # Docker 镜像构建
@@ -1393,7 +1387,7 @@ NezhaGuard/
 │   │   └── database_helper.h/cc     # SQLite 封装: Quarantine CRUD, 初始化, 内存缓存同步
 │   │
 │   ├── utilities/                   # 工具层
-│   │   └── logger.h/cc              # spdlog 封装: 自定义格式 [哪吒], 多 sink 支持
+│   │   └── logger.h/cc              # 自定义日志系统: [哪吒] 格式, ANSI 颜色, 文件轮转, 多 sink
 │   │
 │   └── views/                       # Qt6 GUI 层
 │       ├── monitor.h/cc             # QMainWindow: 蓝队控制台, 5 页, 双主题, 键盘快捷键
@@ -1422,4 +1416,26 @@ NezhaGuard/
 ## 许可证
 
 Copyright © 2026 钟智强. All rights reserved.
+
+---
+
+<div align="center">
+
+<h2>支持</h2>
+
+<p>如果您觉得本项目对您有帮助，欢迎请我喝杯咖啡</p>
+<p><sub>您的支持是我持续维护和改进的动力</sub></p>
+
+<br/>
+
+<strong>微信扫码捐赠</strong><br/><br/>
+<img src="https://raw.gitcode.com/ctkqiang_sr/ctkqiang_sr/raw/main/mm_reward_qrcode_1778988737577.png"
+alt="微信扫码捐赠"
+width="240"
+style="border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);" />
+
+<br/>
+<br/>
+
+---
 

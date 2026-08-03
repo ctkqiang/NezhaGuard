@@ -6,7 +6,12 @@
 #include <QRegularExpression>
 #include <QString>
 
-GuiSink::GuiSink(LogModel *model, QObject *parent) : QObject(parent), model_(model) {}
+GuiSink::GuiSink(LogModel *model, QObject *parent) : QObject(parent), model_(model) {
+    batch_timer_ = new QTimer(this);
+    batch_timer_->setInterval(100);
+    connect(batch_timer_, &QTimer::timeout, this, &GuiSink::flush_batch);
+    batch_timer_->start();
+}
 
 void GuiSink::write(Nezha::Log::Level lv, const char *line, std::size_t len) {
     if (!model_) return;
@@ -35,12 +40,29 @@ void GuiSink::write(Nezha::Log::Level lv, const char *line, std::size_t len) {
 
     QColor color = level_color(level, message);
 
-    QMetaObject::invokeMethod(
-        model_.data(), "append", Qt::QueuedConnection,
-        Q_ARG(QString, timestamp),
-        Q_ARG(QString, level),
-        Q_ARG(QString, message),
-        Q_ARG(QColor, color));
+    {
+        std::lock_guard<std::mutex> lock(buf_mtx_);
+        pending_.append({timestamp, level, message, color});
+    }
+}
+
+void GuiSink::flush_batch() {
+    QVector<Entry> batch;
+    {
+        std::lock_guard<std::mutex> lock(buf_mtx_);
+        if (pending_.isEmpty()) return;
+        batch.swap(pending_);
+    }
+
+    if (!model_) return;
+
+    for (const auto &e : batch) {
+        model_->append(e.timestamp, e.level, e.message, e.color);
+    }
+}
+
+void GuiSink::flush() {
+    flush_batch();
 }
 
 QColor GuiSink::level_color(const QString &level, const QString &message) {

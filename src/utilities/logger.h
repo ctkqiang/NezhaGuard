@@ -104,6 +104,8 @@ namespace Nezha::Log {
 
     void init_default(const std::string &file_path, Level lv = Level::Info);
 
+    Level level_from_string(std::string_view s) noexcept;
+
     std::shared_ptr<ISink> make_stderr_sink(bool color = true);
 
     std::shared_ptr<ISink> make_file_sink(

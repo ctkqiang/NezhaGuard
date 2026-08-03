@@ -107,29 +107,28 @@ static int run_cli_mode() {
     std::string os_name = uname(&uts) == 0 ? std::format("{} {} {}", uts.sysname, uts.release, uts.machine) : "unknown";
 
     NZ_INFO("");
-    NZ_INFO("  哪吒网络安全 SIEM 系统");
-    NZ_INFO("  NezhaGuard v{} — 蓝队主动防御平台", Configuration::ApplicationConstants::ApplicationVersion);
+    NZ_INFO("╔══════════════════════════════════════════════════════════════╗");
+    NZ_INFO("║  哪吒网络安全 SIEM 系统                                      ║");
+    NZ_INFO("║  NezhaGuard v{} — 蓝队主动防御平台                   ║",
+            Configuration::ApplicationConstants::ApplicationVersion);
+    NZ_INFO("╚══════════════════════════════════════════════════════════════╝");
     NZ_INFO("");
-    NZ_INFO("  [系统信息]");
-    NZ_INFO("  操作系统:       {}", os_name);
-    NZ_INFO("  CPU 核心:       {}", ncpu);
-    NZ_INFO("  物理内存:       {} MB", (phys_pages * page_size) / (1024 * 1024));
-    NZ_INFO("  主机名:         {}", hostname);
-    NZ_INFO("  进程 PID:       {}", getpid());
-    NZ_INFO("  运行用户:       {}", getenv("USER") ? getenv("USER") : "unknown");
-    NZ_INFO("  构建版本:       {}  {} {}", Configuration::ApplicationConstants::ApplicationVersion, __DATE__, __TIME__);
+    NZ_INFO("  ◆ 系统信息");
+    NZ_INFO("  OS:       {}", os_name);
+    NZ_INFO("  CPU:      {} cores  |  Memory: {} MB", ncpu, (phys_pages * page_size) / (1024 * 1024));
+    NZ_INFO("  Host:     {}  |  PID: {}", hostname, getpid());
+    NZ_INFO("  User:     {}  |  Build: {} {} {}",
+             getenv("USER") ? getenv("USER") : "unknown",
+             Configuration::ApplicationConstants::ApplicationVersion, __DATE__, __TIME__);
     NZ_INFO("");
-    NZ_INFO("  [引擎配置]");
-    NZ_INFO("  运行模式:       蓝队 CLI (无头模式)");
-    NZ_INFO("  抓包接口:       {}", get_net_interface());
-    NZ_INFO("  BPF 过滤器:     tcp or udp or icmp");
-    NZ_INFO("  蜜罐端口:       8 (SSH/Telnet/MySQL/Redis/MongoDB/PG/HTTP/HTTPS)");
-    NZ_INFO("  日志监控源:     4 (/var/log/{nginx,apache2}/access.log, auth.log, syslog)");
-    NZ_INFO("  隔离阈值:       {} 次", Configuration::ApplicationConstants::AnomaliesQuarantineThreshold);
-    NZ_INFO("  去重窗口:       10 秒");
-    NZ_INFO("  Arena 块:       128 KB");
-    NZ_INFO("  Tor 节点缓存:   {} 个", tor_checker.total_nodes());
-    NZ_INFO("  历史隔离记录:   {} 条", qlist.size());
+    NZ_INFO("  ◆ 引擎配置");
+    NZ_INFO("  Mode:     CLI (Headless)  |  Interface: {}", get_net_interface());
+    NZ_INFO("  BPF:      tcp or udp or icmp  |  Honeypots: 8 ports");
+    NZ_INFO("  LogSrc:   4 files  |  Threshold: {}",
+             Configuration::ApplicationConstants::AnomaliesQuarantineThreshold);
+    NZ_INFO("  Dedup:    10s  |  Arena: 128KB  |  Tor: {} nodes",
+             tor_checker.total_nodes());
+    NZ_INFO("  Quarantine history: {} records", qlist.size());
 
     if (!qlist.empty()) {
         NZ_INFO("  ── 已隔离 IP 列表 ──");
@@ -179,10 +178,10 @@ static int run_cli_mode() {
 
     Core::PacketCapture cap;
     if (cap.open(get_net_interface(), 65535, true, 1000)) {
-        NZ_INFO("抓包引擎已启动: {}", get_net_interface());
+        NZ_INFO("  ✓ 抓包引擎: {}", get_net_interface());
         cap.set_filter("tcp or udp or icmp");
     } else {
-        NZ_WARN("抓包引擎启动失败 (需 root 权限)");
+        NZ_WARN("  ✗ 抓包引擎启动失败 (需 root 权限)");
     }
     g_cap = &cap;
 
@@ -204,7 +203,7 @@ static int run_cli_mode() {
             NZ_DEBUG("蜜罐连接 {}:{} → :{}", e.src.to_string(), e.sport, e.dport);
         }
     });
-    NZ_INFO("蜜罐引擎已启动: {} 端口", std::size(honeypots));
+    NZ_INFO("  ✓ 蜜罐引擎: {} ports", std::size(honeypots));
 
     Core::LogWatcher log_watcher;
     Core::ApplicationMonitor app_monitor;
@@ -220,15 +219,15 @@ static int run_cli_mode() {
     log_watcher.start(arena, [&](const Core::event &e) {
         detector.analyze(e, arena, [&](const Core::Alert &a) { alerter.submit(a); });
     });
-    NZ_INFO("日志引擎已启动: {} 监控源", sizeof(log_paths) / sizeof(log_paths[0]));
+    NZ_INFO("  ✓ 日志引擎: {} sources", sizeof(log_paths) / sizeof(log_paths[0]));
 
     if constexpr (Configuration::ApplicationConstants::ShowOtherApplicationLogs) {
         int n = app_monitor.load_from_file("config/monitor_apps.conf");
         if (n > 0) {
             app_monitor.start();
-            NZ_INFO("应用监控已启动: {} 个外部应用", n);
+            NZ_INFO("  ✓ 应用监控: {} apps", n);
         } else {
-            NZ_INFO("应用监控: 未找到配置 (config/monitor_apps.conf), 跳过");
+            NZ_INFO("  - 应用监控: no config, skipped");
         }
     }
     std::signal(SIGINT, on_signal);
@@ -290,10 +289,9 @@ static int run_cli_mode() {
                 double elapsed = (e.ts_ns - last_stats) / 1'000'000'000.0;
                 auto arp_count = Core::arp_table_size();
                 double mbps = (pkt_bytes * 8.0) / (elapsed * 1'000'000.0);
-                NZ_INFO("[统计] 包: {} | 流量: {:.1f} MB | 速率: {:.0f} pps / {:.2f} Mbps | TCP: {} UDP: {} ICMP: {}",
+                NZ_INFO("◆ STATS | pkts:{} flow:{:.1f}MB rate:{:.0f}pps/{:.2f}Mbps | TCP:{} UDP:{} ICMP:{} | alerts:{} quar:{} arp:{} tor:{} rules:{} arena:{}KB",
                         pkt_count, pkt_bytes / 1'000'000.0,
-                        pkt_count / elapsed, mbps, tcp_pkts, udp_pkts, icmp_pkts);
-                NZ_INFO("[统计] 告警: {} | 隔离: {} | ARP设备: {} | Tor: {} | 规则: {} | Arena: {}KB",
+                        pkt_count / elapsed, mbps, tcp_pkts, udp_pkts, icmp_pkts,
                         alerter.total_alerts(), ql.size(), arp_count,
                         tor_checker.total_nodes(), detector.rule_count(),
                         arena.bytes_used() / 1024);
@@ -321,33 +319,27 @@ static int run_cli_mode() {
     struct rusage ru{};
     getrusage(RUSAGE_SELF, &ru);
     NZ_INFO("");
-    NZ_INFO("══════════════════════════════════════════════════════════════");
-    NZ_INFO("  哪吒网络安全 SIEM — 运行摘要");
-    NZ_INFO("══════════════════════════════════════════════════════════════");
-    NZ_INFO("  累计告警:        {}", alerter.total_alerts());
-    NZ_INFO("  已隔离 IP:       {}", final_qlist.size());
-    NZ_INFO("  Tor 出口节点:    {}", tor_checker.total_nodes());
-    NZ_INFO("  ARP 活跃设备:    {}", arp_count);
-    NZ_INFO("  签名规则:        {} 条", detector.rule_count());
-    NZ_INFO("  Arena 使用:      {} KB", arena.bytes_used() / 1024);
-    NZ_INFO("  用户 CPU:        {:.2f}s", ru.ru_utime.tv_sec + ru.ru_utime.tv_usec / 1'000'000.0);
-    NZ_INFO("  系统 CPU:        {:.2f}s", ru.ru_stime.tv_sec + ru.ru_stime.tv_usec / 1'000'000.0);
+    NZ_INFO("╔══════════════════════════════════════════════════════════════╗");
+    NZ_INFO("║  哪吒网络安全 SIEM — 运行摘要                               ║");
+    NZ_INFO("╠══════════════════════════════════════════════════════════════╣");
+    NZ_INFO("║  Alerts: {:<5}  |  Quarantined: {:<3}  |  Tor: {:<5}  |  ARP: {:<3}        ║",
+             alerter.total_alerts(), final_qlist.size(), tor_checker.total_nodes(), arp_count);
+    NZ_INFO("║  Rules: {:<5}   |  Arena: {:<4}KB   |  CPU user: {:.2f}s  sys: {:.2f}s  ║",
+             detector.rule_count(), arena.bytes_used() / 1024,
+             ru.ru_utime.tv_sec + ru.ru_utime.tv_usec / 1'000'000.0,
+             ru.ru_stime.tv_sec + ru.ru_stime.tv_usec / 1'000'000.0);
 #if defined(__APPLE__)
-    NZ_INFO("  最大 RSS:        {} MB", ru.ru_maxrss / (1024 * 1024));
+    NZ_INFO("║  RSS: {} MB                                                  ║", ru.ru_maxrss / (1024 * 1024));
 #else
-    NZ_INFO("  最大 RSS:        {} MB", ru.ru_maxrss / 1024);
+    NZ_INFO("║  RSS: {} MB                                                  ║", ru.ru_maxrss / 1024);
 #endif
-    NZ_INFO("");
+    NZ_INFO("╚══════════════════════════════════════════════════════════════╝");
     if (!final_qlist.empty()) {
-        NZ_INFO("  ── 隔离列表 ──");
+        NZ_INFO("  ◆ Quarantined IPs:");
         for (const auto &r: final_qlist)
             NZ_INFO("    {}  [{}]  score={:.0f}", r.ip_address, r.reason, r.threat_score);
-        NZ_INFO("");
     }
-    NZ_INFO("  日志文件: logs/nezha.log");
-    NZ_INFO("  隔离数据库: data/nezha_quarantine.db");
-    NZ_INFO("");
-    NZ_INFO("══════════════════════════════════════════════════════════════");
+    NZ_INFO("  Log: logs/nezha.log  |  DB: data/nezha_quarantine.db");
     return 0;
 }
 
@@ -581,14 +573,14 @@ static int run_gui_mode(int argc, char *argv[]) {
         NZ_WARN("抓包引擎启动失败 (需 root 权限)");
     }
 
-    // 定时刷新告警 + 更新统计
+    // 定时刷新告警 + 更新统计 (2s interval to reduce GUI thread pressure)
     QTimer *flush_timer = new QTimer(&window);
     QObject::connect(flush_timer, &QTimer::timeout, [&]() {
         alerter.flush();
         window.update_stats(window.log_model()->total(), alerter.total_alerts());
     });
 
-    flush_timer->start(1000);
+    flush_timer->start(2000);
 
     // 信号 → 优雅退出
     std::signal(SIGINT, [](int) { QApplication::quit(); });
