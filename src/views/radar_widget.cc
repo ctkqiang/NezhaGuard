@@ -52,7 +52,7 @@ void RadarWidget::paintEvent(QPaintEvent *) {
     p.drawLine(cx - r, cy, cx + r, cy);
     p.drawLine(cx, cy - r, cx, cy + r);
 
-1    // sweep line ♡
+    // sweep line ♡
     double rad = qDegreesToRadians(static_cast<double>(sweep_angle_));
     QPen sweepPen(QColor(Theme::PinkLight), 1.5);
     p.setPen(sweepPen);
