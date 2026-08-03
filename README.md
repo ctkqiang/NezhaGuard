@@ -7,6 +7,12 @@
 
 ![系统架构](docs/images/哪吒网络安全SIEM系统架构.png)
 
+### 演示截图
+
+| Dashboard | Terminal |
+|-----------|----------|
+| ![Demo1](docs/demo/demo1.png) | ![Demo2](docs/demo/demo2.png) |
+
 ---
 
 ## 目录

@@ -67,28 +67,28 @@ void GuiSink::flush() {
 
 QColor GuiSink::level_color(const QString &level, const QString &message) {
     if (level.startsWith(QStringLiteral("CRIT")) || level == QStringLiteral("Critical"))
-        return QColor(Theme::Red);
+        return QColor(Theme::PinkHot);
     if (level.startsWith(QStringLiteral("ERR")) || level == QStringLiteral("Error"))
-        return QColor(Theme::Orange);
+        return QColor(Theme::Red);
     if (level.startsWith(QStringLiteral("WARN")) || level == QStringLiteral("Warn"))
-        return QColor(Theme::Orange);
+        return QColor(Theme::PeachDeep);
     if (level.startsWith(QStringLiteral("INFO")) || level == QStringLiteral("Info"))
-        return QColor(Theme::PinkDeep);
+        return QColor(Theme::Lavender);
     if (level.startsWith(QStringLiteral("DEB")) || level == QStringLiteral("Debug"))
-        return QColor(Theme::CyanLight);
+        return QColor(Theme::BabyBlue);
     if (level.startsWith(QStringLiteral("TRA")) || level == QStringLiteral("Trace"))
         return QColor(Theme::Grey);
 
     if (message.contains(QStringLiteral("隔离")) || message.contains(QStringLiteral("quarantine")))
         return QColor(Theme::PinkDeep);
     if (message.contains(QStringLiteral("拦截")) || message.contains(QStringLiteral("blocked")))
-        return QColor(Theme::Red);
+        return QColor(Theme::PinkHot);
     if (message.contains(QStringLiteral("已启动")) || message.contains(QStringLiteral("started")))
-        return QColor(Theme::Green);
+        return QColor(Theme::MintDeep);
     if (message.contains(QStringLiteral("Tor")))
-        return QColor(Theme::Purple);
+        return QColor(Theme::Lilac);
     if (message.contains(QStringLiteral("蜜罐")) || message.contains(QStringLiteral("honeypot")))
-        return QColor(Theme::PinkDeep);
+        return QColor(Theme::PinkBlush);
 
-    return QColor(Theme::CyanLight);
+    return QColor(Theme::BabyBlue);
 }

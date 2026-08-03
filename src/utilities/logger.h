@@ -84,7 +84,7 @@ namespace Nezha::Log {
             );
 
             std::string full = std::format(
-                "{}  [哪吒] [{}]  {}",
+                "♡ {}  [{}]  {}",
                 time_str, level_to_string(lv), msg
             );
             write_to_sinks(lv, full);

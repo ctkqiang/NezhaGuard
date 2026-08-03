@@ -59,8 +59,8 @@ QString DetailPanel::row(const QString &label, const QString &value,
 void DetailPanel::show_log(const QString &timestamp, const QString &level,
                            const QString &message, const QStringList &ips) {
     QString body = QStringLiteral("<table>");
-    body += row(QStringLiteral("时间"), timestamp, Theme::Pink);
-    body += row(QStringLiteral("级别"), level, Theme::Pink);
+    body += row(QStringLiteral("时间"), timestamp, Theme::PinkDeep);
+    body += row(QStringLiteral("级别"), level, Theme::Lavender);
     body += row(QStringLiteral("内容"), message,
                 dark_ ? Theme::DkText : Theme::LtText);
     body += QStringLiteral("</table>");
@@ -78,13 +78,13 @@ void DetailPanel::show_log(const QString &timestamp, const QString &level,
             body += row(QStringLiteral("地址"), ip,
                         dark_ ? Theme::DkText : Theme::LtText);
             body += row(QStringLiteral("类型"), scope,
-                        addr.is_private() ? Theme::Pink : Theme::Green);
+                        addr.is_private() ? Theme::PinkDeep : Theme::MintDeep);
         }
         body += QStringLiteral("</table>");
     }
 
     QString html = QStringLiteral("<html><head><style>%1</style></head><body>%2</body></html>")
-        .arg(css(), card_html(QStringLiteral("日志详情"), Theme::Pink, body));
+        .arg(css(), card_html(QStringLiteral("♡ 日志详情"), Theme::Pink, body));
     setHtml(html);
 
     if (!ips.isEmpty()) {
@@ -96,26 +96,26 @@ void DetailPanel::show_log(const QString &timestamp, const QString &level,
 void DetailPanel::show_alert(const QString &timestamp, const QString &level,
                              const QString &message) {
     QString body = QStringLiteral("<table>");
-    body += row(QStringLiteral("时间"), timestamp, Theme::Pink);
-    body += row(QStringLiteral("级别"), level, Theme::Pink);
+    body += row(QStringLiteral("时间"), timestamp, Theme::PinkDeep);
+    body += row(QStringLiteral("级别"), level, Theme::Lavender);
     body += row(QStringLiteral("详情"), message,
                 dark_ ? Theme::DkText : Theme::LtText);
     body += QStringLiteral("</table>");
 
     QString html = QStringLiteral("<html><head><style>%1</style></head><body>%2</body></html>")
-        .arg(css(), card_html(QStringLiteral("告警详情"), Theme::Pink, body));
+        .arg(css(), card_html(QStringLiteral("♡ 告警详情"), Theme::Pink, body));
     setHtml(html);
 }
 
 void DetailPanel::show_honeypot(const QString &timestamp, const QString &message) {
     QString body = QStringLiteral("<table>");
-    body += row(QStringLiteral("时间"), timestamp, Theme::Pink);
+    body += row(QStringLiteral("时间"), timestamp, Theme::PinkDeep);
     body += row(QStringLiteral("事件"), message,
                 dark_ ? Theme::DkText : Theme::LtText);
     body += QStringLiteral("</table>");
 
     QString html = QStringLiteral("<html><head><style>%1</style></head><body>%2</body></html>")
-        .arg(css(), card_html(QStringLiteral("蜜罐详情"), Theme::Pink, body));
+        .arg(css(), card_html(QStringLiteral("♡ 蜜罐详情"), Theme::Pink, body));
     setHtml(html);
 }
 

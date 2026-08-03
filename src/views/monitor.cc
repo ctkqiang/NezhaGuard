@@ -81,7 +81,7 @@ void SparklineWidget::paintEvent(QPaintEvent *) {
     p.setRenderHint(QPainter::Antialiasing);
 
     auto bg = QColor(dark ? Theme::DkCard : Theme::LtCard);
-    auto fg = QColor(dark ? Theme::Cyan : Theme::CyanDeep);
+    auto fg = QColor(dark ? Theme::PinkLight : Theme::PinkDeep);
     auto gr = QColor(dark ? Theme::DkBorder : Theme::LtBorder);
 
     p.setBrush(bg);
@@ -115,7 +115,7 @@ void SparklineWidget::paintEvent(QPaintEvent *) {
     fill.lineTo(r.right(), r.bottom());
     fill.closeSubpath();
 
-    QColor fc = QColor(dark ? Theme::Cyan : Theme::CyanDeep);
+    QColor fc = QColor(dark ? Theme::PinkLight : Theme::PinkDeep);
     fc.setAlpha(25);
     p.setBrush(fc);
     p.setPen(Qt::NoPen);
@@ -374,47 +374,48 @@ monitor::~monitor() { delete ui; }
 
 // -- animations --
 void monitor::start_animations() {
-    // 标题柔光呼吸动画 — 粉青色渐变
+    // ♡ 标题柔光呼吸动画 — 粉紫渐变 ♡
     auto *glow = new QGraphicsDropShadowEffect(this);
     glow->setBlurRadius(8);
     glow->setOffset(0, 0);
-    glow->setColor(QColor(Theme::PinkLight));
+    glow->setColor(QColor(Theme::PinkBlush));
     ui->app_title->setGraphicsEffect(glow);
 
     auto *ga = new QPropertyAnimation(glow, "blurRadius", this);
-    ga->setDuration(3000);
-    ga->setStartValue(4);
-    ga->setKeyValueAt(0.5, 14);
-    ga->setEndValue(4);
+    ga->setDuration(2800);
+    ga->setStartValue(6);
+    ga->setKeyValueAt(0.5, 18);
+    ga->setEndValue(6);
     ga->setEasingCurve(QEasingCurve::InOutSine);
     ga->setLoopCount(-1);
     ga->start();
 
     auto *gc = new QPropertyAnimation(glow, "color", this);
-    gc->setDuration(4000);
-    gc->setStartValue(QColor(Theme::PinkLight));
-    gc->setKeyValueAt(0.33, QColor(Theme::CyanLight));
-    gc->setKeyValueAt(0.66, QColor(Theme::Pink));
-    gc->setEndValue(QColor(Theme::PinkLight));
+    gc->setDuration(4500);
+    gc->setStartValue(QColor(Theme::PinkBlush));
+    gc->setKeyValueAt(0.25, QColor(Theme::LavenderLight));
+    gc->setKeyValueAt(0.5, QColor(Theme::PinkLight));
+    gc->setKeyValueAt(0.75, QColor(Theme::BabyBlue));
+    gc->setEndValue(QColor(Theme::PinkBlush));
     gc->setEasingCurve(QEasingCurve::InOutSine);
     gc->setLoopCount(-1);
     gc->start();
 
-    // 状态指示器柔和脉冲
+    // ♡ 状态指示器柔和心跳脉冲 ♡
     for (auto *s: {ui->status_dot}) {
         auto *a = new QPropertyAnimation(s, "minimumSize", this);
-        a->setDuration(2000);
-        a->setStartValue(QSize(6, 6));
-        a->setKeyValueAt(0.5, QSize(10, 10));
-        a->setEndValue(QSize(6, 6));
+        a->setDuration(1600);
+        a->setStartValue(QSize(8, 8));
+        a->setKeyValueAt(0.5, QSize(13, 13));
+        a->setEndValue(QSize(8, 8));
         a->setEasingCurve(QEasingCurve::InOutSine);
         a->setLoopCount(-1);
         a->start();
         auto *b = new QPropertyAnimation(s, "maximumSize", this);
-        b->setDuration(2000);
-        b->setStartValue(QSize(6, 6));
-        b->setKeyValueAt(0.5, QSize(10, 10));
-        b->setEndValue(QSize(6, 6));
+        b->setDuration(1600);
+        b->setStartValue(QSize(8, 8));
+        b->setKeyValueAt(0.5, QSize(13, 13));
+        b->setEndValue(QSize(8, 8));
         b->setEasingCurve(QEasingCurve::InOutSine);
         b->setLoopCount(-1);
         b->start();
@@ -502,64 +503,117 @@ void monitor::apply_theme(bool d) {
 
     auto B = d ? Theme::DkBg : Theme::LtBg, C = d ? Theme::DkCard : Theme::LtCard;
     auto Br = d ? Theme::DkBorder : Theme::LtBorder, T = d ? Theme::DkText : Theme::LtText;
-    auto A = d ? Theme::Cyan : Theme::CyanDeep, M = d ? Theme::DkMuted : Theme::LtMuted;
-    auto S = d ? Theme::DkSelected : Theme::LtSelected, H = d ? Theme::DkHover : Theme::LtHover;
-    auto P = d ? Theme::Pink : Theme::PinkDeep;
+    auto A = d ? Theme::Pink : Theme::PinkDeep;          // ♡ pink accent ♡
+    auto M = d ? Theme::DkMuted : Theme::LtMuted;
+    auto S = d ? Theme::DkSelected : Theme::LtSelected;
+    auto H = d ? Theme::DkHover : Theme::LtHover;
+    auto P = d ? Theme::PinkLight : Theme::PinkDeep;
+    auto Lv = d ? Theme::Lavender : Theme::LavenderDeep; // lavender accent
+    auto Cy = d ? Theme::BabyBlue : Theme::CyanDeep;     // baby blue accent
 
     QString s;
     s += QStringLiteral("* { font-family:\"PingFang SC\",\"SF Pro Display\",sans-serif; } ");
     s += QStringLiteral("QMainWindow { background:") + B + QStringLiteral("; } ");
-    s += QStringLiteral("#header { background:qlineargradient(x1:0,y1:0,x2:1,y2:0,stop:0 ") + C + QStringLiteral(",stop:1 ") + C + QStringLiteral("); border-bottom:1px solid ") + Br + QStringLiteral("; } ");
+
+    // header — soft gradient
+    s += QStringLiteral("#header { background:qlineargradient(x1:0,y1:0,x2:1,y2:0,stop:0 ")
+         + C + QStringLiteral(",stop:1 ")
+         + (d ? Theme::DkCard : Theme::LtCard) + QStringLiteral("); border-bottom:1px solid ") + Br + QStringLiteral("; } ");
+
     s += QStringLiteral("QLabel { color:") + T + QStringLiteral("; } ");
-    s += QStringLiteral("#app_title { font-size:15px; font-weight:700; color:") + A + QStringLiteral("; } ");
-    s += QStringLiteral("#brand_badge { background:qlineargradient(x1:0,y1:0,x2:1,y2:1,stop:0 ") + P + QStringLiteral(",stop:1 #e0637e); color:") + B + QStringLiteral("; border-radius:13px; font-size:9px; font-weight:700; padding:3px 9px; } ");
+
+    // ♡ app title — pink with lavender glow ♡
+    s += QStringLiteral("#app_title { font-size:16px; font-weight:700; color:") + P
+         + QStringLiteral("; } ");
+
+    // ♡ brand badge — kawaii pink gradient ♡
+    s += QStringLiteral("#brand_badge { background:qlineargradient(x1:0,y1:0,x2:1,y2:1,stop:0 ")
+         + P + QStringLiteral(",stop:1 ") + Lv
+         + QStringLiteral("); color:") + (d ? Theme::DkBg : Theme::White)
+         + QStringLiteral("; border-radius:16px; font-size:9px; font-weight:700; padding:4px 12px; } ");
+
     s += QStringLiteral("#clock_label { font-size:10px; color:") + M + QStringLiteral("; font-weight:500; } ");
-    s += QStringLiteral("#status_text { font-size:10px; color:") + A + QStringLiteral("; font-weight:600; } ");
-    s += QStringLiteral("#status_dot { background:qlineargradient(x1:0,y1:0,x2:1,y2:1,stop:0 ") + A + QStringLiteral(",stop:1 ") + P + QStringLiteral("); border-radius:5px; } ");
-    s += QStringLiteral("QStatusBar { background:") + C + QStringLiteral("; border-top:1px solid ") + Br + QStringLiteral("; font-size:10px; color:") + M + QStringLiteral("; padding:3px 14px; } QStatusBar::item { border:none; } ");
-    s += QStringLiteral("QToolTip { background:") + C + QStringLiteral("; color:") + T + QStringLiteral("; border:1px solid ") + A + QStringLiteral("; border-radius:8px; padding:5px 10px; font-size:10px; } ");
+    s += QStringLiteral("#status_text { font-size:10px; color:") + P + QStringLiteral("; font-weight:600; } ");
+
+    // ♡ status dot — pink-lavender heartbeat ♡
+    s += QStringLiteral("#status_dot { background:qlineargradient(x1:0,y1:0,x2:1,y2:1,stop:0 ")
+         + P + QStringLiteral(",stop:1 ") + Lv
+         + QStringLiteral("); border-radius:6px; } ");
+
+    s += QStringLiteral("QStatusBar { background:") + C + QStringLiteral("; border-top:1px solid ")
+         + Br + QStringLiteral("; font-size:10px; color:") + M + QStringLiteral("; padding:3px 14px; } QStatusBar::item { border:none; } ");
+    s += QStringLiteral("QToolTip { background:") + C + QStringLiteral("; color:") + T
+         + QStringLiteral("; border:1px solid ") + P + QStringLiteral("; border-radius:10px; padding:6px 12px; font-size:10px; } ");
+
+    // sidebar
     s += QStringLiteral("#sidebar { background:") + C + QStringLiteral("; border-right:2px solid ") + Br + QStringLiteral("; } ");
-    s += QStringLiteral("#sidebar::item { color:") + M + QStringLiteral("; padding:12px 22px; font-size:12px; border:none; margin:2px 8px; border-radius:12px; } ");
-    s += QStringLiteral("#sidebar::item:selected { background:") + S + QStringLiteral("; color:") + A + QStringLiteral("; font-weight:600; border-left:3px solid ") + A + QStringLiteral("; } ");
+    s += QStringLiteral("#sidebar::item { color:") + M + QStringLiteral("; padding:12px 22px; font-size:12px; border:none; margin:2px 8px; border-radius:14px; } ");
+    s += QStringLiteral("#sidebar::item:selected { background:") + S + QStringLiteral("; color:") + P + QStringLiteral("; font-weight:600; border-left:3px solid ") + P + QStringLiteral("; } ");
     s += QStringLiteral("#sidebar::item:hover:!selected { background:") + H + QStringLiteral("; color:") + T + QStringLiteral("; } ");
+
+    // section titles
     s += QStringLiteral("#dash_title,#logs_title,#alerts_title,#honey_title,#network_title,#recent_alerts_label,#attackers_label,#local_ip_label,#arp_label,#quarantine_label { font-size:12px; font-weight:600; color:") + P + QStringLiteral("; padding-bottom:6px; border-bottom:1px solid ") + Br + QStringLiteral("; } ");
-    s += QStringLiteral("QFrame#card_logs,QFrame#card_alerts,QFrame#card_threats,QFrame#card_uptime { background:qlineargradient(x1:0,y1:0,x2:0,y2:1,stop:0 ") + C + QStringLiteral(",stop:1 ") + C + QStringLiteral("); border:1px solid ") + Br + QStringLiteral("; border-radius:16px; padding:18px 16px; border-left:4px solid ") + Br + QStringLiteral("; } ");
-    s += QStringLiteral("QFrame#card_logs { border-left-color:") + P + QStringLiteral("; } QFrame#card_alerts { border-left-color:") + A + QStringLiteral("; } ");
-    s += QStringLiteral("QFrame#card_threats { border-left-color:#ff6b6b; } QFrame#card_uptime { border-left-color:#7ecf8a; } ");
+
+    // ♡ dashboard cards — softer rounded ♡
+    s += QStringLiteral("QFrame#card_logs,QFrame#card_alerts,QFrame#card_threats,QFrame#card_uptime { background:qlineargradient(x1:0,y1:0,x2:0,y2:1,stop:0 ") + C + QStringLiteral(",stop:1 ") + C + QStringLiteral("); border:1px solid ") + Br + QStringLiteral("; border-radius:20px; padding:18px 16px; border-left:4px solid ") + Br + QStringLiteral("; } ");
+    s += QStringLiteral("QFrame#card_logs { border-left-color:") + P + QStringLiteral("; } QFrame#card_alerts { border-left-color:") + Lv + QStringLiteral("; } ");
+    s += QStringLiteral("QFrame#card_threats { border-left-color:") + Cy + QStringLiteral("; } QFrame#card_uptime { border-left-color:") + Theme::MintDeep + QStringLiteral("; } ");
     s += QStringLiteral("QFrame#card_logs:hover,QFrame#card_alerts:hover,QFrame#card_threats:hover,QFrame#card_uptime:hover { border-color:") + P + QStringLiteral("; background:") + C + QStringLiteral("; } ");
+
     s += QStringLiteral("#card_logs_value,#card_alerts_value,#card_threats_value,#card_uptime_value { font-size:30px; font-weight:800; color:") + T + QStringLiteral("; } ");
     s += QStringLiteral("#card_logs_label,#card_alerts_label,#card_threats_label,#card_uptime_label { font-size:10px; font-weight:600; color:") + M + QStringLiteral("; margin-top:4px; } ");
-    s += QStringLiteral("QTableView { background:") + B + QStringLiteral("; alternate-background-color:") + C + QStringLiteral("; gridline-color:") + Br + QStringLiteral("; color:") + T + QStringLiteral("; border:1px solid ") + Br + QStringLiteral("; border-radius:12px; font-size:11px; } ");
+
+    // table views
+    s += QStringLiteral("QTableView { background:") + B + QStringLiteral("; alternate-background-color:") + C + QStringLiteral("; gridline-color:") + Br + QStringLiteral("; color:") + T + QStringLiteral("; border:1px solid ") + Br + QStringLiteral("; border-radius:16px; font-size:11px; } ");
     s += QStringLiteral("QTableView::item:selected { background:") + S + QStringLiteral("; } ");
     s += QStringLiteral("QHeaderView::section { background:") + C + QStringLiteral("; color:") + M + QStringLiteral("; padding:6px 14px; border:none; border-bottom:1px solid ") + Br + QStringLiteral("; font-size:10px; font-weight:600; } ");
-    s += QStringLiteral("QComboBox { background:") + C + QStringLiteral("; color:") + T + QStringLiteral("; border:1px solid ") + Br + QStringLiteral("; border-radius:12px; padding:6px 14px; font-size:11px; min-width:80px; } ");
-    s += QStringLiteral("QComboBox:hover { border-color:") + A + QStringLiteral("; } QComboBox::drop-down { border:none; width:22px; } ");
-    s += QStringLiteral("QComboBox QAbstractItemView { background:") + C + QStringLiteral("; color:") + T + QStringLiteral("; selection-background-color:") + S + QStringLiteral("; border:1px solid ") + Br + QStringLiteral("; border-radius:8px; padding:4px; } ");
-    s += QStringLiteral("QPushButton { background:qlineargradient(x1:0,y1:0,x2:0,y2:1,stop:0 ") + C + QStringLiteral(",stop:1 ") + C + QStringLiteral("); color:") + A + QStringLiteral("; border:1px solid ") + Br + QStringLiteral("; border-radius:12px; padding:7px 18px; font-size:11px; font-weight:600; } ");
+
+    // combo box — rounded
+    s += QStringLiteral("QComboBox { background:") + C + QStringLiteral("; color:") + T + QStringLiteral("; border:1px solid ") + Br + QStringLiteral("; border-radius:14px; padding:6px 14px; font-size:11px; min-width:80px; } ");
+    s += QStringLiteral("QComboBox:hover { border-color:") + P + QStringLiteral("; } QComboBox::drop-down { border:none; width:22px; } ");
+    s += QStringLiteral("QComboBox QAbstractItemView { background:") + C + QStringLiteral("; color:") + T + QStringLiteral("; selection-background-color:") + S + QStringLiteral("; border:1px solid ") + Br + QStringLiteral("; border-radius:10px; padding:4px; } ");
+
+    // buttons — cute pink hover
+    s += QStringLiteral("QPushButton { background:qlineargradient(x1:0,y1:0,x2:0,y2:1,stop:0 ") + C + QStringLiteral(",stop:1 ") + C + QStringLiteral("); color:") + P + QStringLiteral("; border:1px solid ") + Br + QStringLiteral("; border-radius:16px; padding:7px 18px; font-size:11px; font-weight:600; } ");
     s += QStringLiteral("QPushButton:hover { background:") + C + QStringLiteral("; border-color:") + P + QStringLiteral("; color:") + P + QStringLiteral("; } ");
     s += QStringLiteral("QPushButton:pressed { background:") + S + QStringLiteral("; } ");
-    s += QStringLiteral("QLineEdit { background:") + C + QStringLiteral("; color:") + T + QStringLiteral("; border:1px solid ") + Br + QStringLiteral("; border-radius:12px; padding:7px 14px; font-size:11px; } ");
-    s += QStringLiteral("QLineEdit:focus { border-color:") + A + QStringLiteral("; } ");
-    s += QStringLiteral("QTextEdit,QTableWidget { background:") + B + QStringLiteral("; color:") + T + QStringLiteral("; border:1px solid ") + Br + QStringLiteral("; border-radius:12px; font-size:11px; } ");
-    s += QStringLiteral("QTextEdit:focus { border-color:") + A + QStringLiteral("; } ");
+
+    // input
+    s += QStringLiteral("QLineEdit { background:") + C + QStringLiteral("; color:") + T + QStringLiteral("; border:1px solid ") + Br + QStringLiteral("; border-radius:14px; padding:7px 14px; font-size:11px; } ");
+    s += QStringLiteral("QLineEdit:focus { border-color:") + P + QStringLiteral("; } ");
+    s += QStringLiteral("QTextEdit,QTableWidget { background:") + B + QStringLiteral("; color:") + T + QStringLiteral("; border:1px solid ") + Br + QStringLiteral("; border-radius:16px; font-size:11px; } ");
+    s += QStringLiteral("QTextEdit:focus { border-color:") + P + QStringLiteral("; } ");
     s += QStringLiteral("QTableWidget::item:selected { background:") + S + QStringLiteral("; } ");
     s += QStringLiteral("QTableWidget::item:hover { background:") + C + QStringLiteral("; } ");
+
+    // scrollbar
     s += QStringLiteral("QScrollBar:vertical { background:transparent; width:6px; margin:2px; } ");
     s += QStringLiteral("QScrollBar::handle:vertical { background:") + Br + QStringLiteral("; border-radius:3px; min-height:24px; } ");
-    s += QStringLiteral("QScrollBar::handle:vertical:hover { background:") + A + QStringLiteral("; } ");
+    s += QStringLiteral("QScrollBar::handle:vertical:hover { background:") + P + QStringLiteral("; } ");
     s += QStringLiteral("QScrollBar::add-line:vertical,QScrollBar::sub-line:vertical { height:0; } ");
-    s += QStringLiteral("QTabWidget::pane { background:") + C + QStringLiteral("; border:1px solid ") + Br + QStringLiteral("; border-radius:14px; } ");
-    s += QStringLiteral("QTabBar::tab { background:") + B + QStringLiteral("; color:") + M + QStringLiteral("; padding:9px 20px; border:1px solid ") + Br + QStringLiteral("; border-bottom:none; border-top-left-radius:10px; border-top-right-radius:10px; font-size:11px; } ");
-    s += QStringLiteral("QTabBar::tab:selected { background:") + C + QStringLiteral("; color:") + A + QStringLiteral("; font-weight:600; border-bottom:2px solid ") + A + QStringLiteral("; } ");
+
+    // tab widget
+    s += QStringLiteral("QTabWidget::pane { background:") + C + QStringLiteral("; border:1px solid ") + Br + QStringLiteral("; border-radius:16px; } ");
+    s += QStringLiteral("QTabBar::tab { background:") + B + QStringLiteral("; color:") + M + QStringLiteral("; padding:9px 20px; border:1px solid ") + Br + QStringLiteral("; border-bottom:none; border-top-left-radius:12px; border-top-right-radius:12px; font-size:11px; } ");
+    s += QStringLiteral("QTabBar::tab:selected { background:") + C + QStringLiteral("; color:") + P + QStringLiteral("; font-weight:600; border-bottom:2px solid ") + P + QStringLiteral("; } ");
     s += QStringLiteral("QTabBar::tab:hover:!selected { background:") + C + QStringLiteral("; color:") + T + QStringLiteral("; } ");
-    s += QStringLiteral("QPlainTextEdit { background:") + B + QStringLiteral("; color:") + T + QStringLiteral("; border:1px solid ") + Br + QStringLiteral("; border-radius:12px; font-family:\"Menlo\",\"SF Mono\",monospace; font-size:11px; padding:10px; } ");
-    s += QStringLiteral("QPlainTextEdit:focus { border-color:") + A + QStringLiteral("; } ");
-    s += QStringLiteral("#sev_crit,#sev_error,#sev_warn,#sev_info { border-radius:12px; font-family:\"Menlo\"; font-size:10px; font-weight:700; padding:5px 0; background:") + C + QStringLiteral("; } ");
-    s += QStringLiteral("#sev_crit { color:#ff6b6b; } #sev_error { color:#ff9966; } #sev_warn { color:") + P + QStringLiteral("; } #sev_info { color:") + M + QStringLiteral("; } ");
-    s += QStringLiteral("#qs_tor,#qs_blocked,#qs_engines,#qs_types { border-radius:12px; font-family:\"Menlo\"; font-size:9px; font-weight:700; padding:5px 8px; background:") + C + QStringLiteral("; color:") + M + QStringLiteral("; border:1px solid ") + Br + QStringLiteral("; } ");
-    s += QStringLiteral("#settings_title { font-size:18px; font-weight:700; color:") + A + QStringLiteral("; } ");
+
+    // text edit
+    s += QStringLiteral("QPlainTextEdit { background:") + B + QStringLiteral("; color:") + T + QStringLiteral("; border:1px solid ") + Br + QStringLiteral("; border-radius:16px; font-family:\"Menlo\",\"SF Mono\",monospace; font-size:11px; padding:10px; } ");
+    s += QStringLiteral("QPlainTextEdit:focus { border-color:") + P + QStringLiteral("; } ");
+
+    // severity badges
+    s += QStringLiteral("#sev_crit,#sev_error,#sev_warn,#sev_info { border-radius:14px; font-family:\"Menlo\"; font-size:10px; font-weight:700; padding:5px 0; background:") + C + QStringLiteral("; } ");
+    s += QStringLiteral("#sev_crit { color:") + Theme::PinkHot + QStringLiteral("; } #sev_error { color:") + Theme::Orange + QStringLiteral("; } #sev_warn { color:") + P + QStringLiteral("; } #sev_info { color:") + M + QStringLiteral("; } ");
+
+    // quick stats
+    s += QStringLiteral("#qs_tor,#qs_blocked,#qs_engines,#qs_types { border-radius:14px; font-family:\"Menlo\"; font-size:9px; font-weight:700; padding:5px 8px; background:") + C + QStringLiteral("; color:") + M + QStringLiteral("; border:1px solid ") + Br + QStringLiteral("; } ");
+
+    // settings page
+    s += QStringLiteral("#settings_title { font-size:18px; font-weight:700; color:") + P + QStringLiteral("; } ");
     s += QStringLiteral("#settings_version { font-size:10px; color:") + M + QStringLiteral("; } ");
-    s += QStringLiteral("#app_info_card { background:") + C + QStringLiteral("; border:1px solid ") + Br + QStringLiteral("; border-radius:14px; } ");
+    s += QStringLiteral("#app_info_card { background:") + C + QStringLiteral("; border:1px solid ") + Br + QStringLiteral("; border-radius:18px; } ");
+
     setStyleSheet(s);
 }
 
@@ -1138,7 +1192,7 @@ void monitor::append_alert(const QString &time, const QString &type, const QStri
         auto color = sev_crit_ > 0 ? Theme::PinkDeep : Theme::Pink;
         types.append(
             QStringLiteral(
-                "<span style='color:%1;background:%2;border-radius:8px;padding:2px 8px;margin:1px;font-size:10px;font-weight:600;'>%3</span>")
+                "<span style='color:%1;background:%2;border-radius:12px;padding:2px 10px;margin:1px;font-size:10px;font-weight:600;'>%3</span>")
             .arg(Theme::White, Theme::DkCard, t));
     }
     ui->threat_activity->setText(types.isEmpty() ? QString() : types.join(QStringLiteral(" ")));
@@ -1302,8 +1356,8 @@ void monitor::refresh_local_ips() {
         int r = t->rowCount();
         t->insertRow(r);
 
-        auto *status = new QTableWidgetItem(up && running ? QStringLiteral("●") : QStringLiteral("○"));
-        status->setForeground(up && running ? QColor(Theme::Green) : QColor(Theme::Grey));
+        auto *status = new QTableWidgetItem(up && running ? QStringLiteral("✦") : QStringLiteral("・"));
+        status->setForeground(up && running ? QColor(Theme::MintDeep) : QColor(Theme::Grey));
         status->setTextAlignment(Qt::AlignCenter);
 
         auto *name = new QTableWidgetItem(ifa->ifa_name);
@@ -1311,14 +1365,14 @@ void monitor::refresh_local_ips() {
 
         auto *ip_item = new QTableWidgetItem(ip);
         ip_item->setFont(mf);
-        ip_item->setForeground(QColor(Theme::Cyan));
+        ip_item->setForeground(QColor(Theme::BabyBlue));
 
         auto *mask_item = new QTableWidgetItem(*mask ? mask : "-");
         mask_item->setFont(mf);
-        mask_item->setForeground(QColor(Theme::CyanLight));
+        mask_item->setForeground(QColor(Theme::LavenderLight));
 
         auto *type_item = new QTableWidgetItem(*iftype ? iftype : "-");
-        type_item->setForeground(QColor(Theme::Purple));
+        type_item->setForeground(QColor(Theme::Lilac));
 
         t->setItem(r, 0, status);
         t->setItem(r, 1, name);
@@ -1397,7 +1451,7 @@ void monitor::refresh_arp_table() {
         t->insertRow(row);
         auto *ipx = new QTableWidgetItem(ips);
         ipx->setFont(mf);
-        ipx->setForeground(QColor(Theme::Green));
+        ipx->setForeground(QColor(Theme::MintDeep));
         auto *mx = new QTableWidgetItem(mb);
         mx->setFont(mf);
         mx->setForeground(QColor(Theme::DkMuted));
@@ -1421,7 +1475,7 @@ void monitor::refresh_arp_table() {
         t->insertRow(row);
         auto *ipx = new QTableWidgetItem(QString::fromStdString(ip));
         ipx->setFont(mf);
-        ipx->setForeground(QColor(Theme::Green));
+        ipx->setForeground(QColor(Theme::MintDeep));
         auto *mx = new QTableWidgetItem(QString::fromStdString(mac));
         mx->setFont(mf);
         mx->setForeground(QColor(Theme::DkMuted));
@@ -1462,9 +1516,9 @@ void monitor::refresh_quarantine_list() {
         t->insertRow(row);
         auto *i1 = new QTableWidgetItem(QString::fromStdString(r.ip_address));
         i1->setFont(mf);
-        i1->setForeground(QColor(Theme::Red));
+        i1->setForeground(QColor(Theme::PinkHot));
         auto *i2 = new QTableWidgetItem(QString::fromStdString(r.reason));
-        i2->setForeground(QColor(Theme::Pink));
+        i2->setForeground(QColor(Theme::PinkLight));
         auto *i3 = new QTableWidgetItem(QString::number(r.threat_score, 'f', 0));
         i3->setForeground(QColor(Theme::DkMuted));
         t->setItem(row, 0, i1);

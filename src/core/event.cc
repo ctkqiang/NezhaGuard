@@ -78,7 +78,6 @@ namespace Nezha::Core {
         switch (s) {
             case Severity::Trace: return "跟踪";
             case Severity::Debug: return "调试";
-            case Severity::Info: return "信息";
             case Severity::Warn: return "警告";
             case Severity::Error: return "错误";
             case Severity::Critical: return "严重";

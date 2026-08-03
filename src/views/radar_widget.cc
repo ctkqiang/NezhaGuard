@@ -52,17 +52,17 @@ void RadarWidget::paintEvent(QPaintEvent *) {
     p.drawLine(cx - r, cy, cx + r, cy);
     p.drawLine(cx, cy - r, cx, cy + r);
 
-    // sweep line
+1    // sweep line ♡
     double rad = qDegreesToRadians(static_cast<double>(sweep_angle_));
-    QPen sweepPen(QColor(Theme::Cyan), 1.5);
+    QPen sweepPen(QColor(Theme::PinkLight), 1.5);
     p.setPen(sweepPen);
     p.drawLine(cx, cy, cx + static_cast<int>(r * std::cos(rad)), cy - static_cast<int>(r * std::sin(rad)));
 
-    // sweep arc glow
+    // sweep arc glow ♡
     QConicalGradient cone(cx, cy, -sweep_angle_);
-    cone.setColorAt(0.0, QColor(Theme::Cyan).darker(180));
-    cone.setColorAt(0.1, QColor(Theme::Cyan).lighter(120));
-    cone.setColorAt(0.2, QColor(Theme::Cyan).darker(180));
+    cone.setColorAt(0.0, QColor(Theme::PinkDeep).darker(180));
+    cone.setColorAt(0.1, QColor(Theme::PinkLight).lighter(120));
+    cone.setColorAt(0.2, QColor(Theme::Lavender).darker(180));
     p.setPen(Qt::NoPen);
     p.setBrush(cone);
     p.drawPie(QRect(cx - r, cy - r, r * 2, r * 2), (sweep_angle_ - 30) * 16, 60 * 16);
@@ -79,13 +79,13 @@ void RadarWidget::paintEvent(QPaintEvent *) {
         int dx = cx + static_cast<int>(r * dist * std::cos(qDegreesToRadians(a)));
         int dy = cy - static_cast<int>(r * dist * std::sin(qDegreesToRadians(a)));
 
-        // dot
-        p.setBrush(QColor(Theme::Green));
+        // dot ♡
+        p.setBrush(QColor(Theme::MintDeep));
         p.setPen(Qt::NoPen);
         p.drawEllipse(QPoint(dx, dy), 4, 4);
 
         // glow
-        QColor glow(Theme::Green);
+        QColor glow(Theme::MintDeep);
         glow.setAlpha(50);
         p.setBrush(glow);
         p.drawEllipse(QPoint(dx, dy), 8, 8);
@@ -97,14 +97,14 @@ void RadarWidget::paintEvent(QPaintEvent *) {
         p.drawText(QRect(dx - 20, dy - 18, 40, 14), Qt::AlignCenter, label);
     }
 
-    // center dot
-    p.setBrush(QColor(Theme::Cyan));
+    // center dot ♡
+    p.setBrush(QColor(Theme::PinkLight));
     p.setPen(Qt::NoPen);
     p.drawEllipse(QPoint(cx, cy), 5, 5);
 
-    // title
-    p.setPen(QColor(Theme::Cyan));
+    // title ♡
+    p.setPen(QColor(Theme::Pink));
     p.setFont(QFont(QStringLiteral("PingFang SC"), 9));
     p.drawText(QRect(8, 4, 200, 16), Qt::AlignLeft,
-               QStringLiteral("设备雷达 — %1 台").arg(devices_.size()));
+               QStringLiteral("♡ 设备雷达 — %1 台").arg(devices_.size()));
 }
