@@ -64,19 +64,22 @@ namespace Nezha::IPAddress {
     }
 
     bool ipaddr::parse(std::string_view text, ipaddr &out) {
+        struct in_addr v4;
+        struct in6_addr v6;
+
         char tmp[INET6_ADDRSTRLEN];
         if (text.empty() || text.size() >= sizeof(tmp)) return false;
+
         std::memcpy(tmp, text.data(), text.size());
         tmp[text.size()] = '\0';
 
-        struct in_addr v4;
         if (::inet_pton(AF_INET, tmp, &v4) == 1) {
             // 先按 v4，成功则映射
             std::memcpy(out.b_.data(), kV4Prefix, 12);
             std::memcpy(out.b_.data() + 12, &v4, 4);
             return true;
         }
-        struct in6_addr v6;
+
         if (::inet_pton(AF_INET6, tmp, &v6) == 1) {
             std::memcpy(out.b_.data(), &v6, 16);
             return true;

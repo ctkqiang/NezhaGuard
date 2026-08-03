@@ -72,6 +72,6 @@ namespace Nezha::Core {
         std::atomic<std::size_t> threats_found_{0};
     };
 
-} // namespace Nezha::Core
+}
 
 #endif //NEZHAGUARD_WEBSHELL_SCANNER_H

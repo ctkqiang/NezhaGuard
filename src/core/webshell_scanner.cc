@@ -146,7 +146,6 @@ namespace Nezha::Core {
             } else if (fs::is_directory(t.path, ec)) {
                 for (auto it = fs::recursive_directory_iterator(t.path, ec);
                      it != fs::recursive_directory_iterator(); ++it) {
-
                     if (!running_) break;
 
                     if (it->is_regular_file() && is_webshell_ext(it->path().extension().string())) {
@@ -180,10 +179,17 @@ namespace Nezha::Core {
 
     bool WebshellScanner::is_webshell_ext(std::string_view path) {
         static constexpr std::array<std::string_view, 6> kExts = {
-            ".php", ".phtml", ".php5", ".jsp", ".asp", ".aspx"
+            ".php",
+            ".phtml",
+            ".php5",
+            ".jsp",
+            ".asp",
+            ".aspx"
         };
 
-        return std::ranges::any_of(kExts, [&](auto e) { return path.ends_with(e); });
+        return std::ranges::any_of(kExts, [&](auto e) {
+            return path.ends_with(e);
+        });
     }
 
     double WebshellScanner::shannon_entropy(std::string_view data) {
