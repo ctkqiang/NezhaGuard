@@ -1625,7 +1625,7 @@ void monitor::save_database_conf() {
 }
 
 void monitor::setup_tray() {
-    QIcon app_icon(QStringLiteral("src/views/app_icon.svg"));
+    QIcon app_icon(QStringLiteral(":/app_icon.svg"));
     if (app_icon.isNull())
         app_icon = qApp->style()->standardIcon(QStyle::SP_ComputerIcon);
     qApp->setWindowIcon(app_icon);
@@ -1901,42 +1901,45 @@ void monitor::import_nzc() {
 
 void monitor::run_nmap_scan(const QString &ip) {
     auto *dlg = new QDialog(this);
-    dlg->setWindowTitle(QStringLiteral("Nmap 扫描 — %1").arg(ip));
-    dlg->resize(720, 560);
+    dlg->setWindowTitle(QStringLiteral("(◕‿◕) Nmap — %1").arg(ip));
+    dlg->resize(760, 600);
     dlg->setAttribute(Qt::WA_DeleteOnClose);
-    dlg->setWindowFlags(dlg->windowFlags() | Qt::WindowStaysOnTopHint);
+    dlg->setWindowFlags(Qt::Dialog | Qt::WindowCloseButtonHint);
     dlg->setStyleSheet(QStringLiteral(
-        "QDialog { background:#0a0a0a; border:1px solid #0f0; }"));
+        "QDialog { background:#0d0d14; border:2px solid #ffb3cc; border-radius:8px; }"));
 
     auto *root = new QVBoxLayout(dlg);
-    root->setContentsMargins(8, 8, 8, 8);
+    root->setContentsMargins(12, 10, 12, 10);
     root->setSpacing(6);
 
     auto *header = new QLabel(QStringLiteral(
-        "╔══════════════════════════════════════════════╗\n"
-        "║  哪吒 Nmap 扫描引擎                              ║\n"
-        "║  TARGET: %1                                     ║\n"
-        "╚══════════════════════════════════════════════╝").arg(ip));
+        "  ✧  ˚  。  ✧  ˚  。  ✧  ˚  。  ✧  ˚  。  ✧  ˚  。  ✧\n"
+        "  ♡ ═══════════════════════════════════════ ♡\n"
+        "      (◕‿◕)  哪吒 Nmap 扫描引擎  (◕‿◕)\n"
+        "      ♡  TARGET: %1  ♡\n"
+        "  ♡ ═══════════════════════════════════════ ♡\n"
+        "  ✧  ˚  。  ✧  ˚  。  ✧  ˚  。  ✧  ˚  。  ✧  ˚  。  ✧").arg(ip));
     header->setStyleSheet(QStringLiteral(
-        "color:#0f0; font-family:\"Menlo\",\"JetBrains Mono\",monospace; font-size:10px;"
+        "color:#ffb3cc; font-family:\"Menlo\",\"JetBrains Mono\",monospace; font-size:10px;"
         "background:transparent;"));
     root->addWidget(header);
 
     auto *output = new QTextEdit(dlg);
     output->setReadOnly(true);
     output->setStyleSheet(QStringLiteral(
-        "QTextEdit { background:#050505; color:#0f0; border:1px solid #0a0; border-radius:4px;"
-        "  font-family:\"Menlo\",\"JetBrains Mono\",monospace; font-size:11px; padding:8px;"
-        "  selection-background-color:#0a0; selection-color:#000; }"
-        "QScrollBar:vertical { background:#0a0a0a; width:8px; border:none; }"
-        "QScrollBar::handle:vertical { background:#0a0; border-radius:4px; min-height:20px; }"
+        "QTextEdit { background:#08080f; color:#7ee8e8; border:1px solid #f0a0b8; border-radius:6px;"
+        "  font-family:\"Menlo\",\"JetBrains Mono\",monospace; font-size:11px; padding:10px;"
+        "  selection-background-color:#ffb3cc; selection-color:#0d0d14; }"
+        "QScrollBar:vertical { background:#0d0d14; width:8px; border:none; border-radius:4px; }"
+        "QScrollBar::handle:vertical { background:#f0a0b8; border-radius:4px; min-height:20px; }"
+        "QScrollBar::handle:vertical:hover { background:#ffb3cc; }"
         "QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical { height:0; }"));
     output->setText(QStringLiteral(
-        "[*] 初始化扫描引擎...\n"
-        "[*] 目标: %1\n"
-        "[*] 参数: -sT -sV -v\n"
-        "[*] 启动 nmap 子进程...\n"
-        "──────────────────────────────────────────\n").arg(ip));
+        "✨ 初始化扫描引擎...\n"
+        "♡ 目标: %1\n"
+        "♡ 参数: -sT -sV -v\n"
+        "✨ 启动 nmap 子进程...\n"
+        "· · · · · · · · · · · · · · · · · · · · · · · · · ·\n").arg(ip));
     root->addWidget(output);
 
     auto *btnBar = new QHBoxLayout();
@@ -1946,16 +1949,17 @@ void monitor::run_nmap_scan(const QString &ip) {
 
     auto mkbtn = [](const QString &label, const QString &fg, const QString &bg) -> QPushButton * {
         auto *b = new QPushButton(label);
+        b->setCursor(Qt::PointingHandCursor);
         b->setStyleSheet(QStringLiteral(
-            "QPushButton { background:%1; color:%2; border:1px solid %3; border-radius:4px;"
-            "  padding:5px 14px; font-family:\"Menlo\",\"JetBrains Mono\",monospace;"
+            "QPushButton { background:%1; color:%2; border:1px solid %3; border-radius:6px;"
+            "  padding:5px 18px; font-family:\"Menlo\",\"JetBrains Mono\",monospace;"
             "  font-size:10px; font-weight:600; }"
             "QPushButton:hover { background:%3; color:%1; }")
             .arg(bg, fg, fg));
         return b;
     };
 
-    auto *closeBtn = mkbtn(QStringLiteral("[ 关闭 ]"), QStringLiteral("#0f0"), QStringLiteral("#0a0a0a"));
+    auto *closeBtn = mkbtn(QStringLiteral("♡ 关闭 ♡"), QStringLiteral("#ffb3cc"), QStringLiteral("#0d0d14"));
     connect(closeBtn, &QPushButton::clicked, dlg, &QDialog::close);
     btnBar->addWidget(closeBtn);
 
@@ -1971,14 +1975,14 @@ void monitor::run_nmap_scan(const QString &ip) {
     });
     connect(proc, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
             dlg, [output, ip](int code, QProcess::ExitStatus) {
-        output->append(QStringLiteral("──────────────────────────────────────────"));
+        output->append(QStringLiteral("· · · · · · · · · · · · · · · · · · · · · · · · · ·"));
         if (code == 0) {
-            output->append(QStringLiteral("[+] 扫描完成 — %1").arg(ip));
-            output->append(QStringLiteral("[+] Nmap done. All packets processed."));
+            output->append(QStringLiteral("💖 扫描完成 — %1 ✨").arg(ip));
+            output->append(QStringLiteral("(◕‿◕) Nmap done. All packets processed. ♡"));
         } else {
-            output->append(QStringLiteral("[!] nmap 退出码: %1").arg(code));
+            output->append(QStringLiteral("💢 nmap 异常退出 — 退出码: %1 (╥﹏╥)").arg(code));
         }
-        output->append(QStringLiteral("══════════════════════════════════════════════"));
+        output->append(QStringLiteral("♡ ═══════════════════════════════════════ ♡"));
         output->moveCursor(QTextCursor::End);
     });
 

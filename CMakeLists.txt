@@ -54,6 +54,7 @@ set(NEZHA_CORE_SOURCES
     src/views/monitor.cc
     src/views/monitor.h
     src/views/monitor.ui
+    src/views/resources.qrc
     src/views/log_model.cc
     src/views/log_model.h
     src/views/gui_sink.cc
