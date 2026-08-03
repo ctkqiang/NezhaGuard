@@ -174,10 +174,11 @@ bool Notifier::keyword_match(const std::string &text, const std::vector<std::str
 
     for (const auto &kw: keywords) {
         std::string kl = kw;
-        std::transform(kl.begin(), kl.end(), kl.begin(),
-                       [](unsigned char c) { return std::tolower(c); });
+        std::ranges::transform(kl, kl.begin(),
+                               [](unsigned char c) { return std::tolower(c); });
         if (lower.find(kl) != std::string::npos) return true;
     }
+
     return false;
 }
 

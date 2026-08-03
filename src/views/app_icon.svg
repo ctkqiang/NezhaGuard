@@ -1,48 +1,67 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
   <defs>
-    <linearGradient id="bg" x1="0" y1="1" x2="0" y2="0">
-      <stop offset="0%" stop-color="#8b0000"/>
-      <stop offset="50%" stop-color="#c41e3a"/>
-      <stop offset="100%" stop-color="#e8384f"/>
+    <linearGradient id="bg" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0%" stop-color="#ffb3cc"/>
+      <stop offset="40%" stop-color="#d4a8f0"/>
+      <stop offset="100%" stop-color="#ffb3cc"/>
     </linearGradient>
-    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#d4a017"/>
-      <stop offset="50%" stop-color="#f0c75e"/>
-      <stop offset="100%" stop-color="#d4a017"/>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#7ee8e8"/>
+      <stop offset="50%" stop-color="#ffb3cc"/>
+      <stop offset="100%" stop-color="#b5f0f0"/>
     </linearGradient>
     <linearGradient id="inner" x1="0" y1="1" x2="0" y2="0">
-      <stop offset="0%" stop-color="#1a0000"/>
-      <stop offset="100%" stop-color="#2a0505"/>
+      <stop offset="0%" stop-color="#0d0d14"/>
+      <stop offset="100%" stop-color="#1a1024"/>
     </linearGradient>
   </defs>
   <!-- background -->
   <rect width="512" height="512" rx="96" fill="url(#bg)"/>
   <!-- outer ring -->
-  <circle cx="256" cy="256" r="230" fill="none" stroke="url(#gold)" stroke-width="4" opacity="0.6"/>
-  <circle cx="256" cy="256" r="218" fill="none" stroke="url(#gold)" stroke-width="1.5" opacity="0.3"/>
+  <circle cx="256" cy="256" r="230" fill="none" stroke="url(#accent)" stroke-width="4" opacity="0.5"/>
+  <circle cx="256" cy="256" r="218" fill="none" stroke="url(#accent)" stroke-width="1.5" opacity="0.25"/>
   <!-- inner shield shape -->
-  <path d="M256 60 L386 140 L386 280 C386 386 322 448 256 476 C190 448 126 386 126 280 L126 140 Z" fill="url(#inner)" stroke="url(#gold)" stroke-width="3"/>
-  <!-- flame ornaments - left -->
-  <path d="M150 260 Q140 230 150 200 Q155 215 160 200 Q165 225 155 260" fill="#e8384f" opacity="0.7"/>
-  <path d="M140 300 Q128 270 140 240 Q146 258 152 240 Q158 268 148 300" fill="#f0c75e" opacity="0.5"/>
-  <!-- flame ornaments - right -->
-  <path d="M362 260 Q372 230 362 200 Q357 215 352 200 Q347 225 357 260" fill="#e8384f" opacity="0.7"/>
-  <path d="M372 300 Q384 270 372 240 Q366 258 360 240 Q354 268 364 300" fill="#f0c75e" opacity="0.5"/>
+  <path d="M256 60 L386 140 L386 280 C386 386 322 448 256 476 C190 448 126 386 126 280 L126 140 Z" fill="url(#inner)" stroke="url(#accent)" stroke-width="3"/>
+  <!-- sparkle ornaments - left -->
+  <g opacity="0.8">
+    <path d="M140 250 L145 240 L150 250 L145 260 Z" fill="#ffb3cc"/>
+    <path d="M130 290 L135 280 L140 290 L135 300 Z" fill="#7ee8e8" opacity="0.7"/>
+    <circle cx="148" cy="220" r="2.5" fill="#ffccdd"/>
+  </g>
+  <!-- sparkle ornaments - right -->
+  <g opacity="0.8">
+    <path d="M372 250 L367 240 L362 250 L367 260 Z" fill="#ffb3cc"/>
+    <path d="M382 290 L377 280 L372 290 L377 300 Z" fill="#7ee8e8" opacity="0.7"/>
+    <circle cx="364" cy="220" r="2.5" fill="#ffccdd"/>
+  </g>
+  <!-- heart decoration - top -->
+  <path d="M256 155 C250 148 242 150 240 155 C238 160 240 166 256 172 C272 166 274 160 272 155 C270 150 262 148 256 155 Z" fill="#ffb3cc" opacity="0.7"/>
   <!-- central circle -->
-  <circle cx="256" cy="240" r="68" fill="none" stroke="url(#gold)" stroke-width="2.5" opacity="0.8"/>
-  <circle cx="256" cy="240" r="58" fill="#1a0000" opacity="0.3"/>
+  <circle cx="256" cy="240" r="68" fill="none" stroke="url(#accent)" stroke-width="2.5" opacity="0.7"/>
+  <circle cx="256" cy="240" r="58" fill="#0d0d14" opacity="0.3"/>
   <!-- 哪吒 text -->
-  <text x="256" y="262" text-anchor="middle" font-family="PingFang SC,STSong,SimSun,serif" font-size="52" font-weight="900" fill="url(#gold)">哪吒</text>
+  <text x="256" y="262" text-anchor="middle" font-family="PingFang SC,STSong,SimSun,serif" font-size="52" font-weight="900" fill="url(#accent)">哪吒</text>
   <!-- 网安 small text -->
-  <text x="256" y="340" text-anchor="middle" font-family="PingFang SC,STSong,SimSun,serif" font-size="20" font-weight="700" fill="#f0c75e" opacity="0.85">网络安全</text>
+  <text x="256" y="340" text-anchor="middle" font-family="PingFang SC,STSong,SimSun,serif" font-size="20" font-weight="700" fill="#ffb3cc" opacity="0.85">网络安全</text>
   <!-- decorative dots -->
-  <circle cx="256" cy="164" r="3" fill="#f0c75e" opacity="0.9"/>
-  <circle cx="256" cy="320" r="2" fill="#f0c75e" opacity="0.6"/>
-  <circle cx="200" cy="200" r="2" fill="#f0c75e" opacity="0.5"/>
-  <circle cx="312" cy="200" r="2" fill="#f0c75e" opacity="0.5"/>
-  <!-- corner ornaments -->
-  <circle cx="88" cy="88" r="6" fill="none" stroke="url(#gold)" stroke-width="1.5" opacity="0.5"/>
-  <circle cx="424" cy="88" r="6" fill="none" stroke="url(#gold)" stroke-width="1.5" opacity="0.5"/>
-  <circle cx="88" cy="424" r="6" fill="none" stroke="url(#gold)" stroke-width="1.5" opacity="0.5"/>
-  <circle cx="424" cy="424" r="6" fill="none" stroke="url(#gold)" stroke-width="1.5" opacity="0.5"/>
+  <circle cx="256" cy="164" r="3" fill="#7ee8e8" opacity="0.9"/>
+  <circle cx="256" cy="318" r="2" fill="#ffb3cc" opacity="0.7"/>
+  <circle cx="200" cy="200" r="2" fill="#ffccdd" opacity="0.6"/>
+  <circle cx="312" cy="200" r="2" fill="#ffccdd" opacity="0.6"/>
+  <!-- corner hearts -->
+  <g opacity="0.5" fill="#ffb3cc">
+    <path d="M88 80 C84 76 78 77 76 80 C74 83 76 87 88 92 C100 87 102 83 100 80 C98 77 92 76 88 80 Z"/>
+    <path d="M424 80 C420 76 414 77 412 80 C410 83 412 87 424 92 C436 87 438 83 436 80 C434 77 428 76 424 80 Z"/>
+    <path d="M88 432 C84 428 78 429 76 432 C74 435 76 439 88 444 C100 439 102 435 100 432 C98 429 92 428 88 432 Z"/>
+    <path d="M424 432 C420 428 414 429 412 432 C410 435 412 439 424 444 C436 439 438 435 436 432 C434 429 428 428 424 432 Z"/>
+  </g>
+  <!-- tiny sparkles scattered -->
+  <g fill="#7ee8e8" opacity="0.4">
+    <circle cx="110" cy="170" r="1.5"/>
+    <circle cx="402" cy="170" r="1.5"/>
+    <circle cx="110" cy="370" r="1.5"/>
+    <circle cx="402" cy="370" r="1.5"/>
+    <circle cx="170" cy="110" r="1.5"/>
+    <circle cx="342" cy="110" r="1.5"/>
+  </g>
 </svg>

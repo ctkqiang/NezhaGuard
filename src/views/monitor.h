@@ -97,6 +97,7 @@ private slots:
     void export_nzc();
     void import_nzc();
     void run_nmap_scan(const QString &ip);
+    void update_theme_preference(int index);
     void tray_show();
     void tray_quit();
     void log_search_changed(const QString &text);

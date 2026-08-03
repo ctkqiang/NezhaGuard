@@ -288,6 +288,36 @@
            <item>
             <widget class="QTabWidget" name="settings_tabs">
              <property name="currentIndex"><number>0</number></property>
+             <widget class="QWidget" name="tab_general">
+              <attribute name="title"><string>常规</string></attribute>
+              <layout class="QVBoxLayout" name="general_tab_layout">
+               <property name="spacing"><number>16</number></property>
+               <property name="leftMargin"><number>16</number></property>
+               <property name="topMargin"><number>16</number></property>
+               <property name="rightMargin"><number>16</number></property>
+               <property name="bottomMargin"><number>16</number></property>
+               <item>
+                <layout class="QHBoxLayout" name="theme_row">
+                 <item>
+                  <widget class="QLabel" name="theme_label">
+                   <property name="text"><string>主题模式</string></property>
+                   <property name="minimumWidth"><number>80</number></property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QComboBox" name="theme_combo">
+                   <property name="minimumWidth"><number>180</number></property>
+                   <item><property name="text"><string>跟随系统</string></property></item>
+                   <item><property name="text"><string>浅色</string></property></item>
+                   <item><property name="text"><string>深色</string></property></item>
+                  </widget>
+                 </item>
+                 <item><spacer><property name="orientation"><enum>Qt::Horizontal</enum></property></spacer></item>
+                </layout>
+               </item>
+               <item><spacer><property name="orientation"><enum>Qt::Vertical</enum></property></spacer></item>
+              </layout>
+             </widget>
              <widget class="QWidget" name="tab_monitor">
               <attribute name="title"><string>应用监控</string></attribute>
               <layout class="QVBoxLayout" name="monitor_tab_layout">

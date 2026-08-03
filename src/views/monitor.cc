@@ -13,6 +13,7 @@
 #include <QClipboard>
 #include <QComboBox>
 #include <QDateTime>
+#include <QSettings>
 #include <QDialog>
 #include <QFile>
 #include <QFileDialog>
@@ -59,7 +60,6 @@
 #include <sys/sysctl.h>
 #endif
 
-#include <cstring>
 #include <fstream>
 #include <set>
 #include <sstream>
@@ -238,7 +238,23 @@ monitor::monitor(QWidget *parent) : QMainWindow(parent), ui(new Ui::monitor) {
     dark_mode_ = (qApp->palette().color(QPalette::Window).lightness() < 128);
 #endif
 
+    {
+        QSettings s(QStringLiteral("NezhaGuard"), QStringLiteral("NezhaGuard"));
+        const QString pref = s.value(QStringLiteral("app/theme"), QStringLiteral("dark")).toString();
+        if (pref == QStringLiteral("light")) {
+            dark_mode_ = false;
+            ui->theme_combo->setCurrentIndex(1);
+        } else if (pref == QStringLiteral("dark")) {
+            dark_mode_ = true;
+            ui->theme_combo->setCurrentIndex(2);
+        } else {
+            ui->theme_combo->setCurrentIndex(0);
+        }
+    }
+
     connect(qApp->styleHints(), &QStyleHints::colorSchemeChanged, this, &monitor::sync_theme);
+    connect(ui->theme_combo, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this, &monitor::update_theme_preference);
 
     clock_timer_ = new QTimer(this);
     connect(clock_timer_, &QTimer::timeout, this, &monitor::update_clock);
@@ -302,6 +318,8 @@ monitor::monitor(QWidget *parent) : QMainWindow(parent), ui(new Ui::monitor) {
     sparkline_timer_ = new QTimer(this);
     connect(sparkline_timer_, &QTimer::timeout, this, &monitor::update_sparkline);
     sparkline_timer_->start(1000);
+
+    apply_theme(dark_mode_);
 }
 
 monitor::~monitor() { delete ui; }
@@ -368,12 +386,49 @@ void monitor::start_animations() {
 
 
 void monitor::sync_theme() {
+    QSettings s(QStringLiteral("NezhaGuard"), QStringLiteral("NezhaGuard"));
+    const QString pref = s.value(QStringLiteral("app/theme"), QStringLiteral("dark")).toString();
+
     bool dk;
+    if (pref == QStringLiteral("light")) {
+        dk = false;
+    } else if (pref == QStringLiteral("dark")) {
+        dk = true;
+    } else {
 #if QT_VERSION >= QT_VERSION_CHECK(6, 5, 0)
-    dk = (QGuiApplication::styleHints()->colorScheme() == Qt::ColorScheme::Dark);
+        dk = (QGuiApplication::styleHints()->colorScheme() == Qt::ColorScheme::Dark);
 #else
-    dk = (qApp->palette().color(QPalette::Window).lightness() < 128);
+        dk = (qApp->palette().color(QPalette::Window).lightness() < 128);
 #endif
+    }
+
+    if (dk != dark_mode_) {
+        dark_mode_ = dk;
+        apply_theme(dk);
+    }
+}
+
+void monitor::update_theme_preference(int index) {
+    QSettings s(QStringLiteral("NezhaGuard"), QStringLiteral("NezhaGuard"));
+    bool dk;
+    switch (index) {
+    case 1: // 浅色
+        s.setValue(QStringLiteral("app/theme"), QStringLiteral("light"));
+        dk = false;
+        break;
+    case 2: // 深色
+        s.setValue(QStringLiteral("app/theme"), QStringLiteral("dark"));
+        dk = true;
+        break;
+    default: // 跟随系统
+        s.setValue(QStringLiteral("app/theme"), QStringLiteral("auto"));
+#if QT_VERSION >= QT_VERSION_CHECK(6, 5, 0)
+        dk = (QGuiApplication::styleHints()->colorScheme() == Qt::ColorScheme::Dark);
+#else
+        dk = (qApp->palette().color(QPalette::Window).lightness() < 128);
+#endif
+        break;
+    }
     if (dk != dark_mode_) {
         dark_mode_ = dk;
         apply_theme(dk);
@@ -1900,13 +1955,22 @@ void monitor::import_nzc() {
 }
 
 void monitor::run_nmap_scan(const QString &ip) {
+    bool d = dark_mode_;
+    auto bg     = d ? Theme::DkBg     : Theme::LtBg;
+    auto card   = d ? Theme::DkCard   : Theme::LtCard;
+    auto border = d ? Theme::DkBorder : Theme::LtBorder;
+    auto text   = d ? Theme::DkText   : Theme::LtText;
+    auto muted  = d ? Theme::DkMuted  : Theme::LtMuted;
+    auto accent = d ? Theme::Cyan     : Theme::CyanDeep;
+    auto hover  = d ? Theme::DkHover  : Theme::LtHover;
+
     auto *dlg = new QDialog(this);
     dlg->setWindowTitle(QStringLiteral("(◕‿◕) Nmap — %1").arg(ip));
     dlg->resize(760, 600);
-    dlg->setAttribute(Qt::WA_DeleteOnClose);
     dlg->setWindowFlags(Qt::Dialog | Qt::WindowCloseButtonHint);
     dlg->setStyleSheet(QStringLiteral(
-        "QDialog { background:#0d0d14; border:2px solid #ffb3cc; border-radius:8px; }"));
+        "QDialog { background:%1; border:2px solid %2; border-radius:8px; }")
+        .arg(bg, accent));
 
     auto *root = new QVBoxLayout(dlg);
     root->setContentsMargins(12, 10, 12, 10);
@@ -1920,20 +1984,21 @@ void monitor::run_nmap_scan(const QString &ip) {
         "  ♡ ═══════════════════════════════════════ ♡\n"
         "  ✧  ˚  。  ✧  ˚  。  ✧  ˚  。  ✧  ˚  。  ✧  ˚  。  ✧").arg(ip));
     header->setStyleSheet(QStringLiteral(
-        "color:#ffb3cc; font-family:\"Menlo\",\"JetBrains Mono\",monospace; font-size:10px;"
-        "background:transparent;"));
+        "color:%1; font-family:\"Menlo\",\"JetBrains Mono\",monospace; font-size:13px;"
+        "background:transparent;").arg(accent));
     root->addWidget(header);
 
     auto *output = new QTextEdit(dlg);
     output->setReadOnly(true);
     output->setStyleSheet(QStringLiteral(
-        "QTextEdit { background:#08080f; color:#7ee8e8; border:1px solid #f0a0b8; border-radius:6px;"
-        "  font-family:\"Menlo\",\"JetBrains Mono\",monospace; font-size:11px; padding:10px;"
-        "  selection-background-color:#ffb3cc; selection-color:#0d0d14; }"
-        "QScrollBar:vertical { background:#0d0d14; width:8px; border:none; border-radius:4px; }"
-        "QScrollBar::handle:vertical { background:#f0a0b8; border-radius:4px; min-height:20px; }"
-        "QScrollBar::handle:vertical:hover { background:#ffb3cc; }"
-        "QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical { height:0; }"));
+        "QTextEdit { background:%1; color:%2; border:1px solid %3; border-radius:6px;"
+        "  font-family:\"Menlo\",\"JetBrains Mono\",monospace; font-size:13px; padding:10px;"
+        "  selection-background-color:%4; selection-color:%5; }"
+        "QScrollBar:vertical { background:%1; width:8px; border:none; border-radius:4px; }"
+        "QScrollBar::handle:vertical { background:%3; border-radius:4px; min-height:20px; }"
+        "QScrollBar::handle:vertical:hover { background:%4; }"
+        "QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical { height:0; }")
+        .arg(card, text, border, accent, bg));
     output->setText(QStringLiteral(
         "✨ 初始化扫描引擎...\n"
         "♡ 目标: %1\n"
@@ -1947,28 +2012,33 @@ void monitor::run_nmap_scan(const QString &ip) {
     root->addLayout(btnBar);
     btnBar->addStretch();
 
-    auto mkbtn = [](const QString &label, const QString &fg, const QString &bg) -> QPushButton * {
-        auto *b = new QPushButton(label);
-        b->setCursor(Qt::PointingHandCursor);
-        b->setStyleSheet(QStringLiteral(
-            "QPushButton { background:%1; color:%2; border:1px solid %3; border-radius:6px;"
-            "  padding:5px 18px; font-family:\"Menlo\",\"JetBrains Mono\",monospace;"
-            "  font-size:10px; font-weight:600; }"
-            "QPushButton:hover { background:%3; color:%1; }")
-            .arg(bg, fg, fg));
-        return b;
-    };
-
-    auto *closeBtn = mkbtn(QStringLiteral("♡ 关闭 ♡"), QStringLiteral("#ffb3cc"), QStringLiteral("#0d0d14"));
-    connect(closeBtn, &QPushButton::clicked, dlg, &QDialog::close);
+    auto *closeBtn = new QPushButton(QStringLiteral("♡ 关闭 ♡"));
+    closeBtn->setCursor(Qt::PointingHandCursor);
+    closeBtn->setStyleSheet(QStringLiteral(
+        "QPushButton { background:%1; color:%2; border:1px solid %3; border-radius:6px;"
+        "  padding:5px 18px; font-family:\"Menlo\",\"JetBrains Mono\",monospace;"
+        "  font-size:12px; font-weight:600; }"
+        "QPushButton:hover { background:%4; color:%1; }")
+        .arg(bg, accent, border, hover));
     btnBar->addWidget(closeBtn);
-
-    dlg->show();
 
     auto *proc = new QProcess(dlg);
     proc->setProgram(QStringLiteral("nmap"));
     proc->setArguments({QStringLiteral("-sT"), QStringLiteral("-sV"), QStringLiteral("-v"), ip});
     proc->setProcessChannelMode(QProcess::MergedChannels);
+
+    // cleanup: kill nmap first, then delete dialog (avoid QProcess dtor blocking UI)
+    connect(dlg, &QDialog::finished, dlg, [proc, dlg]() {
+        if (proc->state() != QProcess::NotRunning) {
+            proc->terminate();
+            if (!proc->waitForFinished(2000)) {
+                proc->kill();
+                proc->waitForFinished(1000);
+            }
+        }
+        dlg->deleteLater();
+    });
+    connect(closeBtn, &QPushButton::clicked, dlg, &QDialog::close);
 
     connect(proc, &QProcess::readyRead, dlg, [proc, output]() {
         output->append(QString::fromUtf8(proc->readAll()));
@@ -1986,5 +2056,6 @@ void monitor::run_nmap_scan(const QString &ip) {
         output->moveCursor(QTextCursor::End);
     });
 
+    dlg->show();
     proc->start();
 }
