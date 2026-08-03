@@ -49,8 +49,8 @@ namespace Nezha::Log {
                             icon     = "✘";
                             break;
                         case Level::Critical:
-                            level_fg = "\033[38;2;255;255;255m";
-                            level_bg = "\033[48;2;230;64;96m";    // cherry bg
+                            level_fg = "\033[38;2;255;200;210m";  // light pink on bg
+                            level_bg = "\033[48;2;180;40;70m";    // deep cherry bg
                             icon     = "♡";
                             break;
                         default: break;
