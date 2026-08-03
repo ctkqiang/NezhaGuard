@@ -146,6 +146,7 @@ namespace Nezha::Core {
             } else if (fs::is_directory(t.path, ec)) {
                 for (auto it = fs::recursive_directory_iterator(t.path, ec);
                      it != fs::recursive_directory_iterator(); ++it) {
+
                     if (!running_) break;
 
                     if (it->is_regular_file() && is_webshell_ext(it->path().extension().string())) {
@@ -192,11 +193,12 @@ namespace Nezha::Core {
         for (auto c: data) ++freq[static_cast<std::uint8_t>(c)];
 
         double entropy = 0.0;
-        auto n = static_cast<double>(data.size());
+        const auto n = static_cast<double>(data.size());
 
-        for (int f: freq) {
+        for (const int f: freq) {
             if (f == 0) continue;
-            double p = static_cast<double>(f) / n;
+            const double p = static_cast<double>(f) / n;
+
             entropy -= p * std::log2(p);
         }
 
@@ -231,6 +233,7 @@ namespace Nezha::Core {
                 entropy > 6.5 ? Severity::Error : Severity::Warn
             });
         }
+
         if (content.size() < 80 && !results.empty()) {
             results.push_back({
                 path, "mini_shell", "极小文件含恶意特征，疑似一句话木马",
