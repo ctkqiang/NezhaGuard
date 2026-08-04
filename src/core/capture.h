@@ -5,6 +5,7 @@
 #ifndef NEZHAGUARD_CAPTURE_H
 #define NEZHAGUARD_CAPTURE_H
 
+#include <cstdint>
 #include <functional>
 #include <string>
 #include <vector>

@@ -3,6 +3,7 @@
 //
 
 #include "arena.h"
+#include <cstring>
 
 namespace Nezha::Core {
     /*
