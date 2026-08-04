@@ -2176,7 +2176,7 @@ void monitor::run_nmap_scan(const QString &ip) {
     root->addLayout(btnBar);
     btnBar->addStretch();
 
-n    auto *closeBtn = new QPushButton(QStringLiteral("Close"));
+    auto *closeBtn = new QPushButton(QStringLiteral("Close"));
     closeBtn->setCursor(Qt::PointingHandCursor);
     closeBtn->setStyleSheet(QStringLiteral(
         "QPushButton { background:%1; color:%2; border:1px solid %3; border-radius:6px;"
