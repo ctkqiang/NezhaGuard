@@ -25,25 +25,25 @@ namespace Nezha::Database {
         )SQL";
 
         constexpr const char *kInsertSQL =
-            "INSERT OR REPLACE INTO quarantine (ip_address, reason, threat_score) "
-            "VALUES (?, ?, ?);";
+                "INSERT OR REPLACE INTO quarantine (ip_address, reason, threat_score) "
+                "VALUES (?, ?, ?);";
 
         constexpr const char *kSelectOneSQL =
-            "SELECT COUNT(*) FROM quarantine WHERE ip_address = ?;";
+                "SELECT COUNT(*) FROM quarantine WHERE ip_address = ?;";
 
         constexpr const char *kDeleteSQL =
-            "DELETE FROM quarantine WHERE ip_address = ?;";
+                "DELETE FROM quarantine WHERE ip_address = ?;";
 
         constexpr const char *kSelectAllSQL =
-            "SELECT ip_address, reason, threat_score, created_at FROM quarantine "
-            "ORDER BY created_at DESC;";
+                "SELECT ip_address, reason, threat_score, created_at FROM quarantine "
+                "ORDER BY created_at DESC;";
 
         void EnsureDB() {
             if (g_quarantine_db) return;
 
             if (sqlite3_open(kQuarantineDBPath, &g_quarantine_db) != SQLITE_OK) {
                 std::cerr << "[DatabaseHelper] 无法打开隔离数据库: "
-                          << sqlite3_errmsg(g_quarantine_db) << '\n';
+                        << sqlite3_errmsg(g_quarantine_db) << '\n';
                 return;
             }
 
@@ -82,7 +82,7 @@ namespace Nezha::Database {
         sqlite3_stmt *stmt = nullptr;
         if (sqlite3_prepare_v2(g_quarantine_db, kInsertSQL, -1, &stmt, nullptr) != SQLITE_OK) {
             std::cerr << "[DatabaseHelper] prepare insert: "
-                      << sqlite3_errmsg(g_quarantine_db) << '\n';
+                    << sqlite3_errmsg(g_quarantine_db) << '\n';
             return;
         }
 
@@ -92,11 +92,11 @@ namespace Nezha::Database {
 
         if (sqlite3_step(stmt) != SQLITE_DONE) {
             std::cerr << "[DatabaseHelper] 隔离IP写入失败: "
-                      << sqlite3_errmsg(g_quarantine_db) << '\n';
+                    << sqlite3_errmsg(g_quarantine_db) << '\n';
         } else {
             g_quarantine_cache.insert(ip);
             std::cout << "[DatabaseHelper] IP已隔离: " << ip
-                      << " 原因: " << reason << '\n';
+                    << " 原因: " << reason << '\n';
         }
 
         sqlite3_finalize(stmt);
@@ -117,8 +117,7 @@ namespace Nezha::Database {
         if (!g_quarantine_db) return;
 
         sqlite3_stmt *stmt = nullptr;
-        if (sqlite3_prepare_v2(g_quarantine_db, kDeleteSQL, -1, &stmt, nullptr) != SQLITE_OK)
-            return;
+        if (sqlite3_prepare_v2(g_quarantine_db, kDeleteSQL, -1, &stmt, nullptr) != SQLITE_OK) { return; }
 
         sqlite3_bind_text(stmt, 1, ip.c_str(), -1, SQLITE_TRANSIENT);
         sqlite3_step(stmt);
@@ -132,8 +131,9 @@ namespace Nezha::Database {
         if (!g_quarantine_db) return list;
 
         sqlite3_stmt *stmt = nullptr;
-        if (sqlite3_prepare_v2(g_quarantine_db, kSelectAllSQL, -1, &stmt, nullptr) != SQLITE_OK)
+        if (sqlite3_prepare_v2(g_quarantine_db, kSelectAllSQL, -1, &stmt, nullptr) != SQLITE_OK) {
             return list;
+        }
 
         while (sqlite3_step(stmt) == SQLITE_ROW) {
             QuarantineRecord r{};

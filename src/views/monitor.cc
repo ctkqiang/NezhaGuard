@@ -41,6 +41,8 @@
 #include <QPushButton>
 #include <QRegularExpression>
 #include <QShortcut>
+#include <QGestureEvent>
+#include <QPinchGesture>
 #include <QSortFilterProxyModel>
 #include <QStyleHints>
 #include <QStyledItemDelegate>
@@ -318,6 +320,14 @@ monitor::monitor(QWidget *parent) : QMainWindow(parent), ui(new Ui::monitor) {
         });
     }
 
+    // macOS standard shortcuts
+    new QShortcut(QKeySequence::Quit, this, [this]() { tray_quit(); });
+    new QShortcut(QKeySequence::Close, this, [this]() { hide(); });
+    new QShortcut(QKeySequence::Preferences, this, [this]() {
+        ui->sidebar->setCurrentRow(5);
+        ui->pages->setCurrentIndex(5);
+    });
+
     sparkline_timer_ = new QTimer(this);
     connect(sparkline_timer_, &QTimer::timeout, this, &monitor::update_sparkline);
     sparkline_timer_->start(2000);
@@ -367,10 +377,41 @@ monitor::monitor(QWidget *parent) : QMainWindow(parent), ui(new Ui::monitor) {
         }
     }
 
+    setAttribute(Qt::WA_AcceptTouchEvents);
+    grabGesture(Qt::PinchGesture);
+
     apply_theme(dark_mode_);
 }
 
 monitor::~monitor() { delete ui; }
+
+bool monitor::event(QEvent *e) {
+    if (e->type() == QEvent::Gesture) {
+        auto *ge = static_cast<QGestureEvent *>(e);
+        if (auto *pinch = static_cast<QPinchGesture *>(ge->gesture(Qt::PinchGesture))) {
+            if (pinch->state() == Qt::GestureUpdated || pinch->state() == Qt::GestureFinished) {
+                double factor = pinch->scaleFactor();
+                font_scale_ = qBound(0.5, font_scale_ * factor, 2.5);
+                int sz = qBound(8, qRound(11.0 * font_scale_), 28);
+                QString qss = QStringLiteral("QTableView { font-size:%1px; }").arg(sz);
+                auto apply_to_view = [sz](QTableView *v) {
+                    if (!v) return;
+                    auto f = v->font();
+                    f.setPixelSize(sz);
+                    v->setFont(f);
+                };
+                apply_to_view(ui->log_view);
+                apply_to_view(ui->alert_view);
+                apply_to_view(ui->honey_view);
+                apply_to_view(ui->recent_alerts_view);
+                if (pinch->state() == Qt::GestureFinished)
+                    pinch->setScaleFactor(1.0);
+                return true;
+            }
+        }
+    }
+    return QMainWindow::event(e);
+}
 
 // -- animations --
 void monitor::start_animations() {
@@ -671,10 +712,19 @@ void monitor::init_models() {
     log_search_proxy_->setSourceModel(log_proxy_);
     log_search_proxy_->setFilterRole(LogModel::MessageRole);
     log_search_proxy_->setFilterCaseSensitivity(Qt::CaseInsensitive);
+    log_search_proxy_->setSortRole(LogModel::TimestampRole);
     log_search_proxy_->setDynamicSortFilter(true);
+    log_search_proxy_->sort(0, Qt::DescendingOrder);
     ui->log_view->setModel(log_search_proxy_);
     connect(ui->log_search_box, &QLineEdit::textChanged, this, &monitor::log_search_changed);
     connect(ui->log_clear_btn, &QPushButton::clicked, this, &monitor::clear_logs);
+
+    // auto-scroll to latest (DESC = top)
+    connect(log_model_, &QAbstractItemModel::rowsInserted, this, [this]() {
+        QTimer::singleShot(0, this, [this]() {
+            ui->log_view->scrollToTop();
+        });
+    });
 
     // alert page
     alert_model_ = new LogModel(this);
@@ -1527,6 +1577,8 @@ void monitor::refresh_quarantine_list() {
         t->setItem(row, 1, i2);
         t->setItem(row, 2, i3);
     }
+    t->setSortingEnabled(true);
+    t->sortByColumn(2, Qt::DescendingOrder);
     t->resizeColumnToContents(0);
     t->horizontalHeader()->setStretchLastSection(true);
 }

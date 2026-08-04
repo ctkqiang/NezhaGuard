@@ -119,6 +119,8 @@ private:
     void refresh_quickstats();
     void start_animations();
 
+    bool event(QEvent *e) override;
+
     Ui::monitor *ui;
     LogModel *log_model_ = nullptr;
     LogModel *alert_model_ = nullptr;
@@ -152,6 +154,7 @@ private:
     QAction *import_act_ = nullptr;
     bool dark_mode_ = true;
     QTime start_time_;
+    double font_scale_ = 1.0;
 };
 
 #endif //NEZHAGUARD_MONITOR_H

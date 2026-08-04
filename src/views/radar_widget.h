@@ -8,6 +8,7 @@
 #include <QFrame>
 #include <QString>
 #include <QTimer>
+#include <QVariantAnimation>
 #include <QVector>
 
 struct RadarDevice {
@@ -29,8 +30,10 @@ protected:
 
 private:
     QVector<RadarDevice> devices_;
-    QTimer *sweep_timer_ = nullptr;
-    int sweep_angle_ = 0;
+    QVariantAnimation *sweep_anim_ = nullptr;
+    QVariantAnimation *pulse_anim_ = nullptr;
+    double sweep_angle_ = 0.0;
+    double pulse_radius_ = 0.0;
 };
 
 #endif //NEZHAGUARD_RADAR_WIDGET_H

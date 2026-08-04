@@ -344,6 +344,7 @@ static int run_cli_mode() {
 }
 
 
+#ifndef NEZHAGUARD_CLI_ONLY
 #include <QApplication>
 #include <QTimer>
 #include <QString>
@@ -612,6 +613,8 @@ static int run_gui_mode(int argc, char *argv[]) {
     return ret;
 }
 
+#endif // NEZHAGUARD_CLI_ONLY
+
 
 int main(const int argc, char *argv[]) {
     bool no_gui = false;
@@ -624,6 +627,10 @@ int main(const int argc, char *argv[]) {
         }
     }
 
+#ifdef NEZHAGUARD_CLI_ONLY
+    (void)argc; (void)no_gui;
+    return run_cli_mode();
+#else
     if (no_gui) {
         return run_cli_mode();
     }
@@ -635,4 +642,5 @@ int main(const int argc, char *argv[]) {
     if (show_gui) return run_gui_mode(argc, argv);
 
     return run_cli_mode();
+#endif
 }

@@ -6,10 +6,14 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTORCC ON)
 
+option(CLI_ONLY "Build CLI-only without Qt GUI" OFF)
+
 add_compile_definitions($<$<CONFIG:Debug>:NEZHAGUARD_DEBUG>)
 
+# ============================================================
+# 核心源文件（GUI + CLI 共用）
+# ============================================================
 set(NEZHA_CORE_SOURCES
-    main.cc
     src/utilities/logger.cc
     src/utilities/logger.h
     src/core/ipaddr.cc
@@ -51,27 +55,37 @@ set(NEZHA_CORE_SOURCES
     src/core/application_monitor.h
     src/service/database_helper.cc
     src/service/database_helper.h
-    src/views/monitor.cc
-    src/views/monitor.h
-    src/views/monitor.ui
-    src/views/resources.qrc
-    src/views/log_model.cc
-    src/views/log_model.h
-    src/views/gui_sink.cc
-    src/views/gui_sink.h
-    src/views/detail_panel.cc
-    src/views/detail_panel.h
-    src/views/radar_widget.cc
-    src/views/radar_widget.h
-    src/views/theme.h
+    src/service/notifier.cc
+    src/service/notifier.h
     src/contants.h
-        src/service/notifier.cc
-        src/service/notifier.h
 )
 
-if(APPLE)
+if(NOT CLI_ONLY)
+    set(NEZHA_GUI_SOURCES
+        main.cc
+        src/views/monitor.cc
+        src/views/monitor.h
+        src/views/monitor.ui
+        src/views/resources.qrc
+        src/views/log_model.cc
+        src/views/log_model.h
+        src/views/gui_sink.cc
+        src/views/gui_sink.h
+        src/views/detail_panel.cc
+        src/views/detail_panel.h
+        src/views/radar_widget.cc
+        src/views/radar_widget.h
+        src/views/theme.h
+    )
+    set(NEZHA_ALL_SOURCES ${NEZHA_CORE_SOURCES} ${NEZHA_GUI_SOURCES})
+else()
+    add_compile_definitions(NEZHAGUARD_CLI_ONLY)
+    set(NEZHA_ALL_SOURCES ${NEZHA_CORE_SOURCES} main.cc)
+endif()
+
+if(APPLE AND NOT CLI_ONLY)
     add_executable(NezhaGuard MACOSX_BUNDLE
-        ${NEZHA_CORE_SOURCES}
+        ${NEZHA_ALL_SOURCES}
         src/views/app_icon.svg
         src/views/app_icon.icns
         src/Info.plist
@@ -92,15 +106,17 @@ if(APPLE)
         ${CMAKE_PREFIX_PATH}
     )
 else()
-    add_executable(NezhaGuard ${NEZHA_CORE_SOURCES})
+    add_executable(NezhaGuard ${NEZHA_ALL_SOURCES})
 endif()
 
 target_include_directories(NezhaGuard PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
-find_package(Qt6 REQUIRED COMPONENTS Widgets Concurrent)
+if(NOT CLI_ONLY)
+    find_package(Qt6 REQUIRED COMPONENTS Widgets Concurrent)
+endif()
 
 find_library(PCAP_LIB pcap REQUIRED
-    PATHS /opt/homebrew/lib /usr/local/lib /usr/lib
+    PATHS /opt/homebrew/lib /usr/local/lib /usr/lib /usr/lib/aarch64-linux-gnu /usr/lib/x86_64-linux-gnu
 )
 find_path(PCAP_INCLUDE_DIR pcap.h REQUIRED
     PATHS /opt/homebrew/include /usr/local/include /usr/include
@@ -108,25 +124,38 @@ find_path(PCAP_INCLUDE_DIR pcap.h REQUIRED
 target_include_directories(NezhaGuard PRIVATE ${PCAP_INCLUDE_DIR})
 
 find_library(SQLITE3_LIB sqlite3 REQUIRED
-    PATHS /opt/homebrew/lib /usr/local/lib /usr/lib
+    PATHS /opt/homebrew/lib /usr/local/lib /usr/lib /usr/lib/aarch64-linux-gnu /usr/lib/x86_64-linux-gnu
 )
 find_path(SQLITE3_INCLUDE_DIR sqlite3.h REQUIRED
     PATHS /opt/homebrew/opt/sqlite/include /opt/homebrew/Cellar/sqlite/3.53.3/include
           /opt/homebrew/include /usr/local/include /usr/include
 )
 target_include_directories(NezhaGuard PRIVATE ${SQLITE3_INCLUDE_DIR})
-target_link_libraries(NezhaGuard PRIVATE ${PCAP_LIB} Qt6::Widgets Qt6::Concurrent ${SQLITE3_LIB})
+
+if(NOT CLI_ONLY)
+    target_link_libraries(NezhaGuard PRIVATE ${PCAP_LIB} Qt6::Widgets Qt6::Concurrent ${SQLITE3_LIB})
+else()
+    target_link_libraries(NezhaGuard PRIVATE ${PCAP_LIB} ${SQLITE3_LIB})
+endif()
 
 # ============================================================
 # 安装规则
 # ============================================================
 include(GNUInstallDirs)
 
-if(APPLE)
+if(APPLE AND NOT CLI_ONLY)
     set(INSTALL_BIN_DIR .)
     set(INSTALL_DATA_DIR "Contents/Resources")
     install(TARGETS NezhaGuard BUNDLE DESTINATION .)
     install(FILES rules/default.yaml DESTINATION "Contents/Resources/rules")
+elseif(NOT CLI_ONLY)
+    install(TARGETS NezhaGuard RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+    install(FILES rules/default.yaml DESTINATION /etc/nezhaguard/rules)
+    install(DIRECTORY config/ DESTINATION /etc/nezhaguard/config
+            FILES_MATCHING PATTERN "*.conf"
+            PATTERN "notifier" EXCLUDE)
+    install(DIRECTORY config/notifier/ DESTINATION /etc/nezhaguard/config/notifier
+            FILES_MATCHING PATTERN "*.conf")
 else()
     install(TARGETS NezhaGuard RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
     install(FILES rules/default.yaml DESTINATION /etc/nezhaguard/rules)
@@ -138,28 +167,30 @@ else()
 endif()
 
 # ============================================================
-# CPack DEB / macOS 打包
+# CPack
 # ============================================================
-set(CPACK_PACKAGE_NAME "nezhaguard")
-set(CPACK_PACKAGE_VERSION "0.0.1")
-set(CPACK_PACKAGE_VENDOR "钟智强")
-set(CPACK_PACKAGE_CONTACT "johnmelodymel@qq.com")
-set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "哪吒网络安全 SIEM — 蓝队主动防御平台")
-set(CPACK_PACKAGE_HOMEPAGE_URL "https://github.com/ctkqiang/NezhaGuard")
-set(CPACK_RESOURCE_FILE_README "${CMAKE_SOURCE_DIR}/README.md")
+if(NOT CLI_ONLY)
+    set(CPACK_PACKAGE_NAME "nezhaguard")
+    set(CPACK_PACKAGE_VERSION "0.0.1")
+    set(CPACK_PACKAGE_VENDOR "钟智强")
+    set(CPACK_PACKAGE_CONTACT "johnmelodymel@qq.com")
+    set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "哪吒网络安全 SIEM — 蓝队主动防御平台")
+    set(CPACK_PACKAGE_HOMEPAGE_URL "https://github.com/ctkqiang/NezhaGuard")
+    set(CPACK_RESOURCE_FILE_README "${CMAKE_SOURCE_DIR}/README.md")
 
-if(NOT APPLE)
-    set(CPACK_GENERATOR "DEB")
-    set(CPACK_DEBIAN_PACKAGE_NAME "nezhaguard")
-    set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "amd64")
-    set(CPACK_DEBIAN_PACKAGE_MAINTAINER "钟智强 <johnmelodymel@qq.com>")
-    set(CPACK_DEBIAN_PACKAGE_SECTION "net")
-    set(CPACK_DEBIAN_PACKAGE_PRIORITY "optional")
-    set(CPACK_DEBIAN_PACKAGE_DEPENDS
-        "libqt6widgets6t64 (>= 6.5.0), libpcap0.8t64 (>= 1.10.0), libsqlite3-0 (>= 3.40.0)")
-    set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
-    set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA
-        "${CMAKE_SOURCE_DIR}/scripts/deb-postinst;${CMAKE_SOURCE_DIR}/scripts/deb-postrm")
+    if(NOT APPLE)
+        set(CPACK_GENERATOR "DEB")
+        set(CPACK_DEBIAN_PACKAGE_NAME "nezhaguard")
+        set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "amd64")
+        set(CPACK_DEBIAN_PACKAGE_MAINTAINER "钟智强 <johnmelodymel@qq.com>")
+        set(CPACK_DEBIAN_PACKAGE_SECTION "net")
+        set(CPACK_DEBIAN_PACKAGE_PRIORITY "optional")
+        set(CPACK_DEBIAN_PACKAGE_DEPENDS
+            "libqt6widgets6t64 (>= 6.5.0), libpcap0.8t64 (>= 1.10.0), libsqlite3-0 (>= 3.40.0)")
+        set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
+        set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA
+            "${CMAKE_SOURCE_DIR}/scripts/deb-postinst;${CMAKE_SOURCE_DIR}/scripts/deb-postrm")
+    endif()
+
+    include(CPack)
 endif()
-
-include(CPack)
