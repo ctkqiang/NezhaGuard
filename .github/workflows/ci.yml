@@ -1,0 +1,65 @@
+# 哪吒网络安全 SIEM — 持续集成
+# 推送/PR 到 main 分支时自动构建 macOS / Linux
+name: 持续集成
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ============================================================
+  # macOS — 完整 GUI 构建
+  # ============================================================
+  macos:
+    name: macOS (Qt GUI)
+    runs-on: macos-latest
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 安装 Qt6 与依赖
+        run: brew install qt@6 libpcap sqlite3 ninja
+
+      - name: CMake 配置
+        run: |
+          cmake -B build -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_PREFIX_PATH="$(brew --prefix qt@6)" \
+            -DCLI_ONLY=OFF
+
+      - name: 编译
+        run: cmake --build build
+
+  # ============================================================
+  # Linux — CLI 构建 (无 Qt，快速验证)
+  # ============================================================
+  linux:
+    name: Linux (CLI)
+    runs-on: ubuntu-24.04
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 安装依赖
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            g++-14 cmake ninja-build libpcap-dev libsqlite3-dev
+
+      - name: CMake 配置 (CLI Only)
+        run: |
+          cmake -B build -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCLI_ONLY=ON
+        env:
+          CC: gcc-14
+          CXX: g++-14
+
+      - name: 编译
+        run: cmake --build build

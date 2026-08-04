@@ -1,0 +1,255 @@
+# 哪吒网络安全 SIEM — 发布工作流
+# 推送 tag（v*）时自动构建所有平台并发布到 GitHub Release
+name: 发布
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  # ============================================================
+  # macOS — App Bundle → 上传构件
+  # ============================================================
+  macos-build:
+    name: macOS 构建
+    runs-on: macos-latest
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 安装依赖
+        run: brew install qt@6 libpcap sqlite3 ninja create-dmg
+
+      - name: CMake 配置
+        run: |
+          cmake -B build -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_PREFIX_PATH="$(brew --prefix qt@6)" \
+            -DCLI_ONLY=OFF
+
+      - name: 编译
+        run: cmake --build build
+
+      - name: 创建 DMG
+        run: |
+          mkdir -p dist
+          cp -R build/NezhaGuard.app dist/
+          create-dmg \
+            --volname "哪吒网络安全 SIEM" \
+            --window-pos 200 120 --window-size 640 420 \
+            --icon-size 100 --icon "NezhaGuard.app" 160 200 \
+            --hide-extension "NezhaGuard.app" \
+            --app-drop-link 400 200 \
+            "NezhaGuard-macOS-${{ github.ref_name }}.dmg" dist/
+
+      - name: 计算校验和
+        run: shasum -a 256 NezhaGuard-macOS-${{ github.ref_name }}.dmg > NezhaGuard-macOS-${{ github.ref_name }}.dmg.sha256
+
+      - name: 上传构件
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-release
+          path: |
+            NezhaGuard-macOS-${{ github.ref_name }}.dmg
+            NezhaGuard-macOS-${{ github.ref_name }}.dmg.sha256
+          retention-days: 3
+
+  # ============================================================
+  # Linux — CLI tar.gz → 上传构件
+  # ============================================================
+  linux-build:
+    name: Linux 构建
+    runs-on: ubuntu-24.04
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 安装依赖
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            g++-14 cmake ninja-build libpcap-dev libsqlite3-dev
+
+      - name: CMake 配置 (CLI)
+        run: |
+          cmake -B build -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCLI_ONLY=ON
+        env:
+          CC: gcc-14
+          CXX: g++-14
+
+      - name: 编译
+        run: cmake --build build
+
+      - name: 打包
+        run: |
+          cmake --install build --prefix dist
+          tar -czf NezhaGuard-Linux-CLI-${{ github.ref_name }}.tar.gz -C dist .
+          shasum -a 256 NezhaGuard-Linux-CLI-${{ github.ref_name }}.tar.gz \
+            > NezhaGuard-Linux-CLI-${{ github.ref_name }}.tar.gz.sha256
+
+      - name: 上传构件
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-release
+          path: |
+            NezhaGuard-Linux-CLI-${{ github.ref_name }}.tar.gz
+            NezhaGuard-Linux-CLI-${{ github.ref_name }}.tar.gz.sha256
+          retention-days: 3
+
+  # ============================================================
+  # Windows — 便携 zip → 上传构件
+  # ============================================================
+  windows-build:
+    name: Windows 构建
+    runs-on: windows-latest
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 安装 Qt6
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.7.*'
+          cache: true
+
+      - name: 安装 Npcap SDK
+        shell: pwsh
+        run: |
+          Invoke-WebRequest -Uri "https://npcap.com/dist/npcap-sdk-1.13.zip" -OutFile "npcap-sdk.zip"
+          Expand-Archive npcap-sdk.zip -DestinationPath npcap-sdk
+
+      - name: 编译 SQLite3
+        shell: cmd
+        run: |
+          curl -L -o sqlite.zip https://sqlite.org/2024/sqlite-amalgamation-3460000.zip
+          tar -xf sqlite.zip
+          cd sqlite-amalgamation-3460000
+          cl /c /O2 sqlite3.c
+          lib sqlite3.obj /OUT:sqlite3.lib
+
+      - name: CMake 配置
+        run: |
+          cmake -B build -G "Ninja" `
+            -DCMAKE_BUILD_TYPE=Release `
+            -DCLI_ONLY=OFF `
+            -DPCAP_INCLUDE_DIR="${{ github.workspace }}/npcap-sdk/Include" `
+            -DPCAP_LIB="${{ github.workspace }}/npcap-sdk/Lib/x64/wpcap.lib" `
+            -DSQLITE3_INCLUDE_DIR="${{ github.workspace }}/sqlite-amalgamation-3460000" `
+            -DSQLITE3_LIB="${{ github.workspace }}/sqlite-amalgamation-3460000/sqlite3.lib"
+
+      - name: 编译
+        run: cmake --build build
+
+      - name: 部署 Qt DLL
+        run: windeployqt build/NezhaGuard.exe
+
+      - name: 打包 zip
+        shell: pwsh
+        run: |
+          $zip = "NezhaGuard-Windows-${{ github.ref_name }}.zip"
+          Compress-Archive -Path build/NezhaGuard.exe, build/*.dll, build/platforms/, build/styles/ -DestinationPath $zip
+          (Get-FileHash $zip -Algorithm SHA256).Hash + "  " + $zip | Out-File "$zip.sha256"
+
+      - name: 上传构件
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-release
+          path: |
+            NezhaGuard-Windows-${{ github.ref_name }}.zip
+            NezhaGuard-Windows-${{ github.ref_name }}.zip.sha256
+          retention-days: 3
+
+  # ============================================================
+  # Docker 镜像 → GitHub Container Registry
+  # ============================================================
+  docker-build:
+    name: Docker 镜像
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 登录到 GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 构建并推送
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}:${{ github.ref_name }}
+            ghcr.io/${{ github.repository }}:latest
+
+  # ============================================================
+  # 统一发布 — 收集所有构件并创建 GitHub Release
+  # ============================================================
+  publish:
+    name: 发布 Release
+    needs: [macos-build, linux-build, windows-build, docker-build]
+    runs-on: ubuntu-latest
+    steps:
+      - name: 下载所有构件
+        uses: actions/download-artifact@v4
+        with:
+          pattern: '*-release'
+          path: dist
+          merge-multiple: true
+
+      - name: 列出构件
+        run: ls -lh dist/
+
+      - name: 创建 GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "哪吒网络安全 SIEM ${{ github.ref_name }}"
+          body: |
+            ## 哪吒网络安全 SIEM ${{ github.ref_name }}
+
+            蓝队主动防御 SIEM 系统 — 跨平台发布
+
+            ### 下载
+
+            | 平台 | 文件 | 说明 |
+            |------|------|------|
+            | macOS | `.dmg` | 双击挂载，拖入 `/Applications` |
+            | Linux | `.tar.gz` | CLI 无界面版，服务器部署 |
+            | Windows | `.zip` | 需先安装 [Npcap](https://npcap.com/#download) |
+
+            ### Docker
+
+            ```bash
+            docker pull ghcr.io/${{ github.repository }}:${{ github.ref_name }}
+            docker run --rm --net=host --cap-add=NET_RAW --cap-add=NET_ADMIN \
+              -v ./logs:/app/logs -v ./data:/app/data \
+              -e NEZHA_INTERFACE=eth0 ghcr.io/${{ github.repository }}:${{ github.ref_name }}
+            ```
+
+            ### 校验
+
+            所有文件附带 `.sha256` 校验文件，下载后请验证：
+
+            ```bash
+            shasum -a 256 -c *.sha256
+            ```
+
+            ### 构建环境
+
+            - macOS: Xcode + Qt6 (Homebrew)
+            - Linux: GCC 14, CLI-only
+            - Windows: MSVC + Qt6 + Npcap SDK
+            - Docker: ubuntu:plucky, CLI-only
+          files: dist/*
+          draft: false
+          prerelease: false
+          fail_on_unmatched_files: false
