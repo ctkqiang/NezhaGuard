@@ -178,13 +178,16 @@ namespace Nezha::Core {
     }
 
     bool WebshellScanner::is_webshell_ext(std::string_view path) {
-        static constexpr std::array<std::string_view, 6> kExts = {
+        static constexpr std::array<std::string_view, 9> kExts = {
             ".php",
             ".phtml",
             ".php5",
             ".jsp",
             ".asp",
-            ".aspx"
+            ".aspx",
+            ".py",
+            ".js",
+            ".sql",
         };
 
         return std::ranges::any_of(kExts, [&](auto e) {

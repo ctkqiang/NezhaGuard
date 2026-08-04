@@ -54,7 +54,7 @@ namespace Nezha::Database {
 
         [[nodiscard]] static std::vector<QuarantineRecord> GetQuarantineList();
 
-        static void InitializeQuarantineDatabase();
+        static void InitializeQuarantineDatabase(const std::string &data_dir = "data/");
 
     private:
         DatabaseConfiguration m_config;

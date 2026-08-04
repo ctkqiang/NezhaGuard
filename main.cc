@@ -16,7 +16,11 @@
 
 #if defined(__APPLE__)
 #include <sys/sysctl.h>
+#include <mach-o/dyld.h>
+#include <limits.h>
 #endif
+
+#include <filesystem>
 
 #include "src/contants.h"
 #include "src/core/alert.h"
@@ -40,6 +44,57 @@
 
 using namespace Nezha;
 
+namespace fs = std::filesystem;
+
+struct AppPaths {
+    std::string rules_dir;    // rules/default.yaml
+    std::string config_dir;   // config/
+    std::string data_dir;     // data/ (DB + writable)
+    std::string log_dir;      // logs/
+};
+
+// 解析应用路径：macOS .app bundle → ~/Library/Application Support +
+// Bundle Resources；开发环境 → 当前目录
+static AppPaths resolve_app_paths() {
+    AppPaths p;
+
+#if defined(__APPLE__)
+    char exe[PATH_MAX];
+    uint32_t sz = sizeof(exe);
+    if (_NSGetExecutablePath(exe, &sz) == 0) {
+        char real[PATH_MAX];
+        if (realpath(exe, real)) {
+            std::string ep(real);
+            auto macos = ep.find(".app/Contents/MacOS/");
+            if (macos != std::string::npos) {
+                // 运行于 .app bundle 内
+                std::string resources = ep.substr(0, macos) + ".app/Contents/Resources/";
+                std::string home = getenv("HOME") ? getenv("HOME") : "/tmp";
+                std::string app_support = home + "/Library/Application Support/NezhaGuard";
+
+                p.rules_dir  = resources + "rules/";
+                p.config_dir = resources + "config/";
+                p.data_dir   = app_support + "/data/";
+                p.log_dir    = app_support + "/logs/";
+                return p;
+            }
+        }
+    }
+#endif
+    // 开发环境 / CLI / Linux — 使用当前目录
+    p.rules_dir  = "rules/";
+    p.config_dir = "config/";
+    p.data_dir   = "data/";
+    p.log_dir    = "logs/";
+    return p;
+}
+
+static void ensure_dirs(const AppPaths &p) {
+    std::error_code ec;
+    fs::create_directories(p.data_dir, ec);
+    fs::create_directories(p.log_dir, ec);
+}
+
 static const char *get_net_interface() {
     const char *env = std::getenv("NEZHA_INTERFACE");
     if (env && env[0] != '\0') return env;
@@ -54,8 +109,10 @@ static Core::PacketCapture *g_cap = nullptr;
 static Core::AttackDetector *g_detector = nullptr;
 static volatile bool g_running = true;
 
+static AppPaths g_paths;
+
 static void on_sighup(int) {
-    if (g_detector) g_detector->reload_rules("rules/default.yaml");
+    if (g_detector) g_detector->reload_rules((g_paths.rules_dir + "default.yaml").c_str());
 }
 
 static std::string quarantine_detail(const std::string &ip) {
@@ -87,10 +144,14 @@ static void on_signal(int) {
 }
 
 static int run_cli_mode() {
+    auto paths = resolve_app_paths();
+    ensure_dirs(paths);
+    g_paths = paths;
+
     Core::HoneypotListener honeypot;
 
-    Log::init_default("logs/nezha.log", Log::Level::Info);
-    Database::DatabaseHelper::InitializeQuarantineDatabase();
+    Log::init_default((paths.log_dir + "nezha.log").c_str(), Log::Level::Info);
+    Database::DatabaseHelper::InitializeQuarantineDatabase(paths.data_dir);
     Core::TorChecker tor_checker;
 
     tor_checker.initialize();
@@ -153,13 +214,13 @@ static int run_cli_mode() {
     Core::Arena arena(128 * 1024);
     Core::AttackDetector detector;
 
-    detector.load_rules("rules/default.yaml");
+    detector.load_rules((paths.rules_dir + "default.yaml").c_str());
     g_detector = &detector;
 
     Core::AlertManager alerter;
     alerter.set_dedup_window(10);
 
-    Service::Notifier::instance().load_config_dir("config/notifier");
+    Service::Notifier::instance().load_config_dir((paths.config_dir + "notifier").c_str());
 
     alerter.set_callback([&](const Core::Alert &a) {
         Service::Notifier::instance().on_alert(a);
@@ -222,7 +283,7 @@ static int run_cli_mode() {
     NZ_INFO("  ✓ 日志引擎: {} sources", sizeof(log_paths) / sizeof(log_paths[0]));
 
     if constexpr (Configuration::ApplicationConstants::ShowOtherApplicationLogs) {
-        int n = app_monitor.load_from_file("config/monitor_apps.conf");
+        int n = app_monitor.load_from_file((paths.config_dir + "monitor_apps.conf").c_str());
         if (n > 0) {
             app_monitor.start();
             NZ_INFO("  ✓ 应用监控: {} apps", n);
@@ -369,8 +430,12 @@ static int run_gui_mode(int argc, char *argv[]) {
 
     qputenv("QT_LOGGING_RULES", "qt.*=false");
 
-    Log::init_default("logs/nezha.log", Log::Level::Info);
-    Database::DatabaseHelper::InitializeQuarantineDatabase();
+    auto paths = resolve_app_paths();
+    ensure_dirs(paths);
+    g_paths = paths;
+
+    Log::init_default((paths.log_dir + "nezha.log").c_str(), Log::Level::Info);
+    Database::DatabaseHelper::InitializeQuarantineDatabase(paths.data_dir);
     Core::TorChecker tor_checker;
 
     tor_checker.initialize();
@@ -405,12 +470,12 @@ static int run_gui_mode(int argc, char *argv[]) {
 
     Core::Arena arena(128 * 1024);
     Core::AttackDetector detector;
-    detector.load_rules("rules/default.yaml");
+    detector.load_rules((paths.rules_dir + "default.yaml").c_str());
     g_detector = &detector;
     Core::AlertManager alerter;
     alerter.set_dedup_window(10);
 
-    Service::Notifier::instance().load_config_dir("config/notifier");
+    Service::Notifier::instance().load_config_dir((paths.config_dir + "notifier").c_str());
     Service::Notifier::instance().set_gui_callback([](const std::string &title, const std::string &body) {
 #if defined(__APPLE__)
         std::string cmd = std::format(
@@ -513,7 +578,7 @@ static int run_gui_mode(int argc, char *argv[]) {
     NZ_INFO("日志引擎已启动: {} 监控源", sizeof(log_paths) / sizeof(log_paths[0]));
 
     if constexpr (Configuration::ApplicationConstants::ShowOtherApplicationLogs) {
-        int n = app_monitor.load_from_file("config/monitor_apps.conf");
+        int n = app_monitor.load_from_file((paths.config_dir + "monitor_apps.conf").c_str());
         if (n > 0) {
             app_monitor.start();
             NZ_INFO("应用监控已启动: {} 个外部应用", n);

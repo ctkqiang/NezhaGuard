@@ -23,46 +23,46 @@ namespace Nezha::Log {
 
             void write(Level lv, const char *line, std::size_t len) override {
                 if (color_) {
-                    // ♡ pink + cyan kawaii ANSI — readable on any terminal bg ♡
-                    const char *level_fg  = "\033[38;2;48;200;160m";    // readable cyan
+                    // pink + cyan ANSI — readable on any terminal bg
+                    const char *level_fg  = "\033[38;2;48;200;160m";    // cyan
                     const char *level_bg  = "";
-                    const char *icon      = "♡";
+                    const char *icon      = "*";
                     switch (lv) {
                         case Level::Trace:
                             level_fg = "\033[38;2;140;120;180m";  // muted lavender
-                            icon     = "·";
+                            icon     = ".";
                             break;
                         case Level::Debug:
                             level_fg = "\033[38;2;80;200;170m";   // medium cyan
-                            icon     = "◇";
+                            icon     = "o";
                             break;
                         case Level::Info:
-                            level_fg = "\033[38;2;30;190;150m";   // readable cyan
-                            icon     = "♡";
+                            level_fg = "\033[38;2;30;190;150m";   // cyan
+                            icon     = "*";
                             break;
                         case Level::Warn:
-                            level_fg = "\033[38;2;240;96;160m";   // readable pink
-                            icon     = "⚡";
+                            level_fg = "\033[38;2;240;96;160m";   // pink
+                            icon     = "!";
                             break;
                         case Level::Error:
-                            level_fg = "\033[38;2;230;64;96m";    // readable cherry
-                            icon     = "✘";
+                            level_fg = "\033[38;2;230;64;96m";    // cherry
+                            icon     = "X";
                             break;
                         case Level::Critical:
                             level_fg = "\033[38;2;255;200;210m";  // light pink on bg
                             level_bg = "\033[48;2;180;40;70m";    // deep cherry bg
-                            icon     = "♡";
+                            icon     = "!!";
                             break;
                         default: break;
                     }
                     std::fprintf(stderr,
-                        "\033[38;2;240;96;160m♡\033[0m "
+                        "\033[38;2;240;96;160m[Nezha]\033[0m "
                         "%s%s%s\033[0m "
                         "\033[38;2;30;190;150m%s\033[0m  %s%.*s\033[0m\n",
                         level_bg, level_fg, icon, icon,
                         level_fg, static_cast<int>(len), line);
                 } else {
-                    std::fprintf(stderr, "♡ %.*s\n", static_cast<int>(len), line);
+                    std::fprintf(stderr, "[Nezha] %.*s\n", static_cast<int>(len), line);
                 }
             }
 
@@ -203,7 +203,7 @@ namespace Nezha::Log {
         );
 
         std::string full = std::format(
-            "♡ [{}] {}: {}",
+            "[{}] {}: {}",
             level_to_string(lv), time_str, msg
         );
         write_to_sinks(lv, full);

@@ -84,7 +84,7 @@ void DetailPanel::show_log(const QString &timestamp, const QString &level,
     }
 
     QString html = QStringLiteral("<html><head><style>%1</style></head><body>%2</body></html>")
-        .arg(css(), card_html(QStringLiteral("♡ 日志详情"), Theme::Pink, body));
+        .arg(css(), card_html(QStringLiteral("Log Detail"), Theme::Pink, body));
     setHtml(html);
 
     if (!ips.isEmpty()) {
@@ -103,7 +103,7 @@ void DetailPanel::show_alert(const QString &timestamp, const QString &level,
     body += QStringLiteral("</table>");
 
     QString html = QStringLiteral("<html><head><style>%1</style></head><body>%2</body></html>")
-        .arg(css(), card_html(QStringLiteral("♡ 告警详情"), Theme::Pink, body));
+        .arg(css(), card_html(QStringLiteral("Alert Detail"), Theme::Pink, body));
     setHtml(html);
 }
 
@@ -115,7 +115,7 @@ void DetailPanel::show_honeypot(const QString &timestamp, const QString &message
     body += QStringLiteral("</table>");
 
     QString html = QStringLiteral("<html><head><style>%1</style></head><body>%2</body></html>")
-        .arg(css(), card_html(QStringLiteral("♡ 蜜罐详情"), Theme::Pink, body));
+        .arg(css(), card_html(QStringLiteral("Honeypot Detail"), Theme::Pink, body));
     setHtml(html);
 }
 

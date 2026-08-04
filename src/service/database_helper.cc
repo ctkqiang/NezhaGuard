@@ -11,8 +11,7 @@ namespace Nezha::Database {
         sqlite3 *g_quarantine_db = nullptr;
         std::mutex g_db_mutex;
         std::unordered_set<std::string> g_quarantine_cache;
-
-        constexpr const char *kQuarantineDBPath = "nezha_quarantine.db";
+        std::string g_db_path = "data/nezha_quarantine.db";
 
         constexpr const char *kCreateTableSQL = R"SQL(
             CREATE TABLE IF NOT EXISTS quarantine (
@@ -41,7 +40,7 @@ namespace Nezha::Database {
         void EnsureDB() {
             if (g_quarantine_db) return;
 
-            if (sqlite3_open(kQuarantineDBPath, &g_quarantine_db) != SQLITE_OK) {
+            if (sqlite3_open(g_db_path.c_str(), &g_quarantine_db) != SQLITE_OK) {
                 std::cerr << "[DatabaseHelper] 无法打开隔离数据库: "
                         << sqlite3_errmsg(g_quarantine_db) << '\n';
                 return;
@@ -67,8 +66,9 @@ namespace Nezha::Database {
         }
     }
 
-    void DatabaseHelper::InitializeQuarantineDatabase() {
+    void DatabaseHelper::InitializeQuarantineDatabase(const std::string &data_dir) {
         std::lock_guard<std::mutex> lock(g_db_mutex);
+        g_db_path = data_dir + "/nezha_quarantine.db";
         EnsureDB();
     }
 

@@ -196,5 +196,5 @@ void RadarWidget::paintEvent(QPaintEvent *) {
     p.setPen(QColor(Theme::Pink));
     p.setFont(QFont(QStringLiteral("PingFang SC"), 9));
     p.drawText(QRect(8, 4, 240, 16), Qt::AlignLeft,
-               QStringLiteral("设备雷达 — %1 台").arg(devices_.size()));
+               QStringLiteral("Device Radar — %1").arg(devices_.size()));
 }

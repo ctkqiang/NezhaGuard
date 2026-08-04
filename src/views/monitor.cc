@@ -415,7 +415,7 @@ bool monitor::event(QEvent *e) {
 
 // -- animations --
 void monitor::start_animations() {
-    // ♡ 标题柔光呼吸动画 — 粉↔青循环 ♡
+    // 标题柔光呼吸动画 — 粉/青循环
     auto *glow = new QGraphicsDropShadowEffect(this);
     glow->setBlurRadius(8);
     glow->setOffset(0, 0);
@@ -442,7 +442,7 @@ void monitor::start_animations() {
     gc->setLoopCount(-1);
     gc->start();
 
-    // ♡ 状态指示器柔和心跳脉冲 ♡
+    // 状态指示器柔和心跳脉冲
     for (auto *s: {ui->status_dot}) {
         auto *a = new QPropertyAnimation(s, "minimumSize", this);
         a->setDuration(1600);
@@ -542,7 +542,7 @@ void monitor::apply_theme(bool d) {
     if (alert_detail_panel_) alert_detail_panel_->set_dark(d);
     if (honey_detail_panel_) honey_detail_panel_->set_dark(d);
 
-    // ♡ pink = primary, cyan = secondary ♡
+    // pink = primary, cyan = secondary
     auto B  = d ? Theme::DkBg      : Theme::LtBg;
     auto C  = d ? Theme::DkCard    : Theme::LtCard;
     auto Br = d ? Theme::DkBorder  : Theme::LtBorder;
@@ -565,11 +565,11 @@ void monitor::apply_theme(bool d) {
 
     s += QStringLiteral("QLabel { color:") + T + QStringLiteral("; } ");
 
-    // ♡ app title — hot pink ♡
+    // app title — hot pink
     s += QStringLiteral("#app_title { font-size:16px; font-weight:700; color:") + P
          + QStringLiteral("; } ");
 
-    // ♡ brand badge — pink→cyan gradient ♡
+    // brand badge — pink->cyan gradient
     s += QStringLiteral("#brand_badge { background:qlineargradient(x1:0,y1:0,x2:1,y2:1,stop:0 ")
          + P + QStringLiteral(",stop:1 ") + Cy
          + QStringLiteral("); color:") + B
@@ -578,7 +578,7 @@ void monitor::apply_theme(bool d) {
     s += QStringLiteral("#clock_label { font-size:10px; color:") + M + QStringLiteral("; font-weight:500; } ");
     s += QStringLiteral("#status_text { font-size:10px; color:") + Cy + QStringLiteral("; font-weight:600; } ");
 
-    // ♡ status dot — pink→cyan heartbeat ♡
+    // status dot — pink->cyan heartbeat
     s += QStringLiteral("#status_dot { background:qlineargradient(x1:0,y1:0,x2:1,y2:1,stop:0 ")
          + P + QStringLiteral(",stop:1 ") + Cy
          + QStringLiteral("); border-radius:6px; } ");
@@ -597,7 +597,7 @@ void monitor::apply_theme(bool d) {
     // section titles — cyan
     s += QStringLiteral("#dash_title,#logs_title,#alerts_title,#honey_title,#network_title,#recent_alerts_label,#attackers_label,#local_ip_label,#arp_label,#quarantine_label { font-size:12px; font-weight:600; color:") + Cy + QStringLiteral("; padding-bottom:6px; border-bottom:1px solid ") + Br + QStringLiteral("; } ");
 
-    // ♡ dashboard cards — pink/cyan/mint borders ♡
+    // dashboard cards — pink/cyan/mint borders
     s += QStringLiteral("QFrame#card_logs,QFrame#card_alerts,QFrame#card_threats,QFrame#card_uptime { background:qlineargradient(x1:0,y1:0,x2:0,y2:1,stop:0 ") + C + QStringLiteral(",stop:1 ") + C + QStringLiteral("); border:1px solid ") + Br + QStringLiteral("; border-radius:20px; padding:18px 16px; border-left:4px solid ") + Br + QStringLiteral("; } ");
     s += QStringLiteral("QFrame#card_logs { border-left-color:") + P + QStringLiteral("; } QFrame#card_alerts { border-left-color:") + Cy + QStringLiteral("; } ");
     s += QStringLiteral("QFrame#card_threats { border-left-color:") + Theme::Lavender + QStringLiteral("; } QFrame#card_uptime { border-left-color:") + Theme::Mint + QStringLiteral("; } ");
@@ -2131,7 +2131,7 @@ void monitor::run_nmap_scan(const QString &ip) {
     auto hover  = d ? Theme::DkHover  : Theme::LtHover;
 
     auto *dlg = new QDialog(this);
-    dlg->setWindowTitle(QStringLiteral("(◕‿◕) Nmap — %1").arg(ip));
+    dlg->setWindowTitle(QStringLiteral("Nmap Scan — %1").arg(ip));
     dlg->resize(760, 600);
     dlg->setWindowFlags(Qt::Dialog | Qt::WindowCloseButtonHint);
     dlg->setStyleSheet(QStringLiteral(
@@ -2143,12 +2143,10 @@ void monitor::run_nmap_scan(const QString &ip) {
     root->setSpacing(6);
 
     auto *header = new QLabel(QStringLiteral(
-        "  ✧  ˚  。  ✧  ˚  。  ✧  ˚  。  ✧  ˚  。  ✧  ˚  。  ✧\n"
-        "  ♡ ═══════════════════════════════════════ ♡\n"
-        "      (◕‿◕)  哪吒 Nmap 扫描引擎  (◕‿◕)\n"
-        "      ♡  TARGET: %1  ♡\n"
-        "  ♡ ═══════════════════════════════════════ ♡\n"
-        "  ✧  ˚  。  ✧  ˚  。  ✧  ˚  。  ✧  ˚  。  ✧  ˚  。  ✧").arg(ip));
+        "========================================\n"
+        "   Nezha Nmap Scan Engine\n"
+        "   TARGET: %1\n"
+        "========================================").arg(ip));
     header->setStyleSheet(QStringLiteral(
         "color:%1; font-family:\"Menlo\",\"JetBrains Mono\",monospace; font-size:13px;"
         "background:transparent;").arg(accent));
@@ -2166,11 +2164,11 @@ void monitor::run_nmap_scan(const QString &ip) {
         "QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical { height:0; }")
         .arg(card, text, border, accent, bg));
     output->setText(QStringLiteral(
-        "✨ 初始化扫描引擎...\n"
-        "♡ 目标: %1\n"
-        "♡ 参数: -sT -sV -v\n"
-        "✨ 启动 nmap 子进程...\n"
-        "· · · · · · · · · · · · · · · · · · · · · · · · · ·\n").arg(ip));
+        "Initializing scan engine...\n"
+        "Target: %1\n"
+        "Args: -sT -sV -v\n"
+        "Launching nmap subprocess...\n"
+        "--------------------------------------------------\n").arg(ip));
     root->addWidget(output);
 
     auto *btnBar = new QHBoxLayout();
@@ -2178,7 +2176,7 @@ void monitor::run_nmap_scan(const QString &ip) {
     root->addLayout(btnBar);
     btnBar->addStretch();
 
-    auto *closeBtn = new QPushButton(QStringLiteral("♡ 关闭 ♡"));
+n    auto *closeBtn = new QPushButton(QStringLiteral("Close"));
     closeBtn->setCursor(Qt::PointingHandCursor);
     closeBtn->setStyleSheet(QStringLiteral(
         "QPushButton { background:%1; color:%2; border:1px solid %3; border-radius:6px;"
@@ -2211,14 +2209,14 @@ void monitor::run_nmap_scan(const QString &ip) {
     });
     connect(proc, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
             dlg, [output, ip](int code, QProcess::ExitStatus) {
-        output->append(QStringLiteral("· · · · · · · · · · · · · · · · · · · · · · · · · ·"));
+        output->append(QStringLiteral("--------------------------------------------------"));
         if (code == 0) {
-            output->append(QStringLiteral("💖 扫描完成 — %1 ✨").arg(ip));
-            output->append(QStringLiteral("(◕‿◕) Nmap done. All packets processed. ♡"));
+            output->append(QStringLiteral("Scan complete — %1").arg(ip));
+            output->append(QStringLiteral("Nmap done. All packets processed."));
         } else {
-            output->append(QStringLiteral("💢 nmap 异常退出 — 退出码: %1 (╥﹏╥)").arg(code));
+            output->append(QStringLiteral("nmap exited with error — exit code: %1").arg(code));
         }
-        output->append(QStringLiteral("♡ ═══════════════════════════════════════ ♡"));
+        output->append(QStringLiteral("========================================"));
         output->moveCursor(QTextCursor::End);
     });
 
