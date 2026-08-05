@@ -106,8 +106,8 @@ private slots:
 
 private:
     void apply_theme(bool dark);
-    void apply_stylesheet(bool dark);
     void setup_sidebar();
+    void animate_page_switch(int row);
     void setup_tray();
     void setup_file_menu();
     void setup_log_table(QTableView *view);
@@ -115,6 +115,7 @@ private:
     void refresh_local_ips();
     void refresh_arp_table();
     void refresh_quarantine_list();
+    void refresh_protocol_stats();
     void refresh_attackers();
     void refresh_quickstats();
     void start_animations();
@@ -128,9 +129,12 @@ private:
     std::shared_ptr<GuiSink> gui_sink_;
     QSortFilterProxyModel *log_proxy_ = nullptr;
     QSortFilterProxyModel *alert_proxy_ = nullptr;
+    QSortFilterProxyModel *recent_proxy_ = nullptr;
+    QSortFilterProxyModel *honey_proxy_ = nullptr;
     QSortFilterProxyModel *log_search_proxy_ = nullptr;
     QTimer *clock_timer_ = nullptr;
     QTimer *sparkline_timer_ = nullptr;
+    QTimer *proto_timer_ = nullptr;
     LogDelegate *log_delegate_ = nullptr;
     AlertDelegate *alert_delegate_ = nullptr;
     AlertDelegate *recent_delegate_ = nullptr;
@@ -140,6 +144,7 @@ private:
     DetailPanel *log_detail_panel_ = nullptr;
     DetailPanel *alert_detail_panel_ = nullptr;
     DetailPanel *honey_detail_panel_ = nullptr;
+    QTableWidget *protocol_table_ = nullptr;
     struct Attacker { double score = 0; int count = 0; QString type; };
     QHash<QString, Attacker> attackers_;
     LogModel *attackers_model_ = nullptr;
@@ -153,6 +158,7 @@ private:
     QAction *export_act_ = nullptr;
     QAction *import_act_ = nullptr;
     bool dark_mode_ = true;
+    bool page_transitioning_ = false;
     QTime start_time_;
     double font_scale_ = 1.0;
 };

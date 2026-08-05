@@ -18,10 +18,11 @@ namespace Nezha::Log {
     namespace {
         class StderrSink final : public ISink {
         public:
-            explicit StderrSink(bool use_color) : color_(use_color) {
+            explicit StderrSink(const bool use_color) : color_(use_color) {
+
             }
 
-            void write(Level lv, const char *line, std::size_t len) override {
+            void write(const Level lv, const char *line, const std::size_t len) override {
                 if (color_) {
                     // pink + cyan ANSI — readable on any terminal bg
                     const char *level_fg  = "\033[38;2;48;200;160m";    // cyan

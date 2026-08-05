@@ -51,12 +51,13 @@ namespace Nezha::IPAddress {
 
     std::string ipaddr::to_string() const {
         char buf[INET6_ADDRSTRLEN] = {0};
+        struct in6_addr v6 {} ;
+        struct in_addr v4 {};
+
         if (is_v4()) {
-            struct in_addr v4;
             std::memcpy(&v4, b_.data() + 12, 4);
             ::inet_ntop(AF_INET, &v4, buf, sizeof(buf));
         } else {
-            struct in6_addr v6;
             std::memcpy(&v6, b_.data(), 16);
             ::inet_ntop(AF_INET6, &v6, buf, sizeof(buf));
         }
@@ -64,8 +65,8 @@ namespace Nezha::IPAddress {
     }
 
     bool ipaddr::parse(std::string_view text, ipaddr &out) {
-        struct in_addr v4;
-        struct in6_addr v6;
+        struct in_addr v4{};
+        struct in6_addr v6{};
 
         char tmp[INET6_ADDRSTRLEN];
         if (text.empty() || text.size() >= sizeof(tmp)) return false;
@@ -74,7 +75,6 @@ namespace Nezha::IPAddress {
         tmp[text.size()] = '\0';
 
         if (::inet_pton(AF_INET, tmp, &v4) == 1) {
-            // 先按 v4，成功则映射
             std::memcpy(out.b_.data(), kV4Prefix, 12);
             std::memcpy(out.b_.data() + 12, &v4, 4);
             return true;
@@ -84,28 +84,41 @@ namespace Nezha::IPAddress {
             std::memcpy(out.b_.data(), &v6, 16);
             return true;
         }
+
         return false;
     }
 
     std::size_t ipaddr_hash::operator()(const ipaddr &a) const noexcept {
         std::uint64_t h = 1469598103934665603ULL; // FNV-1a offset basis
-        for (std::uint8_t byte: a.bytes()) {
+
+        for (const std::uint8_t byte: a.bytes()) {
             h ^= byte;
             h *= 1099511628211ULL;
         }
+
         return static_cast<std::size_t>(h);
     }
 
     std::string ipaddr::ResolveHostname(const std::string &ip) {
         struct sockaddr_in sa{};
+
         sa.sin_family = AF_INET;
         if (::inet_pton(AF_INET, ip.c_str(), &sa.sin_addr) != 1)
             return ip;
 
         char host[NI_MAXHOST] = {0};
-        int r = ::getnameinfo(reinterpret_cast<struct sockaddr *>(&sa), sizeof(sa),
-                              host, sizeof(host), nullptr, 0, NI_NAMEREQD);
+        const int r = ::getnameinfo(
+            reinterpret_cast<struct sockaddr *>(&sa),
+            sizeof(sa),
+            host,
+            sizeof(host),
+            nullptr,
+            0,
+            NI_NAMEREQD
+        );
+
         if (r == 0) return host;
+
         return ip;
     }
 }

@@ -37,6 +37,7 @@
 #include "src/core/active_response.h"
 #include "src/core/tor_checker.h"
 #include "src/core/log_watcher.h"
+#include "src/core/protocol_stats.h"
 #include "src/core/application_monitor.h"
 #include "src/service/database_helper.h"
 #include "src/service/notifier.h"
@@ -302,6 +303,10 @@ static int run_cli_mode() {
             ++pkt_count;
             Core::event e{};
             if (!Core::ProtocolDecoder::decode(raw, len, ts, arena, e)) return;
+            {
+                bool http = !e.msg.empty() && e.proto == PROTO_TCP;
+                Core::ProtocolStats::instance().record_packet(e.proto, len, http);
+            }
             if (Database::DatabaseHelper::IsIPQuarantined(e.src.to_string())) {
                 static std::unordered_map<std::string, Nanos> last_warn;
                 Nanos now_ns = static_cast<Nanos>(ts.tv_sec) * 1'000'000'000ULL + ts.tv_usec * 1000ULL;
@@ -332,13 +337,6 @@ static int run_cli_mode() {
                      e.src.to_string(), e.sport,
                      e.dst.to_string(), e.dport, len);
 
-            static uint64_t pkt_bytes = 0;
-            static uint64_t tcp_pkts = 0, udp_pkts = 0, icmp_pkts = 0;
-            pkt_bytes += len;
-            if (e.proto == PROTO_TCP) ++tcp_pkts;
-            else if (e.proto == PROTO_UDP) ++udp_pkts;
-            else ++icmp_pkts;
-
             static Nanos last_flush = 0;
             if (e.ts_ns - last_flush > 30'000'000'000ULL) {
                 alerter.flush();
@@ -347,15 +345,19 @@ static int run_cli_mode() {
             if (last_stats == 0) last_stats = e.ts_ns;
             if (e.ts_ns - last_stats > 60'000'000'000ULL) {
                 auto ql = Database::DatabaseHelper::GetQuarantineList();
+                auto s = Core::ProtocolStats::instance().snapshot();
                 double elapsed = (e.ts_ns - last_stats) / 1'000'000'000.0;
                 auto arp_count = Core::arp_table_size();
-                double mbps = (pkt_bytes * 8.0) / (elapsed * 1'000'000.0);
-                NZ_INFO("◆ STATS | pkts:{} flow:{:.1f}MB rate:{:.0f}pps/{:.2f}Mbps | TCP:{} UDP:{} ICMP:{} | alerts:{} quar:{} arp:{} tor:{} rules:{} arena:{}KB",
-                        pkt_count, pkt_bytes / 1'000'000.0,
-                        pkt_count / elapsed, mbps, tcp_pkts, udp_pkts, icmp_pkts,
+                double mbps = (s.total_bytes * 8.0) / (elapsed * 1'000'000.0);
+                NZ_INFO("◆ STATS | pkts:{} flow:{:.1f}MB rate:{:.0f}pps/{:.2f}Mbps | TCP:{} UDP:{} ICMP:{} HTTP:{} | alerts:{} quar:{} arp:{} tor:{} rules:{} arena:{}KB",
+                        s.total_packets, s.total_bytes / 1'000'000.0,
+                        s.total_packets / elapsed, mbps,
+                        s.tcp_pkts, s.udp_pkts, s.icmp_pkts, s.http_pkts,
                         alerter.total_alerts(), ql.size(), arp_count,
                         tor_checker.total_nodes(), detector.rule_count(),
                         arena.bytes_used() / 1024);
+                Core::ProtocolStats::instance().reset();
+                pkt_count = 0;
                 last_stats = e.ts_ns;
             }
         });
@@ -601,6 +603,10 @@ static int run_gui_mode(int argc, char *argv[]) {
                 Core::event e{};
 
                 if (!Core::ProtocolDecoder::decode(raw, len, ts, arena, e)) return;
+                {
+                    bool http = !e.msg.empty() && e.proto == PROTO_TCP;
+                    Core::ProtocolStats::instance().record_packet(e.proto, len, http);
+                }
 
                 if (Database::DatabaseHelper::IsIPQuarantined(e.src.to_string())) {
                     static std::unordered_map<std::string, Nanos> last_warn;

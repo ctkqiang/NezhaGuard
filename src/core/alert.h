@@ -40,7 +40,7 @@ namespace Nezha::Core {
             std::string detail;
         };
 
-        void emit(const DedupKey &dk);
+        void emit(const DedupKey &dk) const;
 
         std::mutex mtx_;
         std::deque<DedupKey> buffer_;

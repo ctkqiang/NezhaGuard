@@ -60,14 +60,14 @@ private:
     Notifier() = default;
 
     void dispatch(const ChannelConfig &cfg, const std::string &title, const std::string &body);
-    void send_slack(const std::string &webhook, const std::string &msg);
-    void send_discord(const std::string &webhook, const std::string &msg);
-    void send_dingtalk(const std::string &webhook, const std::string &msg);
-    void send_feishu(const std::string &webhook, const std::string &msg);
-    void send_wechat(const std::string &webhook, const std::string &msg);
-    void send_email(const std::string &to, const std::string &subject, const std::string &body);
+    static void send_slack(const std::string &webhook, const std::string &msg);
+    static void send_discord(const std::string &webhook, const std::string &msg);
+    static void send_dingtalk(const std::string &webhook, const std::string &msg);
+    static void send_feishu(const std::string &webhook, const std::string &msg);
+    static void send_wechat(const std::string &webhook, const std::string &msg);
+    static void send_email(const std::string &to, const std::string &subject, const std::string &body);
     void send_local_gui(const std::string &title, const std::string &body);
-    void send_telegram(const std::string &token, const std::string &chat, const std::string &msg);
+    static void send_telegram(const std::string &token, const std::string &chat, const std::string &msg);
 
     static bool keyword_match(const std::string &text, const std::vector<std::string> &keywords);
     static std::string http_post(const std::string &url, const std::string &json);
@@ -77,6 +77,6 @@ private:
     std::function<void(const std::string &, const std::string &)> gui_callback_;
 };
 
-} // namespace Nezha::Service
+}
 
 #endif //NEZHAGUARD_NOTIFIER_H

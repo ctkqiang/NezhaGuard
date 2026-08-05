@@ -24,7 +24,6 @@
 
 namespace Nezha::Database {
 
-// -- schema types -----------------------------------------------------------
 enum class SqlType { Integer, Real, Text, Blob };
 
 template <typename T> constexpr SqlType sql_type_of();
@@ -40,7 +39,7 @@ concept Ormable = requires {
     requires (std::tuple_size_v<decltype(T::columns)> > 0);
 };
 
-// -- 列描述符：编译期绑定结构体成员 → SQL 列 --------------------------------
+
 template <typename Record, typename FieldType>
 struct Column {
     std::string_view   name;        // SQL 列名
@@ -59,7 +58,6 @@ struct Column {
     }
 };
 
-// -- QuarantineRecord：隔离记录领域模型 + ORM 元数据 -------------------------
 struct QuarantineRecord {
     int64_t     id           = 0;
     std::string ip_address;
@@ -89,7 +87,6 @@ struct QuarantineRecord {
     )SQL";
 };
 
-// -- 兼容旧枚举 -------------------------------------------------------------
 enum class DatabaseService : std::uint8_t { UNKNOWN, SQLITE, MYSQL, POSTGRES, ORACLEDB, DB2 };
 
 struct DatabaseInformation { std::string Name; int Port; };
@@ -99,7 +96,6 @@ struct DatabaseConfiguration {
     std::int32_t DatabasePort = 0;
 };
 
-// -- Orm<T>：轻量级 fluent ORM — 编译期 SQL 生成 + 类型安全绑定 -------------
 template <Ormable Record>
 class Orm {
 public:
@@ -143,13 +139,13 @@ public:
     }
 
     auto order_by_desc(std::string_view col) -> Orm& {
-        auto pos = sql_.find("ORDER BY");
-        if (pos == std::string::npos)
+        if (const auto pos = sql_.find("ORDER BY"); pos == std::string::npos) {
             sql_ += std::format(" ORDER BY {} DESC", col);
+        }
         return *this;
     }
 
-    auto sql() const -> std::string_view { return sql_; }
+    [[nodiscard]] auto sql() const -> std::string_view { return sql_; }
 
 private:
     std::string sql_;
@@ -168,18 +164,17 @@ private:
         }(std::make_index_sequence<column_count()>{});
     }
 
-    static auto placeholders(size_t n) -> std::string {
+    static auto placeholders(const size_t n) -> std::string {
         std::string r;
         for (size_t i = 0; i < n; ++i) {
             if (i) r += ", ";
-            r += "?";
+            r += '?';
         }
         return r;
     }
 
-    // -- 编译期折叠 tuple 中的 Column 定义 → SQL 片段 ------------------
     template <typename Fn>
-    static auto fold_all(Fn &&fn, std::string_view sep) -> std::string {
+    static auto fold_all(Fn &&fn, const std::string_view sep) -> std::string {
         return [&]<size_t... I>(std::index_sequence<I...>) {
             std::string r;
             auto add = [&](std::string_view s) {
@@ -192,7 +187,7 @@ private:
     }
 
     template <typename Fn>
-    static auto fold_insertable(Fn &&fn, std::string_view sep) -> std::string {
+    static auto fold_insertable(Fn &&fn, const std::string_view sep) -> std::string {
         return [&]<size_t... I>(std::index_sequence<I...>) {
             std::string r;
             auto add = [&]<typename Col>(Col &c) {
@@ -206,7 +201,6 @@ private:
     }
 };
 
-// -- DatabaseHelper：公开 API（接口不变，ORM 驱动内部实现） -------------------
 class DatabaseHelper {
 public:
     static auto InitializeQuarantineDatabase(const std::string &data_dir = "data/") -> void;
@@ -219,6 +213,6 @@ public:
     static auto GetDefaultInfo(DatabaseService service) -> DatabaseInformation;
 };
 
-} // namespace Nezha::Database
+}
 
 #endif

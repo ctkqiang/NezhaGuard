@@ -18,20 +18,22 @@ namespace Nezha::Database {
 
             auto open(std::string_view path) -> bool {
                 if (db_) return true;
+
                 if (sqlite3_open(path.data(), &db_) != SQLITE_OK) {
                     std::cerr << std::format("[DB] 打开失败: {}\n", sqlite3_errmsg(db_));
                     return false;
                 }
                 sqlite3_exec(db_, "PRAGMA journal_mode=WAL;", nullptr, nullptr, nullptr);
                 sqlite3_exec(db_, "PRAGMA busy_timeout=3000;", nullptr, nullptr, nullptr);
+
                 exec(QuarantineRecord::ddl);
                 return true;
             }
 
-            auto handle() -> sqlite3 * { return db_; }
-            operator bool() const { return db_ != nullptr; }
+            [[ nodiscard]] auto handle() const -> sqlite3 * { return db_; }
+            explicit operator bool() const { return db_ != nullptr; }
 
-            auto exec(std::string_view sql) -> bool {
+            [[nodiscard]] auto exec(std::string_view sql) const -> bool {
                 char *err = nullptr;
                 if (sqlite3_exec(db_, sql.data(), nullptr, nullptr, &err) != SQLITE_OK) {
                     std::cerr << std::format("[DB] exec 失败: {}\n", err);
@@ -53,7 +55,7 @@ namespace Nezha::Database {
 
         class Stmt {
         public:
-            Stmt(sqlite3 *db, std::string_view sql) {
+            Stmt(sqlite3 *db, const std::string_view sql) {
                 sqlite3_prepare_v2(db, sql.data(), static_cast<int>(sql.size()), &stmt_, nullptr);
             }
 
@@ -63,7 +65,7 @@ namespace Nezha::Database {
 
             Stmt &operator=(const Stmt &) = delete;
 
-            operator bool() const { return stmt_ != nullptr; }
+            explicit operator bool() const { return stmt_ != nullptr; }
 
             template<typename... Args>
             auto bind(Args &&... args) -> bool {
@@ -71,28 +73,33 @@ namespace Nezha::Database {
                 return (bind_one(idx++, std::forward<Args>(args)) && ...);
             }
 
-            auto step() const -> int { return sqlite3_step(stmt_); }
+            [[nodiscard]] auto step() const -> int { return sqlite3_step(stmt_); }
 
-            auto col_text(int i) const -> const char * {
+            [[nodiscard]] auto col_text(const int i) const -> const char * {
                 return reinterpret_cast<const char *>(sqlite3_column_text(stmt_, i));
             }
 
-            auto col_double(const int i) const -> double { return sqlite3_column_double(stmt_, i); }
-            auto col_int64(int i) const -> int64_t { return sqlite3_column_int64(stmt_, i); }
+            [[nodiscard]] auto col_double(const int i) const -> double { return sqlite3_column_double(stmt_, i); }
+            [[nodiscard]] auto col_int64(const int i) const -> int64_t { return sqlite3_column_int64(stmt_, i); }
 
         private:
             sqlite3_stmt *stmt_ = nullptr;
 
-            auto bind_one(const int idx, std::string_view v) const -> bool {
-                return sqlite3_bind_text(stmt_, idx, v.data(),
-                                         static_cast<int>(v.size()), SQLITE_TRANSIENT) == SQLITE_OK;
+            [[nodiscard]] auto bind_one(const int idx, std::string_view v) const -> bool {
+                return sqlite3_bind_text(
+                           stmt_,
+                           idx,
+                           v.data(),
+                           static_cast<int>(v.size()),
+                           SQLITE_TRANSIENT
+                       ) == SQLITE_OK;
             }
 
-            auto bind_one(const int idx, const double v) const -> bool {
+            [[nodiscard]] auto bind_one(const int idx, const double v) const -> bool {
                 return sqlite3_bind_double(stmt_, idx, v) == SQLITE_OK;
             }
 
-            auto bind_one(const int idx, const int64_t v) const -> bool {
+            [[nodiscard]] auto bind_one(const int idx, const int64_t v) const -> bool {
                 return sqlite3_bind_int64(stmt_, idx, v) == SQLITE_OK;
             }
         };
@@ -132,8 +139,10 @@ namespace Nezha::Database {
                 std::lock_guard lock(mtx_);
                 cache_.erase(std::string(ip));
                 ensure_open();
-                Stmt stmt(db_.handle(), Orm<QuarantineRecord>::delete_where("ip_address"));
-                if (stmt && stmt.bind(ip)) stmt.step();
+
+                if (Stmt stmt(db_.handle(), Orm<QuarantineRecord>::delete_where("ip_address")); stmt && stmt.bind(ip)) {
+                    stmt.step();
+                }
             }
 
             auto fetch_all() -> std::vector<QuarantineRecord> {
@@ -141,9 +150,9 @@ namespace Nezha::Database {
                 ensure_open();
                 std::vector<QuarantineRecord> list;
 
-                Stmt stmt(db_.handle(), Orm<QuarantineRecord>::all()
-                          .order_by_desc("id")
-                          .sql());
+                const Stmt stmt(db_.handle(), Orm<QuarantineRecord>::all()
+                                .order_by_desc("id")
+                                .sql());
                 if (!stmt) return list;
 
                 while (stmt.step() == SQLITE_ROW) {
@@ -167,10 +176,12 @@ namespace Nezha::Database {
             auto ensure_open() -> void { db_.open(db_path_); }
 
             auto load_cache() -> void {
-                Stmt stmt(db_.handle(), "SELECT ip_address FROM quarantine");
+                const Stmt stmt(db_.handle(), "SELECT ip_address FROM quarantine");
                 if (!stmt) return;
-                while (stmt.step() == SQLITE_ROW)
+
+                while (stmt.step() == SQLITE_ROW) {
                     cache_.emplace(stmt.col_text(0));
+                }
             }
         };
 
@@ -182,17 +193,18 @@ namespace Nezha::Database {
         g_repo.init(data_dir);
     }
 
-    void DatabaseHelper::QuarantineIP(std::string_view ip,
-                                      std::string_view reason,
-                                      double threat_score) {
+    void DatabaseHelper::QuarantineIP(
+        const std::string_view ip,
+        const std::string_view reason,
+        const double threat_score) {
         g_repo.insert(ip, reason, threat_score);
     }
 
-    bool DatabaseHelper::IsIPQuarantined(std::string_view ip) {
+    bool DatabaseHelper::IsIPQuarantined(const std::string_view ip) {
         return g_repo.contains(ip);
     }
 
-    void DatabaseHelper::RemoveQuarantine(std::string_view ip) {
+    void DatabaseHelper::RemoveQuarantine(const std::string_view ip) {
         g_repo.remove(ip);
     }
 
@@ -205,7 +217,7 @@ namespace Nezha::Database {
         std::cout << std::format("初始化数据库服务: {} 端口={}\n", Name, Port);
     }
 
-    DatabaseInformation DatabaseHelper::GetDefaultInfo(DatabaseService service) {
+    DatabaseInformation DatabaseHelper::GetDefaultInfo(const DatabaseService service) {
         switch (service) {
             case DatabaseService::MYSQL: return {.Name = "MySQL", .Port = 3306};
             case DatabaseService::POSTGRES: return {.Name = "PostgreSQL", .Port = 5432};

@@ -34,15 +34,16 @@ namespace Nezha::Core {
         dk.max_score = a.score;
         dk.max_level = a.level;
         dk.detail = a.detail.empty() ? std::string{} : std::string(a.detail);
+
         buffer_.push_back(std::move(dk));
     }
 
     void AlertManager::flush() {
         std::lock_guard<std::mutex> lock(mtx_);
-        auto now = std::chrono::duration_cast<std::chrono::nanoseconds>(
+         auto const now = std::chrono::duration_cast<std::chrono::nanoseconds>(
                        std::chrono::system_clock::now().time_since_epoch())
                        .count();
-        Nanos cutoff = now - static_cast<Nanos>(dedup_sec_) * 1'000'000'000ULL;
+        const Nanos cutoff = now - static_cast<Nanos>(dedup_sec_) * 1'000'000'000ULL;
 
         while (!buffer_.empty() && buffer_.front().first_ns < cutoff) {
             auto dk = buffer_.front();
@@ -51,7 +52,7 @@ namespace Nezha::Core {
         }
     }
 
-    void AlertManager::emit(const DedupKey &dk) {
+    void AlertManager::emit(const DedupKey &dk) const {
         using namespace Log;
 
         auto &logger = Logger::instance();
@@ -78,6 +79,7 @@ namespace Nezha::Core {
         msg += std::to_string(dk.count);
         msg += " | 评分 ";
         msg += score_buf;
+
         if (!dk.detail.empty()) {
             msg += " | ";
             msg += dk.detail;
@@ -95,5 +97,4 @@ namespace Nezha::Core {
             callback_(a);
         }
     }
-
 }
