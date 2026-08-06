@@ -349,54 +349,6 @@ monitor::monitor(QWidget *parent) : QMainWindow(parent), ui(new Ui::monitor) {
     connect(ui->local_conf_save, &QPushButton::clicked, this, [this]{ save_notifier_conf(); });
     connect(ui->local_conf_load, &QPushButton::clicked, this, &monitor::load_settings_configs);
 
-    // ── add config hints to notification tabs ──
-    {
-        struct Hint { QString tab; QString title; QString desc; };
-        for (auto &[tab, title, desc] : {
-            Hint{QStringLiteral("Slack"), QStringLiteral("Slack Webhook"),
-                 QStringLiteral("填入 Incoming Webhook URL，开启后自动推送告警到指定频道")},
-            Hint{QStringLiteral("Discord"), QStringLiteral("Discord Webhook"),
-                 QStringLiteral("服务器设置 → 整合 → Webhooks → 复制 URL 到上方")},
-            Hint{QStringLiteral("钉钉"), QStringLiteral("钉钉群机器人"),
-                 QStringLiteral("群设置 → 智能群助手 → 添加机器人 → 复制 Webhook 地址")},
-            Hint{QStringLiteral("飞书"), QStringLiteral("飞书群机器人"),
-                 QStringLiteral("群设置 → 群机器人 → 添加自定义机器人 → 复制 Webhook")},
-            Hint{QStringLiteral("企业微信"), QStringLiteral("企业微信群机器人"),
-                 QStringLiteral("群设置 → 群机器人 → 添加 → 复制 Webhook Key")},
-            Hint{QStringLiteral("邮件"), QStringLiteral("邮件通知"),
-                 QStringLiteral("输入接收告警的邮箱地址，需要系统已配置 mail 命令")},
-            Hint{QStringLiteral("Telegram"), QStringLiteral("Telegram Bot"),
-                 QStringLiteral("Bot Token 从 @BotFather 获取，Chat ID 从 @getidsbot 获取")},
-            Hint{QStringLiteral("本地通知"), QStringLiteral("本地桌面通知"),
-                 QStringLiteral("启用后通过系统通知中心推送告警（无需配置 Webhook）")},
-        }) {
-            auto tabWidgetName = [](const QString &tab) -> QString {
-                if (tab == QStringLiteral("Slack"))     return QStringLiteral("tab_slack");
-                if (tab == QStringLiteral("Discord"))   return QStringLiteral("tab_discord");
-                if (tab == QStringLiteral("钉钉"))      return QStringLiteral("tab_dingtalk");
-                if (tab == QStringLiteral("飞书"))      return QStringLiteral("tab_feishu");
-                if (tab == QStringLiteral("企业微信"))   return QStringLiteral("tab_wechat");
-                if (tab == QStringLiteral("邮件"))      return QStringLiteral("tab_email");
-                if (tab == QStringLiteral("Telegram"))  return QStringLiteral("tab_telegram");
-                if (tab == QStringLiteral("本地通知"))   return QStringLiteral("tab_local");
-
-                return QString();
-            };
-            auto *w = ui->settings_tabs->findChild<QWidget *>(tabWidgetName(tab));
-            if (!w) continue;
-            auto *layout = qobject_cast<QVBoxLayout *>(w->layout());
-            if (layout) {
-                auto *hint = new QLabel(QStringLiteral("<b>%1</b>&nbsp;&nbsp;·&nbsp;&nbsp;%2").arg(title, desc));
-                hint->setWordWrap(true);
-                hint->setStyleSheet(QStringLiteral(
-                    "font-size:11px; color:") + (dark_mode_ ? Theme::DkMuted : Theme::LtMuted) +
-                    QStringLiteral("; padding:4px 0 4px 0; background:transparent;"));
-                hint->setContentsMargins(0, 0, 0, 4);
-                layout->insertWidget(0, hint);
-            }
-        }
-    }
-
     // shortcuts
     new QShortcut(QKeySequence(QStringLiteral("Ctrl+F")), this, [this]() {
         ui->sidebar->setCurrentRow(1);
@@ -687,192 +639,204 @@ void monitor::apply_theme(bool d) {
     auto Mu   = d ? Theme::DkMuted     : Theme::LtMuted;
     auto Sel  = d ? Theme::DkSelected  : Theme::LtSelected;
     auto Hov  = d ? Theme::DkCardHover : Theme::LtCardHover;
-    auto Pk   = d ? Theme::Sakura      : Theme::SakuraDeep;
-    auto PkL  = d ? Theme::SakuraLight : Theme::SakuraDeep;
-    auto Wis  = d ? Theme::Wisteria    : Theme::WisteriaDeep;
-    auto WisL = d ? Theme::WisteriaLight : Theme::WisteriaDeep;
-    auto Sea  = d ? Theme::Seafoam     : Theme::SeafoamDeep;
-    auto SeaL = d ? Theme::SeafoamLight : Theme::SeafoamDeep;
-    auto SkyC = d ? Theme::Sky         : Theme::Sky;
+    // 四种粉各司其职: Strawberry(标题) · Peachy(卡片) · Rosy(交互) · Coral(告警)
+    auto Pk   = d ? Theme::Strawberry     : Theme::RosyDeep;     // 标题/主强调
+    auto PkL  = d ? Theme::StrawberryLight: Theme::RosyLight;
+    auto Ros  = d ? Theme::Rosy           : Theme::RosyDeep;     // hover/交互粉
+    auto Wis  = d ? Theme::Lilac          : Theme::LilacDeep;    // 薰衣草辅色
+    auto WisL = d ? Theme::LilacLight     : Theme::LilacDeep;
+    auto Sea  = d ? Theme::Mint           : Theme::MintDeep;     // 薄荷辅色
+    auto SeaL = d ? Theme::MintLight      : Theme::MintDeep;
+    auto SkyC = d ? Theme::Sky            : Theme::Sky;
 
     QString s;
-    // ── global defaults ──
+    // ╔══════════════════════════════════════════════════════════╗
+    // ║  NezhaGuard QSS · 男娘美学 · 草莓薄荷薰衣草             ║
+    // ╚══════════════════════════════════════════════════════════╝
+
+    // ── global ──
     s += QStringLiteral(
-        "* { font-family:\"SF Pro Rounded\",\"PingFang SC\",\"SF Pro Display\",system-ui,sans-serif; } "
+        "* { font-family:\"SF Pro Rounded\",\"PingFang SC\",system-ui,sans-serif; "
+        "selection-background-color:") + Sel + QStringLiteral("; selection-color:") + Tx + QStringLiteral("; } "
         "QMainWindow { background:") + Bg + QStringLiteral("; } "
         "QLabel { color:") + Tx + QStringLiteral("; background:transparent; } ");
 
-    // ── header ──
+    // ── header · 草莓奶霜顶栏 ──
     s += QStringLiteral(
-        "#header { background:") + Sh + QStringLiteral("; border-bottom:1px solid ") + Br + QStringLiteral("; } "
-        "#app_title { font-size:16px; font-weight:700; color:") + Pk + QStringLiteral("; letter-spacing:0.5px; } "
-        "#brand_badge { background:transparent; } "
-        "#clock_label { font-size:10px; color:") + Mu + QStringLiteral("; } "
-        "#status_text { font-size:10px; color:") + Sea + QStringLiteral("; font-weight:600; } "
-        "#status_dot { background:") + Pk + QStringLiteral("; border-radius:5px; } ");
+        "#header { background:") + Sh + QStringLiteral("; border-bottom:1px solid ") + Br + QStringLiteral("; "
+        "min-height:48px; } "
+        "#app_title { font-size:15px; font-weight:800; color:") + Pk + QStringLiteral("; letter-spacing:1px; } "
+        "#brand_badge { background:transparent; border-radius:10px; } "
+        "#clock_label { font-size:10px; color:") + Mu + QStringLiteral("; font-weight:500; } "
+        "#status_text { font-size:10px; color:") + Sea + QStringLiteral("; font-weight:700; letter-spacing:0.5px; } "
+        "#status_dot { background:") + Pk + QStringLiteral("; border-radius:5px; min-width:8px; max-width:8px; "
+        "min-height:8px; max-height:8px; } ");
 
-    // ── sidebar ──
+    // ── sidebar · 粉色导航 ──
     s += QStringLiteral(
-        "#sidebar { background:") + Sh + QStringLiteral("; border-right:1px solid ") + Br + QStringLiteral("; } "
-        "#sidebar::item { color:") + Mu + QStringLiteral("; padding:12px 22px; font-size:13px; border:none; "
-        "margin:3px 12px; border-radius:14px; } "
-        "#sidebar::item:selected { background:") + Sel + QStringLiteral("; color:") + Pk + QStringLiteral("; font-weight:600; } "
-        "#sidebar::item:hover:!selected { background:") + Hov + QStringLiteral("; color:") + Wis + QStringLiteral("; } ");
+        "#sidebar { background:") + Sh + QStringLiteral("; border-right:1px solid ") + Br + QStringLiteral("; "
+        "padding:8px 0; } "
+        "#sidebar::item { color:") + Mu + QStringLiteral("; padding:11px 24px; font-size:13px; font-weight:500; "
+        "border:none; margin:2px 10px; border-radius:14px; } "
+        "#sidebar::item:selected { background:") + Sel + QStringLiteral("; color:") + Pk + QStringLiteral("; "
+        "font-weight:700; } "
+        "#sidebar::item:hover:!selected { background:") + Hov + QStringLiteral("; color:") + Ros + QStringLiteral("; } ");
 
-    // ── network page cards ──
+    // ── network card · 圆角卡片 ──
     s += QStringLiteral(
         "QFrame#netcard { background:") + Card + QStringLiteral("; border:1px solid ") + Br + QStringLiteral("; "
-        "border-radius:18px; } ");
+        "border-radius:20px; } ");
 
     // ── section titles ──
     s += QStringLiteral(
-        "#dash_title,#logs_title,#alerts_title,#honey_title,#network_title,"
-        "#recent_alerts_label,#attackers_label,#local_ip_label,#arp_label,#quarantine_label "
-        "{ font-size:13px; font-weight:700; color:") + Tx + QStringLiteral("; padding-bottom:8px; "
-        "border-bottom:2px solid ") + Br + QStringLiteral("; } ");
+        "#dash_title,#logs_title,#alerts_title,#honey_title,#network_title { "
+        "font-size:14px; font-weight:800; color:") + Tx + QStringLiteral("; padding-bottom:6px; } ");
 
-    // ── dashboard stat cards ──
+    // ── stat cards · 四色左线 ──
+    auto PeachAccent = d ? Theme::Peachy : Theme::PeachyDeep;
     s += QStringLiteral(
         "QFrame#card_logs,QFrame#card_alerts,QFrame#card_threats,QFrame#card_uptime { "
         "background:") + Card + QStringLiteral("; border:1px solid ") + Br + QStringLiteral("; "
-        "border-radius:20px; padding:16px 22px; } "
+        "border-radius:20px; padding:18px 24px; } "
         "QFrame#card_logs { border-left:4px solid ") + Pk + QStringLiteral("; } "
-        "QFrame#card_alerts { border-left:4px solid ") + Sea + QStringLiteral("; } "
-        "QFrame#card_threats { border-left:4px solid ") + Wis + QStringLiteral("; } "
-        "QFrame#card_uptime { border-left:4px solid ") + Theme::Matcha + QStringLiteral("; } "
-        "QFrame#card_logs:hover { background:") + Hov + QStringLiteral("; border-color:") + BrH + QStringLiteral("; } "
-        "QFrame#card_alerts:hover { background:") + Hov + QStringLiteral("; border-color:") + BrH + QStringLiteral("; } "
-        "QFrame#card_threats:hover { background:") + Hov + QStringLiteral("; border-color:") + BrH + QStringLiteral("; } "
-        "QFrame#card_uptime:hover { background:") + Hov + QStringLiteral("; border-color:") + BrH + QStringLiteral("; } "
+        "QFrame#card_alerts { border-left:4px solid ") + Theme::Coral + QStringLiteral("; } "
+        "QFrame#card_threats { border-left:4px solid ") + PeachAccent + QStringLiteral("; } "
+        "QFrame#card_uptime { border-left:4px solid ") + Sea + QStringLiteral("; } "
+        "QFrame#card_logs:hover { background:") + Hov + QStringLiteral("; } "
+        "QFrame#card_alerts:hover { background:") + Hov + QStringLiteral("; } "
+        "QFrame#card_threats:hover { background:") + Hov + QStringLiteral("; } "
+        "QFrame#card_uptime:hover { background:") + Hov + QStringLiteral("; } "
         "#card_logs_value,#card_alerts_value,#card_threats_value,#card_uptime_value { "
-        "font-size:34px; font-weight:900; color:") + Tx + QStringLiteral("; } "
+        "font-size:32px; font-weight:900; color:") + Tx + QStringLiteral("; } "
         "#card_logs_label,#card_alerts_label,#card_threats_label,#card_uptime_label { "
-        "font-size:11px; font-weight:600; color:") + Mu + QStringLiteral("; } ");
+        "font-size:11px; font-weight:600; color:") + Mu + QStringLiteral("; letter-spacing:0.3px; } ");
 
-    // ── table views ──
+    // ── tables · 圆角网格 ──
     s += QStringLiteral(
         "QTableView { background:") + Bg + QStringLiteral("; alternate-background-color:") + Card + QStringLiteral("; "
         "gridline-color:") + Br + QStringLiteral("; color:") + Tx + QStringLiteral("; "
         "border:1px solid ") + Br + QStringLiteral("; border-radius:16px; font-size:11px; "
         "selection-background-color:") + Sel + QStringLiteral("; selection-color:") + Tx + QStringLiteral("; } "
-        "QTableView::item { padding:4px 8px; } "
-        "QTableView::item:selected { background:") + Sel + QStringLiteral("; } "
+        "QTableView::item { padding:5px 10px; } "
         "QHeaderView::section { background:") + Card + QStringLiteral("; color:") + Mu + QStringLiteral("; "
-        "border:none; border-bottom:1px solid ") + Br + QStringLiteral("; padding:6px 10px; font-size:10px; font-weight:700; } ");
+        "border:none; border-bottom:1px solid ") + Br + QStringLiteral("; padding:6px 10px; "
+        "font-size:10px; font-weight:700; letter-spacing:0.3px; } ");
 
-    // ── combo box ──
+    // ── combo ──
     s += QStringLiteral(
         "QComboBox { background:") + Card + QStringLiteral("; color:") + Tx + QStringLiteral("; "
-        "border:1px solid ") + Br + QStringLiteral("; border-radius:12px; padding:6px 14px; "
-        "font-size:11px; min-width:90px; } "
-        "QComboBox:hover { border-color:") + Sea + QStringLiteral("; } "
-        "QComboBox::drop-down { border:none; width:24px; } "
+        "border:1px solid ") + Br + QStringLiteral("; border-radius:14px; padding:7px 16px; "
+        "font-size:11px; min-width:100px; } "
+        "QComboBox:hover { border-color:") + Ros + QStringLiteral("; } "
+        "QComboBox::drop-down { border:none; width:26px; subcontrol-origin:padding; "
+        "subcontrol-position:top right; } "
         "QComboBox QAbstractItemView { background:") + Card + QStringLiteral("; color:") + Tx + QStringLiteral("; "
         "selection-background-color:") + Sel + QStringLiteral("; border:1px solid ") + Br + QStringLiteral("; "
-        "border-radius:12px; padding:6px; outline:none; } ");
+        "border-radius:14px; padding:6px; outline:none; } ");
 
-    // ── buttons ──
+    // ── buttons · 圆角粉边 ──
     s += QStringLiteral(
-        "QPushButton { background:") + Card + QStringLiteral("; color:") + Sea + QStringLiteral("; "
-        "border:1px solid ") + Br + QStringLiteral("; border-radius:14px; padding:8px 20px; "
-        "font-size:11px; font-weight:600; } "
-        "QPushButton:hover { background:") + Hov + QStringLiteral("; border-color:") + Pk + QStringLiteral("; "
+        "QPushButton { background:") + Card + QStringLiteral("; color:") + Pk + QStringLiteral("; "
+        "border:1px solid ") + Br + QStringLiteral("; border-radius:16px; padding:8px 22px; "
+        "font-size:11px; font-weight:700; } "
+        "QPushButton:hover { background:") + Sel + QStringLiteral("; border-color:") + Pk + QStringLiteral("; "
         "color:") + Pk + QStringLiteral("; } "
-        "QPushButton:pressed { background:") + Sel + QStringLiteral("; } ");
+        "QPushButton:pressed { background:") + Hov + QStringLiteral("; } ");
 
-    // ── inputs ──
+    // ── inputs · 圆角输入 ──
     s += QStringLiteral(
         "QLineEdit { background:") + Bg + QStringLiteral("; color:") + Tx + QStringLiteral("; "
-        "border:1px solid ") + Br + QStringLiteral("; border-radius:12px; padding:8px 14px; "
-        "font-size:11px; selection-background-color:") + Sel + QStringLiteral("; } "
-        "QLineEdit:focus { border-color:") + Sea + QStringLiteral("; } "
+        "border:1px solid ") + Br + QStringLiteral("; border-radius:14px; padding:9px 16px; "
+        "font-size:11px; } "
+        "QLineEdit:focus { border-color:") + Pk + QStringLiteral("; } "
         "QTextEdit,QTableWidget { background:") + Bg + QStringLiteral("; color:") + Tx + QStringLiteral("; "
         "border:1px solid ") + Br + QStringLiteral("; border-radius:16px; font-size:11px; "
         "selection-background-color:") + Sel + QStringLiteral("; } "
-        "QTextEdit:focus { border-color:") + Sea + QStringLiteral("; } "
+        "QTextEdit:focus { border-color:") + Pk + QStringLiteral("; } "
         "QTableWidget::item:selected { background:") + Sel + QStringLiteral("; } "
         "QTableWidget::item:hover { background:") + Hov + QStringLiteral("; } ");
 
-    // ── scrollbar ──
+    // ── scrollbar · 超细粉条 ──
     s += QStringLiteral(
-        "QScrollBar:vertical { background:transparent; width:5px; margin:2px; } "
-        "QScrollBar::handle:vertical { background:") + BrH + QStringLiteral("; border-radius:3px; min-height:30px; } "
+        "QScrollBar:vertical { background:transparent; width:4px; margin:2px; } "
+        "QScrollBar::handle:vertical { background:") + BrH + QStringLiteral("; border-radius:2px; min-height:30px; } "
         "QScrollBar::handle:vertical:hover { background:") + Pk + QStringLiteral("; } "
         "QScrollBar::add-line:vertical,QScrollBar::sub-line:vertical { height:0; width:0; } "
-        "QScrollBar:horizontal { background:transparent; height:5px; margin:2px; } "
-        "QScrollBar::handle:horizontal { background:") + BrH + QStringLiteral("; border-radius:3px; min-width:30px; } "
+        "QScrollBar:horizontal { background:transparent; height:4px; margin:2px; } "
+        "QScrollBar::handle:horizontal { background:") + BrH + QStringLiteral("; border-radius:2px; min-width:30px; } "
         "QScrollBar::handle:horizontal:hover { background:") + Pk + QStringLiteral("; } "
         "QScrollBar::add-line:horizontal,QScrollBar::sub-line:horizontal { width:0; } ");
 
     // ── tab widget ──
     s += QStringLiteral(
         "QTabWidget::pane { background:") + Card + QStringLiteral("; border:1px solid ") + Br + QStringLiteral("; "
-        "border-radius:16px; padding:8px; } "
+        "border-radius:18px; padding:10px; } "
         "QTabBar::tab { background:") + Bg + QStringLiteral("; color:") + Mu + QStringLiteral("; "
-        "padding:7px 16px; border:1px solid ") + Br + QStringLiteral("; border-bottom:none; "
+        "padding:8px 18px; border:1px solid ") + Br + QStringLiteral("; border-bottom:none; "
         "border-top-left-radius:14px; border-top-right-radius:14px; font-size:11px; margin-right:2px; } "
-        "QTabBar::tab:selected { background:") + Card + QStringLiteral("; color:") + Pk + QStringLiteral("; font-weight:700; } "
-        "QTabBar::tab:hover:!selected { background:") + Hov + QStringLiteral("; color:") + Wis + QStringLiteral("; } "
-        "QTabBar::scroller { width:20px; } "
+        "QTabBar::tab:selected { background:") + Card + QStringLiteral("; color:") + Pk + QStringLiteral("; "
+        "font-weight:700; } "
+        "QTabBar::tab:hover:!selected { background:") + Hov + QStringLiteral("; color:") + Ros + QStringLiteral("; } "
+        "QTabBar::scroller { width:22px; } "
         "QTabBar QToolButton { background:") + Card + QStringLiteral("; border:1px solid ") + Br + QStringLiteral("; "
-        "border-radius:10px; color:") + Mu + QStringLiteral("; padding:2px; } "
-        "QTabBar QToolButton:hover { background:") + Hov + QStringLiteral("; color:") + Pk + QStringLiteral("; } ");
+        "border-radius:12px; color:") + Mu + QStringLiteral("; padding:3px; } "
+        "QTabBar QToolButton:hover { color:") + Pk + QStringLiteral("; } ");
 
-    // ── plain text edits ──
+    // ── code editors ──
     s += QStringLiteral(
         "QPlainTextEdit { background:") + Bg + QStringLiteral("; color:") + Tx + QStringLiteral("; "
-        "border:1px solid ") + Br + QStringLiteral("; border-radius:16px; "
-        "font-family:\"SF Mono\",\"Menlo\",\"Cascadia Code\",monospace; font-size:11px; padding:12px; "
+        "border:1px solid ") + Br + QStringLiteral("; border-radius:18px; "
+        "font-family:\"SF Mono\",\"Menlo\",monospace; font-size:11px; padding:14px; "
         "selection-background-color:") + Sel + QStringLiteral("; } "
-        "QPlainTextEdit:focus { border-color:") + Sea + QStringLiteral("; } ");
+        "QPlainTextEdit:focus { border-color:") + Pk + QStringLiteral("; } ");
 
     // ── severity badges ──
     s += QStringLiteral(
-        "#sev_crit,#sev_error,#sev_warn,#sev_info { border-radius:12px; font-family:\"SF Mono\",\"Menlo\",monospace; "
-        "font-size:10px; font-weight:700; padding:5px 0; background:") + Card + QStringLiteral("; } "
-        "#sev_crit { color:") + Theme::Cherry + QStringLiteral("; } "
-        "#sev_error { color:") + Theme::Tangerine + QStringLiteral("; } "
-        "#sev_warn { color:") + PkL + QStringLiteral("; } "
-        "#sev_info { color:") + SeaL + QStringLiteral("; } ");
-
-    // ── quick stats ──
-    s += QStringLiteral(
-        "#qs_tor,#qs_blocked,#qs_engines,#qs_types { border-radius:14px; "
-        "font-size:11px; font-weight:700; padding:8px 14px; "
+        "#sev_crit,#sev_error,#sev_warn,#sev_info { border-radius:14px; font-weight:800; "
+        "font-size:10px; padding:6px 0; background:") + Card + QStringLiteral("; "
         "border:1px solid ") + Br + QStringLiteral("; } "
-        "#qs_tor { background:rgba(242,160,182,0.10); color:") + Pk + QStringLiteral("; } "
-        "#qs_blocked { background:rgba(232,80,104,0.10); color:") + Theme::Cherry + QStringLiteral("; } "
-        "#qs_engines { background:rgba(96,208,176,0.10); color:") + Sea + QStringLiteral("; } "
-        "#qs_types { background:rgba(184,160,232,0.10); color:") + Wis + QStringLiteral("; } ");
+        "#sev_crit { color:") + Theme::Coral + QStringLiteral("; } "
+        "#sev_error { color:") + Theme::Tangerine + QStringLiteral("; } "
+        "#sev_warn { color:") + Pk + QStringLiteral("; } "
+        "#sev_info { color:") + Sea + QStringLiteral("; } ");
 
-    // ── settings page ──
+    // ── quick stats · 粉彩徽章 ──
     s += QStringLiteral(
-        "#settings_title { font-size:20px; font-weight:700; color:") + Pk + QStringLiteral("; } "
-        "#settings_version { font-size:11px; color:") + Mu + QStringLiteral("; } "
+        "#qs_tor,#qs_blocked,#qs_engines,#qs_types { border-radius:16px; font-size:11px; font-weight:700; "
+        "padding:9px 16px; border:1px solid ") + Br + QStringLiteral("; } "
+        "#qs_tor { background:") + (d ? QStringLiteral("rgba(242,152,176,0.14)") : QStringLiteral("rgba(232,120,148,0.12)")) + QStringLiteral("; color:") + Pk + QStringLiteral("; } "
+        "#qs_blocked { background:") + (d ? QStringLiteral("rgba(240,104,128,0.14)") : QStringLiteral("rgba(240,104,128,0.12)")) + QStringLiteral("; color:") + Theme::Coral + QStringLiteral("; } "
+        "#qs_engines { background:") + (d ? QStringLiteral("rgba(136,216,188,0.14)") : QStringLiteral("rgba(96,184,152,0.12)")) + QStringLiteral("; color:") + Sea + QStringLiteral("; } "
+        "#qs_types { background:") + (d ? QStringLiteral("rgba(200,168,240,0.14)") : QStringLiteral("rgba(176,128,216,0.12)")) + QStringLiteral("; color:") + Wis + QStringLiteral("; } ");
+
+    // ── settings ──
+    s += QStringLiteral(
+        "#settings_title { font-size:22px; font-weight:800; color:") + Pk + QStringLiteral("; } "
+        "#settings_version { font-size:10px; color:") + Mu + QStringLiteral("; } "
         "#app_info_card { background:") + Card + QStringLiteral("; border:1px solid ") + Br + QStringLiteral("; "
         "border-radius:18px; } ");
 
     // ── status bar ──
     s += QStringLiteral(
-        "QStatusBar { background:") + Card + QStringLiteral("; border-top:1px solid ") + Br + QStringLiteral("; "
-        "font-size:10px; color:") + Mu + QStringLiteral("; padding:4px 16px; } "
+        "QStatusBar { background:") + Sh + QStringLiteral("; border-top:1px solid ") + Br + QStringLiteral("; "
+        "font-size:10px; color:") + Mu + QStringLiteral("; padding:4px 18px; } "
         "QStatusBar::item { border:none; } ");
 
-    // ── tooltips ──
+    // ── tooltips · 圆角气泡 ──
     s += QStringLiteral(
         "QToolTip { background:") + Card + QStringLiteral("; color:") + Tx + QStringLiteral("; "
-        "border:1px solid ") + BrH + QStringLiteral("; border-radius:14px; padding:8px 14px; font-size:11px; } ");
+        "border:1px solid ") + BrH + QStringLiteral("; border-radius:16px; padding:10px 16px; font-size:11px; } ");
 
-    // ── menu bar ──
+    // ── menus · 粉边弹出 ──
     s += QStringLiteral(
-        "QMenuBar { background:") + Card + QStringLiteral("; color:") + Tx + QStringLiteral("; "
-        "border-bottom:1px solid ") + Br + QStringLiteral("; padding:2px 8px; font-size:11px; } "
-        "QMenuBar::item:selected { background:") + Sel + QStringLiteral("; border-radius:8px; } "
+        "QMenuBar { background:") + Sh + QStringLiteral("; color:") + Tx + QStringLiteral("; "
+        "border-bottom:1px solid ") + Br + QStringLiteral("; padding:2px 10px; font-size:11px; } "
+        "QMenuBar::item:selected { background:") + Sel + QStringLiteral("; border-radius:10px; } "
         "QMenu { background:") + Card + QStringLiteral("; color:") + Tx + QStringLiteral("; "
-        "border:1px solid ") + Br + QStringLiteral("; border-radius:14px; padding:6px; } "
-        "QMenu::item { padding:8px 28px 8px 16px; border-radius:8px; font-size:11px; } "
+        "border:1px solid ") + Br + QStringLiteral("; border-radius:18px; padding:8px; } "
+        "QMenu::item { padding:9px 32px 9px 18px; border-radius:10px; font-size:11px; } "
         "QMenu::item:selected { background:") + Sel + QStringLiteral("; color:") + Pk + QStringLiteral("; } "
-        "QMenu::separator { height:1px; background:") + Br + QStringLiteral("; margin:4px 8px; } ");
+        "QMenu::separator { height:1px; background:") + Br + QStringLiteral("; margin:4px 10px; } ");
 
     setStyleSheet(s);
 }
@@ -1177,6 +1141,161 @@ void monitor::init_models() {
     setup_network_page();
     for (auto *t: {ui->local_ip_table, ui->arp_table, ui->quarantine_table})
         setup_network_table(t);
+
+    // ARP 表点击查看详情
+    connect(ui->arp_table, &QTableWidget::cellClicked, this, [this](int row, int) {
+        auto *ipItem = ui->arp_table->item(row, 0);
+        auto *macItem = ui->arp_table->item(row, 1);
+        if (!ipItem || !macItem) return;
+        QString ip = ipItem->text();
+        QString mac = macItem->text();
+
+        auto dlg = new QDialog(this);
+        dlg->setWindowTitle(QStringLiteral("ARP 详情 — %1").arg(ip));
+        dlg->resize(480, 340);
+        dlg->setStyleSheet(QStringLiteral("QDialog { background:") +
+            (dark_mode_ ? Theme::DkCard : Theme::LtCard) + QStringLiteral("; }"));
+
+        auto *lay = new QVBoxLayout(dlg);
+        lay->setContentsMargins(24, 20, 24, 20);
+        lay->setSpacing(12);
+
+        auto addRow = [&](const QString &k, const QString &v, const QString &c) {
+            auto *row = new QHBoxLayout();
+            auto *kl = new QLabel(k);
+            kl->setFixedWidth(80);
+            kl->setStyleSheet(QStringLiteral("font-size:11px; font-weight:700; color:") +
+                (dark_mode_ ? Theme::DkMuted : Theme::LtMuted) + QStringLiteral("; background:transparent;"));
+            auto *vl = new QLabel(v);
+            vl->setWordWrap(true);
+            vl->setTextInteractionFlags(Qt::TextSelectableByMouse);
+            vl->setStyleSheet(QStringLiteral("font-size:12px; font-weight:600; color:") + c +
+                QStringLiteral("; background:transparent; font-family:\"SF Mono\",\"Menlo\",monospace;"));
+            row->addWidget(kl);
+            row->addWidget(vl, 1);
+            lay->addLayout(row);
+        };
+
+        auto accent = dark_mode_ ? Theme::Strawberry : Theme::RosyDeep;
+        auto text   = dark_mode_ ? Theme::DkText : Theme::LtText;
+        auto mint   = dark_mode_ ? Theme::Mint : Theme::MintDeep;
+
+        addRow(QStringLiteral("IP 地址"), ip, accent);
+        addRow(QStringLiteral("MAC 地址"), mac, text);
+
+        // OUI vendor lookup from MAC prefix
+        QString oui = mac.left(8).toUpper();
+        // common OUIs
+        static QHash<QString,QString> vendors = {
+            {"BC:92:6B","Apple"}, {"AC:BC:32","Apple"}, {"F0:18:98","Apple"},
+            {"B8:27:EB","Raspberry Pi"}, {"DC:A6:32","Raspberry Pi"},
+            {"00:1A:11","Google"}, {"3C:5A:B4","Google"},
+            {"F4:F5:D8","Samsung"}, {"00:1E:C2","Samsung"},
+            {"00:25:9C","Cisco"}, {"00:1B:53","Cisco"},
+            {"00:0C:29","VMware"}, {"00:50:56","VMware"},
+            {"08:00:27","VirtualBox"},
+            {"D4:61:DA","Xiaomi"}, {"F4:DB:E3","Xiaomi"},
+            {"58:CB:52","Huawei"}, {"00:1E:10","Huawei"},
+            {"A4:50:46","Intel"}, {"00:1F:3B","Intel"},
+            {"B0:6E:BF","Dell"},
+            {"70:4D:7B","ASUS"},
+            {"48:21:0B","Nintendo"},
+            {"00:04:4B","NVIDIA"},
+        };
+        QString vendor = vendors.value(oui, QStringLiteral("未知厂商"));
+        addRow(QStringLiteral("厂商"), vendor, mint);
+
+        addRow(QStringLiteral("OUI"), oui, dark_mode_ ? Theme::DkMuted : Theme::LtMuted);
+
+        auto *btn = new QPushButton(QStringLiteral("关闭"));
+        btn->setStyleSheet(QStringLiteral(
+            "QPushButton { background:transparent; color:") + accent + QStringLiteral("; "
+            "border:1px solid ") + (dark_mode_ ? Theme::DkBorder : Theme::LtBorder) + QStringLiteral("; "
+            "border-radius:14px; padding:8px 24px; font-size:11px; font-weight:600; } "
+            "QPushButton:hover { background:") + (dark_mode_ ? Theme::DkSelected : Theme::LtSelected) +
+            QStringLiteral("; }"));
+        connect(btn, &QPushButton::clicked, dlg, &QDialog::close);
+        auto *btnRow = new QHBoxLayout();
+        btnRow->addStretch();
+        btnRow->addWidget(btn);
+        lay->addLayout(btnRow);
+
+        dlg->show();
+    });
+
+    // 隔离列表点击查看详情
+    connect(ui->quarantine_table, &QTableWidget::cellClicked, this, [this](int row, int) {
+        auto *ipItem = ui->quarantine_table->item(row, 0);
+        auto *reasonItem = ui->quarantine_table->item(row, 1);
+        auto *scoreItem = ui->quarantine_table->item(row, 2);
+        if (!ipItem) return;
+        QString ip = ipItem->text();
+        QString reason = reasonItem ? reasonItem->text() : QStringLiteral("-");
+        QString score = scoreItem ? scoreItem->text() : QStringLiteral("0");
+
+        auto dlg = new QDialog(this);
+        dlg->setWindowTitle(QStringLiteral("隔离详情 — %1").arg(ip));
+        dlg->resize(420, 280);
+        dlg->setStyleSheet(QStringLiteral("QDialog { background:") +
+            (dark_mode_ ? Theme::DkCard : Theme::LtCard) + QStringLiteral("; }"));
+
+        auto *lay = new QVBoxLayout(dlg);
+        lay->setContentsMargins(24, 20, 24, 20);
+        lay->setSpacing(12);
+
+        auto addRow = [&](const QString &k, const QString &v, const QString &c) {
+            auto *r = new QHBoxLayout();
+            auto *kl = new QLabel(k);
+            kl->setFixedWidth(80);
+            kl->setStyleSheet(QStringLiteral("font-size:11px; font-weight:700; color:") +
+                (dark_mode_ ? Theme::DkMuted : Theme::LtMuted) + QStringLiteral("; background:transparent;"));
+            auto *vl = new QLabel(v);
+            vl->setWordWrap(true);
+            vl->setTextInteractionFlags(Qt::TextSelectableByMouse);
+            vl->setStyleSheet(QStringLiteral("font-size:12px; font-weight:600; color:") + c +
+                QStringLiteral("; background:transparent; font-family:\"SF Mono\",\"Menlo\",monospace;"));
+            r->addWidget(kl);
+            r->addWidget(vl, 1);
+            lay->addLayout(r);
+        };
+
+        auto coral  = Theme::Coral;
+        auto text   = dark_mode_ ? Theme::DkText : Theme::LtText;
+        auto muted  = dark_mode_ ? Theme::DkMuted : Theme::LtMuted;
+
+        addRow(QStringLiteral("IP 地址"), ip, coral);
+        addRow(QStringLiteral("隔离原因"), reason, text);
+        addRow(QStringLiteral("威胁评分"), score, coral);
+
+        auto *btnRow = new QHBoxLayout();
+        btnRow->addStretch();
+        auto *unqBtn = new QPushButton(QStringLiteral("取消隔离"));
+        unqBtn->setStyleSheet(QStringLiteral(
+            "QPushButton { background:transparent; color:") + coral + QStringLiteral("; "
+            "border:1px solid ") + coral + QStringLiteral("; border-radius:14px; padding:8px 20px; "
+            "font-size:11px; font-weight:600; } "
+            "QPushButton:hover { background:rgba(240,104,128,0.12); }"));
+        connect(unqBtn, &QPushButton::clicked, dlg, [dlg, ip, this]() {
+            Nezha::Database::DatabaseHelper::RemoveQuarantine(ip.toStdString());
+            refresh_quarantine_list();
+            dlg->close();
+        });
+        btnRow->addWidget(unqBtn);
+
+        auto *closeBtn = new QPushButton(QStringLiteral("关闭"));
+        auto accent = dark_mode_ ? Theme::Strawberry : Theme::RosyDeep;
+        closeBtn->setStyleSheet(QStringLiteral(
+            "QPushButton { background:transparent; color:") + accent + QStringLiteral("; "
+            "border:1px solid ") + (dark_mode_ ? Theme::DkBorder : Theme::LtBorder) +
+            QStringLiteral("; border-radius:14px; padding:8px 20px; font-size:11px; font-weight:600; } "
+            "QPushButton:hover { background:") + (dark_mode_ ? Theme::DkSelected : Theme::LtSelected) +
+            QStringLiteral("; }"));
+        connect(closeBtn, &QPushButton::clicked, dlg, &QDialog::close);
+        btnRow->addWidget(closeBtn);
+        lay->addLayout(btnRow);
+
+        dlg->show();
+    });
 
     // attackers leaderboard
     attackers_model_ = new LogModel(this);
