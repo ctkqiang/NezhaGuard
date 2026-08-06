@@ -1680,8 +1680,10 @@ void monitor::append_alert(const QString &time, const QString &type, const QStri
 void monitor::append_honeypot(const QString &time, const QString &src_ip, uint16_t sport, uint16_t dport,
                               const QString &service) {
     if (!honey_model_) return;
-    honey_model_->append(time, QStringLiteral("INFO"),
-                         QStringLiteral("%1:%2 → :%3 [%4]").arg(src_ip).arg(sport).arg(dport).arg(service));
+    QString msg = sport > 0
+        ? QStringLiteral("%1:%2 → 端口 %3 [%4]").arg(src_ip).arg(sport).arg(dport).arg(service)
+        : QStringLiteral("%1 → 端口 %2 [%3]").arg(src_ip).arg(dport).arg(service);
+    honey_model_->append(time, QStringLiteral("蜜罐"), msg);
     ui->honey_stats_label->setText(QStringLiteral("共 %1 次连接").arg(honey_model_->total()));
 }
 
@@ -2684,15 +2686,15 @@ void monitor::run_nmap_scan(const QString &ip) {
         return b;
     };
 
-    auto *copyBtn = mkbtn(QStringLiteral("Copy Results"), Sea);
+    auto *copyBtn = mkbtn(QStringLiteral("复制结果"), Sea);
     btnBar->addWidget(copyBtn);
 
-    auto *exportBtn = mkbtn(QStringLiteral("Export .txt"), Wis);
+    auto *exportBtn = mkbtn(QStringLiteral("导出文本"), Wis);
     btnBar->addWidget(exportBtn);
 
     btnBar->addStretch();
 
-    auto *closeBtn = mkbtn(QStringLiteral("Close"), Pk);
+    auto *closeBtn = mkbtn(QStringLiteral("关闭"), Pk);
     btnBar->addWidget(closeBtn);
 
     root->addLayout(btnBar);
@@ -2749,11 +2751,11 @@ void monitor::run_nmap_scan(const QString &ip) {
         output->append(QString());
 
         if (code == 0) {
-            output->append(QStringLiteral("Scan completed successfully in %1s").arg(elapsed, 0, 'f', 1));
+            output->append(QStringLiteral("扫描完成，耗时 %1 秒").arg(elapsed, 0, 'f', 1));
         } else {
-            output->append(QStringLiteral("Scan exited with code %1 after %2s").arg(code).arg(elapsed, 0, 'f', 1));
+            output->append(QStringLiteral("扫描异常退出，代码 %1，耗时 %2 秒").arg(code).arg(elapsed, 0, 'f', 1));
         }
-        statusDot->setText(code == 0 ? QStringLiteral("COMPLETE") : QStringLiteral("ERROR"));
+        statusDot->setText(code == 0 ? QStringLiteral("已完成") : QStringLiteral("错误"));
         statusDot->setStyleSheet(QStringLiteral(
             "font-size:9px; font-weight:700; color:") + (code == 0 ? Sea : Wis) + QStringLiteral("; "
             "background:rgba(") + (code == 0 ? QStringLiteral("96,208,176") : QStringLiteral("184,160,232")) +

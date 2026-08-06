@@ -423,6 +423,7 @@ static int run_cli_mode() {
 
 #ifndef NEZHAGUARD_CLI_ONLY
 #include <QApplication>
+#include <QDateTime>
 #include <QString>
 
 #include "src/views/monitor.h"
@@ -531,7 +532,7 @@ static int run_gui_mode(int argc, char *argv[]) {
             }
         }(a.level);
 
-        QMetaObject::invokeMethod(&window, [window = &window, ts_ns, type_str, ip_str, cnt, sc, sev]() {
+        QMetaObject::invokeMethod(&window, [window = &window, ts_ns, type_str, ip_str, cnt, sc, sev, type = a.type]() {
             auto ns = static_cast<time_t>(ts_ns / 1'000'000'000ULL);
             char ts[16];
             std::strftime(ts, sizeof(ts), "%H:%M:%S", std::localtime(&ns));
@@ -540,6 +541,11 @@ static int run_gui_mode(int argc, char *argv[]) {
             window->append_alert(
                 QString::fromUtf8(ts), qType, qIp, cnt, sc, sev);
             window->record_attacker(qIp, sc, qType);
+            // ICMP/scan alerts also show in honeypot tab
+            if (type == Core::AttackType::PortScan || type == Core::AttackType::Scanner) {
+                auto now = QDateTime::currentDateTime().toString(QStringLiteral("yyyy-MM-dd HH:mm:ss.zzz"));
+                window->append_honeypot(now, qIp, 0, 0, QStringLiteral("ICMP 扫描"));
+            }
         }, Qt::QueuedConnection);
     });
 
@@ -568,8 +574,10 @@ static int run_gui_mode(int argc, char *argv[]) {
                         hp = &h;
                         break;
                     }
+                auto honeytime = QDateTime::fromMSecsSinceEpoch(e.ts_ns / 1'000'000, Qt::LocalTime)
+                                     .toString(QStringLiteral("yyyy-MM-dd HH:mm:ss.zzz"));
                 window.append_honeypot(
-                    QString::number(e.ts_ns),
+                    honeytime,
                     QString::fromStdString(e.src.to_string()),
                     e.sport, e.dport,
                     hp ? QString::fromUtf8(hp->service) : QStringLiteral("?"));

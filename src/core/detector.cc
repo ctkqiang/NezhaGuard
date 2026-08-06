@@ -261,7 +261,7 @@ namespace Nezha::Core {
         entry.last_ns = now;
 
         if (e.proto == PROTO_ICMP) {
-            if ((entry.count == 5) || (entry.count > 5 && entry.count % 10 == 0)) {
+            if ((entry.count == 3) || (entry.count > 3 && entry.count % 5 == 0)) {
                 Alert a{};
                 a.type = AttackType::PortScan;
                 a.level = entry.count > 100

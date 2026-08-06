@@ -258,5 +258,5 @@ void RadarWidget::paintEvent(QPaintEvent *) {
     p.setPen(mu);
     p.setFont(QFont(QStringLiteral("SF Pro Rounded"), 9));
     p.drawText(QRect(10, 6, 200, 16), Qt::AlignLeft,
-               QStringLiteral("Devices: %1  ·  %2 RPM").arg(devices_.size()).arg(60000.0 / sweep_anim_->duration(), 0, 'f', 1));
+               QStringLiteral("设备: %1 · %2 转/分").arg(devices_.size()).arg(60000.0 / sweep_anim_->duration(), 0, 'f', 1));
 }

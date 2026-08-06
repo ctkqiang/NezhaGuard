@@ -86,15 +86,16 @@ namespace Nezha::Core {
         if (!handle_ || !cb) return;
         stop_ = false;
 
-        LoopCtx ctx{static_cast<pcap_t *>(handle_), &cb, &stop_};
+        LoopCtx ctx{.pcap = static_cast<pcap_t *>(handle_), .cb = &cb, .stop = &stop_};
 
         auto handler = [](u_char *user, const pcap_pkthdr *hdr, const u_char *bytes) {
-            auto *c = reinterpret_cast<LoopCtx *>(user);
+            const auto *c = reinterpret_cast<LoopCtx *>(user);
 
             if (*c->stop) {
                 pcap_breakloop(c->pcap);
                 return;
             }
+
             if (c->cb && *c->cb) {
                 timeval tv{};
                 tv.tv_sec = hdr->ts.tv_sec;

@@ -117,7 +117,7 @@ void DetailPanel::show_log(const QString &timestamp, const QString &level,
 
     QString accent = dark_ ? Theme::Sakura : Theme::SakuraDeep;
     setHtml(QStringLiteral("<html><head><style>%1</style></head><body>%2</body></html>")
-        .arg(css(), card_html(QStringLiteral("Log Detail"), accent, body)));
+        .arg(css(), card_html(QStringLiteral("日志详情"), accent, body)));
 
     if (!ips.isEmpty()) {
         pending_ip_ = ips.first();
@@ -146,7 +146,7 @@ void DetailPanel::show_alert(const QString &timestamp, const QString &level,
 
     QString accent = dark_ ? Theme::SakuraHot : Theme::SakuraHot;
     setHtml(QStringLiteral("<html><head><style>%1</style></head><body>%2</body></html>")
-        .arg(css(), card_html(QStringLiteral("Alert Detail"), accent, body)));
+        .arg(css(), card_html(QStringLiteral("告警详情"), accent, body)));
 }
 
 void DetailPanel::show_honeypot(const QString &timestamp, const QString &message) {
@@ -160,7 +160,7 @@ void DetailPanel::show_honeypot(const QString &timestamp, const QString &message
 
     QString accent = dark_ ? Theme::Wisteria : Theme::WisteriaDeep;
     setHtml(QStringLiteral("<html><head><style>%1</style></head><body>%2</body></html>")
-        .arg(css(), card_html(QStringLiteral("Honeypot Event"), accent, body)));
+        .arg(css(), card_html(QStringLiteral("蜜罐事件"), accent, body)));
 }
 
 void DetailPanel::add_geo_info(const QString &ip, const QString &hostname,
@@ -195,11 +195,11 @@ void DetailPanel::add_geo_info(const QString &ip, const QString &hostname,
     geoBody += QStringLiteral("</table>");
 
     QString accent = dark_ ? Theme::Seafoam : Theme::SeafoamDeep;
-    QString geoCard = card_html(QStringLiteral("GeoIP 定位"), accent, geoBody);
+    QString geoCard = card_html(QStringLiteral("地理定位"), accent, geoBody);
 
     QString evtCard;
     if (!pending_msg_.isEmpty()) {
-        evtCard = card_html(QStringLiteral("原始事件"),
+        evtCard = card_html(QStringLiteral("原始日志"),
                             dark_ ? Theme::DkMuted : Theme::LtMuted,
                             pending_msg_.toHtmlEscaped());
     }

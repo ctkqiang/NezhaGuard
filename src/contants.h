@@ -15,7 +15,7 @@ namespace Nezha::Configuration {
         static constexpr bool ShowGui = true;
         static constexpr bool ShowOtherApplicationLogs = true;
 
-        static constexpr int64_t AnomaliesQuarantineThreshold = 100;
+        static constexpr int64_t AnomaliesQuarantineThreshold = 12;
     };
 }
 
