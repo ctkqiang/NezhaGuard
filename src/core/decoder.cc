@@ -195,8 +195,15 @@ namespace Nezha::Core {
         const std::string_view method = req_line.substr(0, sp1);
 
         static const char *methods[] = {
-            "GET", "POST", "PUT", "DELETE", "HEAD", "OPTIONS",
-            "PATCH", "CONNECT", "TRACE"
+            "GET",
+            "POST",
+            "PUT",
+            "DELETE",
+            "HEAD",
+            "OPTIONS",
+            "PATCH",
+            "CONNECT",
+            "TRACE"
         };
 
         bool valid = false;

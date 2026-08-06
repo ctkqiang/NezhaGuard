@@ -146,6 +146,7 @@ private:
     DetailPanel *alert_detail_panel_ = nullptr;
     DetailPanel *honey_detail_panel_ = nullptr;
     QTableWidget *protocol_table_ = nullptr;
+    QTableWidget *top_talkers_table_ = nullptr;
     struct Attacker { double score = 0; int count = 0; QString type; };
     QHash<QString, Attacker> attackers_;
     LogModel *attackers_model_ = nullptr;

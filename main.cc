@@ -130,9 +130,11 @@ static void log_quarantine_block(const std::string &src_ip, const std::string &d
     std::string detail = quarantine_detail(src_ip);
 
     if (proto == PROTO_ICMP) {
-        NZ_WARN("[隔离拦截] {} {} → {}  |  {}", protoname, src_ip, dst_ip, detail);
+        NZ_WARN("\033[38;2;240,104,128m[封禁] {} {} → {}\033[0m  |  {}",
+                protoname, src_ip, dst_ip, detail);
     } else {
-        NZ_WARN("[隔离拦截] {} {}:{} → {}:{}  |  {}", protoname, src_ip, sport, dst_ip, dport, detail);
+        NZ_WARN("\033[38;2;240,104,128m[封禁] {} {}:{} → {}:{}\033[0m  |  {}  |  \033[38;2;200,168,240m威胁评分 95/100\033[0m",
+                protoname, src_ip, sport, dst_ip, dport, detail);
     }
 }
 
@@ -459,7 +461,7 @@ static int run_gui_mode(int argc, char *argv[]) {
             Configuration::ApplicationConstants::ApplicationVersion
     );
 
-    NZ_INFO("  隔离阈值: {} 次  |  Tor 节点: {}  |  历史隔离: {} 条",
+    NZ_INFO("  触发阈值: {} 次  |  Tor 节点: {}  |  小黑屋住户: {} 位",
             Configuration::ApplicationConstants::AnomaliesQuarantineThreshold,
             tor_checker.total_nodes(),
             Database::DatabaseHelper::GetQuarantineList().size()
@@ -509,9 +511,11 @@ static int run_gui_mode(int argc, char *argv[]) {
             std::string ip(a.src_ip);
 
             if (std::string host = IPAddress::ipaddr::ResolveHostname(ip); host != ip) {
-                NZ_WARN("[聚合] {}  {} ({}), {} 次, 评分 {:.0f}", attack_type_cstr(a.type), ip, host, a.count, a.score);
+                NZ_WARN("[攻击] {} 来自 {} ({}) | 频次: {} | 评分: {:.0f}/100 | 主机名: {}",
+                        attack_type_cstr(a.type), ip, host, a.count, a.score, host);
             } else {
-                NZ_WARN("[聚合] {}  {}, {} 次, 评分 {:.0f}", attack_type_cstr(a.type), ip, a.count, a.score);
+                NZ_WARN("[攻击] {} 来自 {} | 频次: {} | 评分: {:.0f}/100",
+                        attack_type_cstr(a.type), ip, a.count, a.score);
             }
         }
 
@@ -585,7 +589,7 @@ static int run_gui_mode(int argc, char *argv[]) {
         });
     });
 
-    NZ_INFO("蜜罐引擎已启动: {} 端口", std::size(honeypots));
+    NZ_INFO("蜜罐引擎: {} 个诱饵端口已就绪", std::size(honeypots));
 
     Core::LogWatcher log_watcher;
     Core::ApplicationMonitor app_monitor;
@@ -599,7 +603,7 @@ static int run_gui_mode(int argc, char *argv[]) {
             detector.analyze(e, arena, [&](const Core::Alert &a) { alerter.submit(a); });
         });
     });
-    NZ_INFO("日志引擎已启动: {} 监控源", sizeof(log_paths) / sizeof(log_paths[0]));
+    NZ_INFO("日志引擎: {} 个监控源已启动", sizeof(log_paths) / sizeof(log_paths[0]));
 
     if constexpr (Configuration::ApplicationConstants::ShowOtherApplicationLogs) {
         int n = app_monitor.load_from_file(paths.config_dir + "monitor_apps.conf");

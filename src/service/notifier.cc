@@ -221,13 +221,25 @@ namespace Nezha::Service {
             // clear samples to avoid repeated notifications for same burst
             samples.clear();
 
-            std::string title = std::format("[NezhaGuard] 频率异常 — {}", ip);
+            std::string emoji;
+            if (cnt_1m > kRateThreshold)      emoji = "分钟";
+            else if (cnt_1h > kRateThreshold) emoji = "小时";
+            else emoji = "天";
+
+            int totalHits = cnt_1m > 0 ? cnt_1m : (cnt_1h > 0 ? cnt_1h : cnt_1d);
+            std::string title = std::format("[NezhaGuard] {} 正在疯狂敲门!", ip);
             std::string body = std::format(
-                "来源 IP: {}\n攻击类型: {}\n频率: {}\n阈值: {} 次\n\n已触发本地通知（默认规则）",
-                ip, type, trigger, kRateThreshold
+                "攻击来源: {}\n"
+                "攻击类型: {}\n"
+                "频率: {} (每{}超过{}次!)\n"
+                "阈值: {} 次触发\n"
+                "已封禁数据包: {} 个\n"
+                "\n哪吒已自动拦截并推送此通知",
+                ip, type, trigger, emoji, kRateThreshold, kRateThreshold, totalHits
             );
 
-            NZ_WARN("[频率告警] {} — {} — {}", ip, type, trigger);
+            NZ_WARN("[告警] {} 来自 {} 的频率异常 — {} — 每{}超过{}次触发!",
+                    ip, type, trigger, emoji, kRateThreshold);
 
             // dispatch to local GUI if callback is set, else use osascript
             std::lock_guard<std::mutex> lock(mtx_);

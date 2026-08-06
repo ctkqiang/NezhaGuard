@@ -126,7 +126,7 @@ namespace Nezha::Database {
                     std::cerr << std::format("[DB] insert: {}\n", sqlite3_errmsg(db_.handle()));
                 else {
                     cache_.emplace(ip);
-                    std::cout << std::format("[DB] 已隔离: {}  原因: {}\n", ip, reason);
+                    std::cout << std::format("[封禁] {} 已被关进小黑屋! 原因: {}  威胁评分: {:.0f}/100\n", ip, reason, score);
                 }
             }
 

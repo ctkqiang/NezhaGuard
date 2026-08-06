@@ -983,15 +983,18 @@ void monitor::setup_network_page() {
     auto *row1 = new QHBoxLayout();
     row1->setSpacing(14);
 
-    // radar
+    // radar — standalone square card, no header squeezing
     radar_widget_ = new RadarWidget();
     radar_widget_->dark = dark_mode_;
-    radar_widget_->setMinimumSize(360, 360);
-    radar_widget_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-    auto *radarCard = makeCard(QStringLiteral("局域网设备扫描"),
-                                radar_widget_,
-                                dark_mode_ ? Theme::Seafoam : Theme::SeafoamDeep);
-    row1->addWidget(radarCard, 2); // 2:1 ratio vs protocol stats
+    radar_widget_->setMinimumSize(320, 320);
+    auto *radarFrame = new QFrame(this);
+    radarFrame->setObjectName(QStringLiteral("netcard"));
+    radarFrame->setFrameShape(QFrame::NoFrame);
+    auto *rfLay = new QVBoxLayout(radarFrame);
+    rfLay->setSpacing(0);
+    rfLay->setContentsMargins(8, 8, 8, 8);
+    rfLay->addWidget(radar_widget_);
+    row1->addWidget(radarFrame, 1);
 
     // protocol stats
     protocol_table_ = new QTableWidget(0, 4, this);
@@ -1007,12 +1010,12 @@ void monitor::setup_network_page() {
         QStringLiteral("协议"), QStringLiteral("包数"),
         QStringLiteral("字节"), QStringLiteral("占比")
     });
-    protocol_table_->setMinimumHeight(360);
+    protocol_table_->setMinimumHeight(320);
     setup_network_table(protocol_table_);
     auto *protoCard = makeCard(QStringLiteral("实时协议统计"),
                                 protocol_table_,
                                 dark_mode_ ? Theme::Wisteria : Theme::WisteriaDeep);
-    row1->addWidget(protoCard, 1); // narrower column
+    row1->addWidget(protoCard, 1);
 
     root->addLayout(row1);
 
@@ -1039,10 +1042,33 @@ void monitor::setup_network_page() {
     ui->quarantine_table->setMaximumHeight(260);
     auto *quarCard = makeCard(QStringLiteral("隔离列表"),
                                ui->quarantine_table,
-                               dark_mode_ ? Theme::SakuraHot : Theme::SakuraHot);
+                               dark_mode_ ? Theme::Coral : Theme::Coral);
     row3->addWidget(quarCard, 1);
 
     root->addLayout(row3);
+
+    // ── row 4: top talkers (full width) ──
+    top_talkers_table_ = new QTableWidget(0, 5, this);
+    top_talkers_table_->setFrameShape(QFrame::NoFrame);
+    top_talkers_table_->setAlternatingRowColors(true);
+    top_talkers_table_->setShowGrid(false);
+    top_talkers_table_->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    top_talkers_table_->setSelectionMode(QAbstractItemView::SingleSelection);
+    top_talkers_table_->setSelectionBehavior(QAbstractItemView::SelectRows);
+    top_talkers_table_->verticalHeader()->hide();
+    top_talkers_table_->horizontalHeader()->setStretchLastSection(true);
+    top_talkers_table_->setMinimumHeight(140);
+    top_talkers_table_->setMaximumHeight(240);
+    top_talkers_table_->setHorizontalHeaderLabels({
+        QStringLiteral("排名"), QStringLiteral("端点 IP"),
+        QStringLiteral("数据包"), QStringLiteral("流量"),
+        QStringLiteral("协议")
+    });
+    setup_network_table(top_talkers_table_);
+    auto *talkerCard = makeCard(QStringLiteral("流量端点 Top 15"),
+                                 top_talkers_table_,
+                                 dark_mode_ ? Theme::Strawberry : Theme::RosyDeep);
+    root->addWidget(talkerCard);
     root->addStretch();
 }
 
@@ -2112,35 +2138,80 @@ void monitor::refresh_protocol_stats() {
     if (!protocol_table_) return;
     auto s = Nezha::Core::ProtocolStats::instance().snapshot();
 
-    struct Row { QString proto; uint64_t pkts; uint64_t bytes; };
+    struct Row { QString proto; uint64_t pkts; uint64_t bytes; QString color; };
     Row rows[] = {
-        {QStringLiteral("TCP"),  s.tcp_pkts,  s.tcp_bytes},
-        {QStringLiteral("UDP"),  s.udp_pkts,  s.udp_bytes},
-        {QStringLiteral("ICMP"), s.icmp_pkts, s.icmp_bytes},
-        {QStringLiteral("HTTP"), s.http_pkts, s.http_bytes},
-        {QStringLiteral("Other"),s.other_pkts,s.other_bytes},
+        {QStringLiteral("TCP"),  s.tcp_pkts,  s.tcp_bytes,  dark_mode_ ? Theme::Strawberry : Theme::RosyDeep},
+        {QStringLiteral("UDP"),  s.udp_pkts,  s.udp_bytes,  dark_mode_ ? Theme::Lilac : Theme::LilacDeep},
+        {QStringLiteral("ICMP"), s.icmp_pkts, s.icmp_bytes, dark_mode_ ? Theme::Coral : Theme::Coral},
+        {QStringLiteral("HTTP"), s.http_pkts, s.http_bytes, dark_mode_ ? Theme::Mint : Theme::MintDeep},
+        {QStringLiteral("Other"),s.other_pkts,s.other_bytes,dark_mode_ ? Theme::DkMuted : Theme::LtMuted},
     };
 
     protocol_table_->setRowCount(5);
+    auto txt = dark_mode_ ? Theme::DkText : Theme::LtText;
+
     for (int i = 0; i < 5; ++i) {
         auto *proto = new QTableWidgetItem(rows[i].proto);
+        proto->setForeground(QColor(rows[i].color));
+        QFont bf(QStringLiteral("SF Pro Rounded"), 11);
+        bf.setBold(true);
+        proto->setFont(bf);
+
         auto *pkts  = new QTableWidgetItem(QString::number(rows[i].pkts));
-        auto *bytes = new QTableWidgetItem(QString::number(rows[i].bytes));
+        pkts->setForeground(QColor(txt));
+
+        QString byteStr;
+        if (rows[i].bytes >= 1'000'000)
+            byteStr = QStringLiteral("%1 MB").arg(rows[i].bytes / 1'000'000.0, 0, 'f', 1);
+        else if (rows[i].bytes >= 1'000)
+            byteStr = QStringLiteral("%1 KB").arg(rows[i].bytes / 1'000.0, 0, 'f', 1);
+        else
+            byteStr = QStringLiteral("%1 B").arg(rows[i].bytes);
+        auto *bytes = new QTableWidgetItem(byteStr);
+        bytes->setForeground(QColor(txt));
 
         double pct = s.total_packets > 0
             ? (rows[i].pkts * 100.0 / s.total_packets) : 0.0;
+        // colored progress bar text
+        int barW = qBound(1, static_cast<int>(pct / 2.5), 40);
+        QString bar = QString(barW, QChar(0x2588)); // full block
         auto *share = new QTableWidgetItem(
-            QStringLiteral("%1%").arg(pct, 0, 'f', 1));
+            QStringLiteral("%1  %2%").arg(bar).arg(pct, 0, 'f', 1));
+        share->setForeground(QColor(rows[i].color));
 
         proto->setTextAlignment(Qt::AlignLeft | Qt::AlignVCenter);
         pkts->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
         bytes->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
-        share->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
+        share->setTextAlignment(Qt::AlignLeft | Qt::AlignVCenter);
 
         protocol_table_->setItem(i, 0, proto);
         protocol_table_->setItem(i, 1, pkts);
         protocol_table_->setItem(i, 2, bytes);
         protocol_table_->setItem(i, 3, share);
+    }
+
+    // top talkers refresh
+    if (top_talkers_table_) {
+        auto s2 = Nezha::Core::ProtocolStats::instance().snapshot();
+        top_talkers_table_->setRowCount(1);
+        auto *info = new QTableWidgetItem(QStringLiteral("流量端点追踪已就绪"));
+        info->setForeground(QColor(dark_mode_ ? Theme::DkMuted : Theme::LtMuted));
+        top_talkers_table_->setItem(0, 0, info);
+        auto *pktInfo = new QTableWidgetItem(QString::number(s2.total_packets));
+        pktInfo->setForeground(QColor(dark_mode_ ? Theme::Strawberry : Theme::RosyDeep));
+        top_talkers_table_->setItem(0, 2, pktInfo);
+        QString totalStr;
+        if (s2.total_bytes >= 1'000'000)
+            totalStr = QStringLiteral("%1 MB").arg(s2.total_bytes / 1'000'000.0, 0, 'f', 1);
+        else
+            totalStr = QStringLiteral("%1 KB").arg(s2.total_bytes / 1'000.0, 0, 'f', 1);
+        auto *byteInfo = new QTableWidgetItem(totalStr);
+        byteInfo->setForeground(QColor(dark_mode_ ? Theme::Mint : Theme::MintDeep));
+        top_talkers_table_->setItem(0, 3, byteInfo);
+        auto *protoInfo = new QTableWidgetItem(
+            QStringLiteral("TCP:%1 UDP:%2 ICMP:%3 HTTP:%4").arg(s2.tcp_pkts).arg(s2.udp_pkts).arg(s2.icmp_pkts).arg(s2.http_pkts));
+        protoInfo->setForeground(QColor(dark_mode_ ? Theme::Lilac : Theme::LilacDeep));
+        top_talkers_table_->setItem(0, 4, protoInfo);
     }
 }
 

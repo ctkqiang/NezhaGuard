@@ -274,7 +274,7 @@ namespace Nezha::Core {
                 a.score = std::min(95.0, 40.0 + entry.count * 0.8);
                 a.ts_ns = now;
                 a.count = entry.count;
-                a.detail = arena.intern("ICMP Ping 洪流");
+                a.detail = arena.intern("ICMP Ping 洪流攻击 — 大量 ICMP Echo Request 数据包");
                 a.src_ip = arena.intern(e.src.to_string());
                 cb(a);
             }
