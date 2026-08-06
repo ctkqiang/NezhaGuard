@@ -355,7 +355,7 @@ monitor::monitor(QWidget *parent) : QMainWindow(parent), ui(new Ui::monitor) {
         ui->log_search_box->setFocus();
     });
     new QShortcut(QKeySequence(QStringLiteral("Ctrl+L")), this, [this]() { clear_logs(); });
-    for (int k = 1; k <= 6; ++k) {
+    for (int k = 1; k <= 7; ++k) {
         new QShortcut(QKeySequence(QStringLiteral("Ctrl+%1").arg(k)), this, [this, k]() {
             ui->sidebar->setCurrentRow(k - 1);
         });
@@ -849,6 +849,7 @@ void monitor::setup_sidebar() {
         QStringLiteral("安全告警"),
         QStringLiteral("蜜罐监控"),
         QStringLiteral("网络信息"),
+        QStringLiteral("流量端点"),
         QStringLiteral("系统配置")
     };
     ui->sidebar->clear();
@@ -903,7 +904,7 @@ void monitor::animate_page_switch(int row) {
     });
     out_anim->start(QAbstractAnimation::DeleteWhenStopped);
 
-    if (row == 5) load_settings_configs();
+    if (row == 6) load_settings_configs();
 }
 
 void monitor::update_clock() {
@@ -1046,8 +1047,29 @@ void monitor::setup_network_page() {
     row3->addWidget(quarCard, 1);
 
     root->addLayout(row3);
+    root->addStretch();
+}
 
-    // ── row 4: top talkers (full width) ──
+void monitor::setup_traffic_page() {
+    auto *page = ui->page_traffic;
+    if (page->layout()) {
+        QLayoutItem *child;
+        while ((child = page->layout()->takeAt(0)) != nullptr) {}
+        delete page->layout();
+    }
+
+    auto *root = new QVBoxLayout(page);
+    root->setSpacing(14);
+    root->setContentsMargins(22, 18, 22, 18);
+
+    // header row
+    auto *hdr = new QHBoxLayout();
+    ui->traffic_title->setStyleSheet(QStringLiteral("font-size:14px; font-weight:700; background:transparent;"));
+    hdr->addWidget(ui->traffic_title);
+    hdr->addStretch();
+    root->addLayout(hdr);
+
+    // top talkers table
     top_talkers_table_ = new QTableWidget(0, 5, this);
     top_talkers_table_->setFrameShape(QFrame::NoFrame);
     top_talkers_table_->setAlternatingRowColors(true);
@@ -1057,18 +1079,36 @@ void monitor::setup_network_page() {
     top_talkers_table_->setSelectionBehavior(QAbstractItemView::SelectRows);
     top_talkers_table_->verticalHeader()->hide();
     top_talkers_table_->horizontalHeader()->setStretchLastSection(true);
-    top_talkers_table_->setMinimumHeight(140);
-    top_talkers_table_->setMaximumHeight(240);
     top_talkers_table_->setHorizontalHeaderLabels({
         QStringLiteral("排名"), QStringLiteral("端点 IP"),
         QStringLiteral("数据包"), QStringLiteral("流量"),
         QStringLiteral("协议")
     });
     setup_network_table(top_talkers_table_);
-    auto *talkerCard = makeCard(QStringLiteral("流量端点 Top 15"),
-                                 top_talkers_table_,
-                                 dark_mode_ ? Theme::Strawberry : Theme::RosyDeep);
-    root->addWidget(talkerCard);
+
+    // card wrapper
+    auto *card = new QFrame(this);
+    card->setObjectName(QStringLiteral("netcard"));
+    card->setFrameShape(QFrame::NoFrame);
+    auto *cardLay = new QVBoxLayout(card);
+    cardLay->setSpacing(8);
+    cardLay->setContentsMargins(14, 12, 14, 12);
+
+    auto *cardHdr = new QHBoxLayout();
+    auto *dot = new QLabel(QStringLiteral("●"));
+    auto accent = dark_mode_ ? Theme::Strawberry : Theme::RosyDeep;
+    dot->setStyleSheet(QStringLiteral("font-size:8px; color:") + accent + QStringLiteral("; background:transparent;"));
+    auto *lbl = new QLabel(QStringLiteral("流量端点 Top 15"));
+    lbl->setStyleSheet(QStringLiteral(
+        "font-size:11px; font-weight:700; color:") + (dark_mode_ ? Theme::DkText : Theme::LtText) +
+        QStringLiteral("; background:transparent;"));
+    cardHdr->addWidget(dot);
+    cardHdr->addWidget(lbl);
+    cardHdr->addStretch();
+    cardLay->addLayout(cardHdr);
+    cardLay->addWidget(top_talkers_table_);
+
+    root->addWidget(card, 1);
     root->addStretch();
 }
 
@@ -1165,6 +1205,8 @@ void monitor::init_models() {
 
     // network page
     setup_network_page();
+    // traffic page
+    setup_traffic_page();
     for (auto *t: {ui->local_ip_table, ui->arp_table, ui->quarantine_table})
         setup_network_table(t);
 

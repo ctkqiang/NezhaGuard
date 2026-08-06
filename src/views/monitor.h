@@ -111,6 +111,7 @@ private:
     void setup_tray();
     void setup_file_menu();
     void setup_network_page();
+    void setup_traffic_page();
     void setup_log_table(QTableView *view);
     void setup_network_table(QTableWidget *table);
     void refresh_local_ips();

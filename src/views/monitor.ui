@@ -60,6 +60,7 @@
          <item><property name="text"><string>  安全告警</string></property></item>
          <item><property name="text"><string>  蜜罐监控</string></property></item>
          <item><property name="text"><string>  网络信息</string></property></item>
+         <item><property name="text"><string>  流量端点</string></property></item>
          <item><property name="text"><string>  系统配置</string></property></item>
         </widget>
        </item>
@@ -269,6 +270,15 @@
            <item><widget class="QTableWidget" name="arp_table"><property name="maximumHeight"><number>180</number></property><property name="frameShape"><enum>QFrame::NoFrame</enum></property><property name="alternatingRowColors"><bool>true</bool></property><property name="showGrid"><bool>false</bool></property><property name="columnCount"><number>2</number></property><property name="editTriggers"><set>QAbstractItemView::NoEditTriggers</set></property><property name="selectionMode"><enum>QAbstractItemView::SingleSelection</enum></property><property name="selectionBehavior"><enum>QAbstractItemView::SelectRows</enum></property><attribute name="horizontalHeaderVisible"><bool>true</bool></attribute><attribute name="horizontalHeaderStretchLastSection"><bool>true</bool></attribute><attribute name="verticalHeaderVisible"><bool>false</bool></attribute><column><property name="text"><string>IP 地址</string></property></column><column><property name="text"><string>MAC 地址</string></property></column></widget></item>
            <item><widget class="QLabel" name="quarantine_label"><property name="text"><string>隔离列表</string></property></widget></item>
            <item><widget class="QTableWidget" name="quarantine_table"><property name="maximumHeight"><number>180</number></property><property name="frameShape"><enum>QFrame::NoFrame</enum></property><property name="alternatingRowColors"><bool>true</bool></property><property name="showGrid"><bool>false</bool></property><property name="columnCount"><number>3</number></property><property name="editTriggers"><set>QAbstractItemView::NoEditTriggers</set></property><property name="selectionMode"><enum>QAbstractItemView::SingleSelection</enum></property><property name="selectionBehavior"><enum>QAbstractItemView::SelectRows</enum></property><attribute name="horizontalHeaderVisible"><bool>true</bool></attribute><attribute name="horizontalHeaderStretchLastSection"><bool>true</bool></attribute><attribute name="verticalHeaderVisible"><bool>false</bool></attribute><column><property name="text"><string>IP 地址</string></property></column><column><property name="text"><string>隔离原因</string></property></column><column><property name="text"><string>威胁评分</string></property></column></widget></item>
+          </layout>
+         </widget>
+         <!-- ============ 流量端点 ============ -->
+         <widget class="QWidget" name="page_traffic">
+          <layout class="QVBoxLayout" name="traffic_layout">
+           <property name="spacing"><number>14</number></property>
+           <property name="leftMargin"><number>22</number></property><property name="topMargin"><number>18</number></property>
+           <property name="rightMargin"><number>22</number></property><property name="bottomMargin"><number>18</number></property>
+           <item><widget class="QLabel" name="traffic_title"><property name="text"><string>流量端点追踪</string></property></widget></item>
           </layout>
          </widget>
          <!-- ============ 系统配置 ============ -->

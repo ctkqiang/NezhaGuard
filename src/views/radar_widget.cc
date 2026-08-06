@@ -51,7 +51,7 @@ void RadarWidget::paintEvent(QPaintEvent *) {
 
     int w = width(), h = height();
     int cx = w / 2, cy = h / 2;
-    int r  = std::min(cx, cy) - 60;
+    int r  = std::min(cx, cy) - 20;
     if (r < 20) return;
 
     auto bg  = dark ? QColor(Theme::DkCard) : QColor(Theme::LtCard);
