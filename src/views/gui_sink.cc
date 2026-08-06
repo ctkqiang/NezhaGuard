@@ -2,6 +2,7 @@
 #include "log_model.h"
 #include "theme.h"
 
+#include <QDateTime>
 #include <QMetaObject>
 #include <QRegularExpression>
 #include <QString>
@@ -23,18 +24,16 @@ void GuiSink::write(Nezha::Log::Level lv, const char *line, std::size_t len) {
     QString timestamp;
     QString message;
 
-    int p1 = raw.indexOf(QStringLiteral("  [哪吒] ["));
-    if (p1 > 0) {
-        timestamp = raw.left(p1);
-        int p2 = raw.indexOf(QChar(']'), p1 + 8);
-        if (p2 > 0) {
-            int p3 = raw.indexOf(QStringLiteral("  "), p2 + 1);
-            message = p3 > 0 ? raw.mid(p3 + 2) : raw.mid(p2 + 2);
-        } else {
-            message = raw.mid(p1 + 8);
-        }
+    // Parse log format: [LEVEL] YYYY-MM-DD HH:MM:SS.mmm: message
+    // Level tag is always 7 chars: [ + 5-char level + ]
+    if (raw.size() > 33 && raw[0] == QChar('[') && raw[6] == QChar(']')) {
+        timestamp = raw.mid(8, 23);  // "YYYY-MM-DD HH:MM:SS.mmm"
+        if (raw.size() > 33 && raw[31] == QChar(':') && raw[32] == QChar(' '))
+            message = raw.mid(33);
+        else
+            message = raw.mid(8 + 23);
     } else {
-        timestamp = QStringLiteral("-");
+        timestamp = QDateTime::currentDateTime().toString(QStringLiteral("yyyy-MM-dd HH:mm:ss.zzz"));
         message = raw;
     }
 

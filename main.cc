@@ -16,7 +16,6 @@
 #if defined(__APPLE__)
 #include <sys/sysctl.h>
 #include <mach-o/dyld.h>
-#include <limits.h>
 #endif
 
 #include <filesystem>
@@ -32,7 +31,6 @@
 #include "src/core/ipaddr.h"
 #include "src/core/net_util.h"
 #include "src/core/ipcn.h"
-#include "src/core/geo_ip.h"
 #include "src/core/active_response.h"
 #include "src/core/tor_checker.h"
 #include "src/core/log_watcher.h"
@@ -46,12 +44,14 @@ using namespace Nezha;
 
 namespace fs = std::filesystem;
 
-struct AppPaths {
-    std::string rules_dir; // rules/default.yaml
-    std::string config_dir; // config/
-    std::string data_dir; // data/ (DB + writable)
-    std::string log_dir; // logs/
-};
+namespace {
+    struct AppPaths {
+        std::string rules_dir; // rules/default.yaml
+        std::string config_dir; // config/
+        std::string data_dir; // data/ (DB + writable)
+        std::string log_dir; // logs/
+    };
+}
 
 // 解析应用路径：macOS .app bundle → ~/Library/Application Support +
 // Bundle Resources；开发环境 → 当前目录
@@ -65,8 +65,7 @@ static AppPaths resolve_app_paths() {
         char real[PATH_MAX];
         if (realpath(exe, real)) {
             std::string ep(real);
-            auto macos = ep.find(".app/Contents/MacOS/");
-            if (macos != std::string::npos) {
+            if (auto macos = ep.find(".app/Contents/MacOS/"); macos != std::string::npos) {
                 // 运行于 .app bundle 内
                 std::string resources = ep.substr(0, macos) + ".app/Contents/Resources/";
                 std::string home = getenv("HOME") ? getenv("HOME") : "/tmp";
@@ -299,55 +298,68 @@ static int run_cli_mode() {
         cap.start([&](const std::uint8_t *raw, std::size_t len, const timeval &ts) {
             static uint64_t pkt_count = 0;
             static Nanos last_stats = 0;
+
             ++pkt_count;
+
             Core::event e{};
             if (!Core::ProtocolDecoder::decode(raw, len, ts, arena, e)) return;
             {
-                bool http = !e.msg.empty() && e.proto == PROTO_TCP;
+                const bool http = !e.msg.empty() && e.proto == PROTO_TCP;
                 Core::ProtocolStats::instance().record_packet(e.proto, len, http);
             }
+
             if (Database::DatabaseHelper::IsIPQuarantined(e.src.to_string())) {
                 static std::unordered_map<std::string, Nanos> last_warn;
-                Nanos now_ns = static_cast<Nanos>(ts.tv_sec) * 1'000'000'000ULL + ts.tv_usec * 1000ULL;
-                auto ip = e.src.to_string();
-                auto it = last_warn.find(ip);
-                if (it == last_warn.end() || (now_ns - it->second) > 10'000'000'000ULL) {
+                const Nanos now_ns = static_cast<Nanos>(ts.tv_sec) * 1'000'000'000ULL + ts.tv_usec * 1000ULL;
+
+                const auto ip = e.src.to_string();
+
+                if (const auto it = last_warn.find(ip);
+                    it == last_warn.end() || (now_ns - it->second) > 10'000'000'000ULL) {
                     log_quarantine_block(ip, e.dst.to_string(), e.proto, e.dport, e.sport);
                     last_warn[ip] = now_ns;
                 }
-                Core::ActiveResponse::send_icmp_unreachable(
-                    e.dst.to_string(), ip, raw, len);
+
+                Core::ActiveResponse::send_icmp_unreachable(e.dst.to_string(), ip, raw, len);
+
                 return;
             }
+
             if (tor_checker.is_tor_exit(e.src.to_string())) {
-                NZ_WARN("[Tor] 检测到 Tor 出口节点流量: {} → {}",
-                        e.src.to_string(), e.dst.to_string());
+                NZ_WARN("[Tor] 检测到 Tor 出口节点流量: {} → {}", e.src.to_string(), e.dst.to_string());
             }
+
             detector.analyze(e, arena, [&](const Core::Alert &a) { alerter.submit(a); });
-            if (e.proto == PROTO_ICMP)
-                NZ_DEBUG("[ICMP] {} → {}  len={}B",
-                     e.src.to_string(), e.dst.to_string(), len);
-            else if (e.proto == PROTO_TCP)
+
+            if (e.proto == PROTO_ICMP) {
+                NZ_DEBUG("[ICMP] {} → {}  len={}B", e.src.to_string(), e.dst.to_string(), len);
+            } else if (e.proto == PROTO_TCP) {
                 NZ_TRACE("[TCP] {}:{} → {}:{}  len={}B  payload={}",
-                     e.src.to_string(), e.sport,
-                     e.dst.to_string(), e.dport, len, e.msg.size());
-            else
+                         e.src.to_string(), e.sport,
+                         e.dst.to_string(), e.dport, len, e.msg.size());
+            } else {
                 NZ_TRACE("[UDP] {}:{} → {}:{}  len={}B",
-                     e.src.to_string(), e.sport,
-                     e.dst.to_string(), e.dport, len);
+                         e.src.to_string(), e.sport,
+                         e.dst.to_string(), e.dport, len);
+            }
 
             static Nanos last_flush = 0;
             if (e.ts_ns - last_flush > 30'000'000'000ULL) {
                 alerter.flush();
                 last_flush = e.ts_ns;
             }
+
             if (last_stats == 0) last_stats = e.ts_ns;
+
             if (e.ts_ns - last_stats > 60'000'000'000ULL) {
-                auto ql = Database::DatabaseHelper::GetQuarantineList();
+                const auto ql = Database::DatabaseHelper::GetQuarantineList();
                 auto s = Core::ProtocolStats::instance().snapshot();
-                double elapsed = (e.ts_ns - last_stats) / 1'000'000'000.0;
+
+                const double elapsed = (e.ts_ns - last_stats) / 1'000'000'000.0;
                 auto arp_count = Core::arp_table_size();
+
                 double mbps = (s.total_bytes * 8.0) / (elapsed * 1'000'000.0);
+
                 NZ_INFO(
                     "◆ STATS | pkts:{} flow:{:.1f}MB rate:{:.0f}pps/{:.2f}Mbps | TCP:{} UDP:{} ICMP:{} HTTP:{} | alerts:{} quar:{} arp:{} tor:{} rules:{} arena:{}KB",
                     s.total_packets, s.total_bytes / 1'000'000.0,
@@ -355,7 +367,9 @@ static int run_cli_mode() {
                     s.tcp_pkts, s.udp_pkts, s.icmp_pkts, s.http_pkts,
                     alerter.total_alerts(), ql.size(), arp_count,
                     tor_checker.total_nodes(), detector.rule_count(),
-                    arena.bytes_used() / 1024);
+                    arena.bytes_used() / 1024
+                );
+
                 Core::ProtocolStats::instance().reset();
                 pkt_count = 0;
                 last_stats = e.ts_ns;
@@ -409,7 +423,6 @@ static int run_cli_mode() {
 
 #ifndef NEZHAGUARD_CLI_ONLY
 #include <QApplication>
-#include <QTimer>
 #include <QString>
 
 #include "src/views/monitor.h"
@@ -464,7 +477,7 @@ static int run_gui_mode(int argc, char *argv[]) {
 
     monitor window;
     window.init_models();
-    window.show();
+    window.showMaximized();
 
     if (auto sink = window.gui_sink()) Log::Logger::instance().add_sink(sink);
 

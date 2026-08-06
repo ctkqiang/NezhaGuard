@@ -68,27 +68,27 @@ inline constexpr auto White           = Cream;
 inline constexpr auto Grey            = Mauve;
 inline constexpr auto PeachDeep       = Peach;
 
-// ── Dark theme ──
-inline constexpr auto DkBg            = "#0D0710";
-inline constexpr auto DkSheet         = "#160E18";
-inline constexpr auto DkCard          = "#1C121E";
-inline constexpr auto DkCardHover     = "#241824";
-inline constexpr auto DkBorder        = "#382838";
-inline constexpr auto DkBorderHover   = "#584858";
-inline constexpr auto DkSelected      = "#302030";
-inline constexpr auto DkText          = "#F4E8F2";
-inline constexpr auto DkMuted         = "#A08898";
+// ── Dark theme (deep · high contrast · accents pop) ──
+inline constexpr auto DkBg            = "#07070E";
+inline constexpr auto DkSheet         = "#0F0F18";
+inline constexpr auto DkCard          = "#141420";
+inline constexpr auto DkCardHover     = "#1C1C2C";
+inline constexpr auto DkBorder        = "#2A2A3E";
+inline constexpr auto DkBorderHover   = "#4A4A62";
+inline constexpr auto DkSelected      = "#222238";
+inline constexpr auto DkText          = "#EDE8F4";
+inline constexpr auto DkMuted         = "#888098";
 
-// ── Light theme ──
-inline constexpr auto LtBg            = "#FFF4F8";
-inline constexpr auto LtSheet         = "#FFFAFC";
+// ── Light theme (soft blush · airy · clean) ──
+inline constexpr auto LtBg            = "#FFF6F9";
+inline constexpr auto LtSheet         = "#FFFCFD";
 inline constexpr auto LtCard          = "#FFFFFF";
 inline constexpr auto LtCardHover     = "#FFF0F5";
-inline constexpr auto LtBorder        = "#F0D8E2";
-inline constexpr auto LtBorderHover   = "#E0C0D0";
-inline constexpr auto LtSelected      = "#FFE8F0";
-inline constexpr auto LtText          = "#28101C";
-inline constexpr auto LtMuted         = "#A88095";
+inline constexpr auto LtBorder        = "#ECD8E2";
+inline constexpr auto LtBorderHover   = "#D8C0D0";
+inline constexpr auto LtSelected      = "#FFE8F2";
+inline constexpr auto LtText          = "#24101C";
+inline constexpr auto LtMuted         = "#A08095";
 
 // legacy hover names (reference DkCardHover/LtCardHover above)
 inline constexpr auto DkHover         = DkCardHover;

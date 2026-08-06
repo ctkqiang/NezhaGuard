@@ -22,8 +22,9 @@ public:
     void set_dark(bool dark);
 
 private:
-    QString card_html(const QString &title, const QString &titleColor, const QString &body) const;
+    QString card_html(const QString &title, const QString &accentColor, const QString &body) const;
     QString row(const QString &label, const QString &value, const QString &color) const;
+    QString badge(const QString &text, const QString &bg, const QString &fg) const;
     QString css() const;
 
     bool dark_ = true;

@@ -7,7 +7,6 @@
 #include <utility>
 
 namespace Nezha::Core {
-
     std::vector<std::string> PacketCapture::list_devices() {
         std::vector<std::string> devs;
         pcap_if_t *alldevs = nullptr;
@@ -59,15 +58,18 @@ namespace Nezha::Core {
     bool PacketCapture::set_filter(const std::string &expr) {
         if (!handle_) return false;
         bpf_program prog{};
+
         if (pcap_compile(static_cast<pcap_t *>(handle_), &prog, expr.c_str(), 1, PCAP_NETMASK_UNKNOWN) != 0) {
             err_ = pcap_geterr(static_cast<pcap_t *>(handle_));
             return false;
         }
+
         if (pcap_setfilter(static_cast<pcap_t *>(handle_), &prog) != 0) {
             err_ = pcap_geterr(static_cast<pcap_t *>(handle_));
             pcap_freecode(&prog);
             return false;
         }
+
         pcap_freecode(&prog);
         return true;
     }
@@ -101,13 +103,11 @@ namespace Nezha::Core {
             }
         };
 
-        pcap_loop(static_cast<pcap_t *>(handle_), -1, handler,
-                  reinterpret_cast<u_char *>(&ctx));
+        pcap_loop(static_cast<pcap_t *>(handle_), -1, handler, reinterpret_cast<u_char *>(&ctx));
     }
 
     void PacketCapture::stop() {
         stop_ = true;
         if (handle_) pcap_breakloop(static_cast<pcap_t *>(handle_));
     }
-
 }

@@ -10,7 +10,9 @@
 #include "../core/types.h"
 #include "../core/detector.h"
 
+#include <chrono>
 #include <cstdint>
+#include <deque>
 #include <functional>
 #include <mutex>
 #include <string>
@@ -56,6 +58,9 @@ public:
 
     void on_alert(const Core::Alert &alert);
 
+    // rate-based anomaly detection (>12 req / min · hour · day → local notify)
+    void check_rate_anomaly(const std::string &ip, const std::string &type, int count);
+
 private:
     Notifier() = default;
 
@@ -75,6 +80,12 @@ private:
     std::mutex mtx_;
     std::unordered_map<NotifyChannel, ChannelConfig> channels_;
     std::function<void(const std::string &, const std::string &)> gui_callback_;
+
+    // rate tracking: IP → deque of (timestamp, count)
+    struct RateSample { std::chrono::steady_clock::time_point ts; int count; };
+    std::unordered_map<std::string, std::deque<RateSample>> rate_map_;
+    static constexpr int kRateThreshold = 12; // >12 per window triggers alert
+    static constexpr int kRateMaxSamples = 200;
 };
 
 }

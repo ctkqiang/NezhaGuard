@@ -191,11 +191,77 @@ namespace Nezha::Service {
         return false;
     }
 
+    void Notifier::check_rate_anomaly(const std::string &ip, const std::string &type, int count) {
+        if (ip.empty() || ip == "0.0.0.0" || ip == "127.0.0.1") return;
+
+        auto now = std::chrono::steady_clock::now();
+        auto &samples = rate_map_[ip];
+
+        samples.push_back({now, count});
+        if (samples.size() > kRateMaxSamples) samples.pop_front();
+
+        // count entries within each time window
+        int cnt_1m = 0, cnt_1h = 0, cnt_1d = 0;
+        auto t1m = now - std::chrono::minutes(1);
+        auto t1h = now - std::chrono::hours(1);
+        auto t1d = now - std::chrono::hours(24);
+
+        for (const auto &s : samples) {
+            if (s.ts >= t1m) cnt_1m += s.count;
+            if (s.ts >= t1h) cnt_1h += s.count;
+            if (s.ts >= t1d) cnt_1d += s.count;
+        }
+
+        std::string trigger;
+        if (cnt_1m > kRateThreshold)      trigger = std::format("{}次/分钟", cnt_1m);
+        else if (cnt_1h > kRateThreshold) trigger = std::format("{}次/小时", cnt_1h);
+        else if (cnt_1d > kRateThreshold) trigger = std::format("{}次/天", cnt_1d);
+
+        if (!trigger.empty()) {
+            // clear samples to avoid repeated notifications for same burst
+            samples.clear();
+
+            std::string title = std::format("[NezhaGuard] 频率异常 — {}", ip);
+            std::string body = std::format(
+                "来源 IP: {}\n攻击类型: {}\n频率: {}\n阈值: {} 次\n\n已触发本地通知（默认规则）",
+                ip, type, trigger, kRateThreshold
+            );
+
+            NZ_WARN("[频率告警] {} — {} — {}", ip, type, trigger);
+
+            // dispatch to local GUI if callback is set, else use osascript
+            std::lock_guard<std::mutex> lock(mtx_);
+            if (gui_callback_) {
+                gui_callback_(title, body);
+            } else {
+#if defined(__APPLE__)
+                std::string cmd = std::format(
+                    "osascript -e 'display notification \"{}\" with title \"{}\" sound name \"Glass\"' 2>/dev/null",
+                    body, title
+                );
+                std::system(cmd.c_str());
+#elif defined(__linux__)
+                std::string cmd = std::format("notify-send '{}' '{}' 2>/dev/null", title, body);
+                std::system(cmd.c_str());
+#endif
+            }
+
+            // also route through enabled local channel if configured
+            auto it = channels_.find(NotifyChannel::LocalGui);
+            if (it != channels_.end() && it->second.enabled) {
+                dispatch(it->second, title, body);
+            }
+        }
+    }
+
     void Notifier::on_alert(const Core::Alert &alert) {
         std::string type_str = Core::attack_type_cstr(alert.type);
         std::string ip(alert.src_ip);
         std::string evidence(alert.evidence);
         std::string detail(alert.detail);
+
+        // rate-based anomaly check (default, always on)
+        check_rate_anomaly(ip, type_str, alert.count);
 
         std::string combined = type_str + " " + ip + " " + evidence + " " + detail;
 

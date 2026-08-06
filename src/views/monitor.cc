@@ -47,6 +47,7 @@
 #include <QShortcut>
 #include <QGestureEvent>
 #include <QPinchGesture>
+#include <QWheelEvent>
 #include <QSortFilterProxyModel>
 #include <QStyleHints>
 #include <QStyledItemDelegate>
@@ -141,7 +142,7 @@ void SparklineWidget::paintEvent(QPaintEvent *) {
     p.setFont(QFont(QStringLiteral("SF Mono"), 9));
     p.drawText(QRect(r.left(), r.bottom() + 4, r.width(), 22),
                Qt::AlignRight | Qt::AlignVCenter,
-               QStringLiteral("%1 pts  max %2").arg(n).arg(maxv));
+               QStringLiteral("%1 点  峰值 %2").arg(n).arg(maxv));
 }
 
 // Delegates
@@ -348,6 +349,54 @@ monitor::monitor(QWidget *parent) : QMainWindow(parent), ui(new Ui::monitor) {
     connect(ui->local_conf_save, &QPushButton::clicked, this, [this]{ save_notifier_conf(); });
     connect(ui->local_conf_load, &QPushButton::clicked, this, &monitor::load_settings_configs);
 
+    // ── add config hints to notification tabs ──
+    {
+        struct Hint { QString tab; QString title; QString desc; };
+        for (auto &[tab, title, desc] : {
+            Hint{QStringLiteral("Slack"), QStringLiteral("Slack Webhook"),
+                 QStringLiteral("填入 Incoming Webhook URL，开启后自动推送告警到指定频道")},
+            Hint{QStringLiteral("Discord"), QStringLiteral("Discord Webhook"),
+                 QStringLiteral("服务器设置 → 整合 → Webhooks → 复制 URL 到上方")},
+            Hint{QStringLiteral("钉钉"), QStringLiteral("钉钉群机器人"),
+                 QStringLiteral("群设置 → 智能群助手 → 添加机器人 → 复制 Webhook 地址")},
+            Hint{QStringLiteral("飞书"), QStringLiteral("飞书群机器人"),
+                 QStringLiteral("群设置 → 群机器人 → 添加自定义机器人 → 复制 Webhook")},
+            Hint{QStringLiteral("企业微信"), QStringLiteral("企业微信群机器人"),
+                 QStringLiteral("群设置 → 群机器人 → 添加 → 复制 Webhook Key")},
+            Hint{QStringLiteral("邮件"), QStringLiteral("邮件通知"),
+                 QStringLiteral("输入接收告警的邮箱地址，需要系统已配置 mail 命令")},
+            Hint{QStringLiteral("Telegram"), QStringLiteral("Telegram Bot"),
+                 QStringLiteral("Bot Token 从 @BotFather 获取，Chat ID 从 @getidsbot 获取")},
+            Hint{QStringLiteral("本地通知"), QStringLiteral("本地桌面通知"),
+                 QStringLiteral("启用后通过系统通知中心推送告警（无需配置 Webhook）")},
+        }) {
+            auto tabWidgetName = [](const QString &tab) -> QString {
+                if (tab == QStringLiteral("Slack"))     return QStringLiteral("tab_slack");
+                if (tab == QStringLiteral("Discord"))   return QStringLiteral("tab_discord");
+                if (tab == QStringLiteral("钉钉"))      return QStringLiteral("tab_dingtalk");
+                if (tab == QStringLiteral("飞书"))      return QStringLiteral("tab_feishu");
+                if (tab == QStringLiteral("企业微信"))   return QStringLiteral("tab_wechat");
+                if (tab == QStringLiteral("邮件"))      return QStringLiteral("tab_email");
+                if (tab == QStringLiteral("Telegram"))  return QStringLiteral("tab_telegram");
+                if (tab == QStringLiteral("本地通知"))   return QStringLiteral("tab_local");
+
+                return QString();
+            };
+            auto *w = ui->settings_tabs->findChild<QWidget *>(tabWidgetName(tab));
+            if (!w) continue;
+            auto *layout = qobject_cast<QVBoxLayout *>(w->layout());
+            if (layout) {
+                auto *hint = new QLabel(QStringLiteral("<b>%1</b>&nbsp;&nbsp;·&nbsp;&nbsp;%2").arg(title, desc));
+                hint->setWordWrap(true);
+                hint->setStyleSheet(QStringLiteral(
+                    "font-size:11px; color:") + (dark_mode_ ? Theme::DkMuted : Theme::LtMuted) +
+                    QStringLiteral("; padding:4px 0 4px 0; background:transparent;"));
+                hint->setContentsMargins(0, 0, 0, 4);
+                layout->insertWidget(0, hint);
+            }
+        }
+    }
+
     // shortcuts
     new QShortcut(QKeySequence(QStringLiteral("Ctrl+F")), this, [this]() {
         ui->sidebar->setCurrentRow(1);
@@ -437,30 +486,60 @@ monitor::monitor(QWidget *parent) : QMainWindow(parent), ui(new Ui::monitor) {
 monitor::~monitor() { delete ui; }
 
 bool monitor::event(QEvent *e) {
+    // ── pinch-to-zoom (trackpad) ──
     if (e->type() == QEvent::Gesture) {
-        auto *ge = static_cast<QGestureEvent *>(e);
-        if (auto *pinch = static_cast<QPinchGesture *>(ge->gesture(Qt::PinchGesture))) {
-            if (pinch->state() == Qt::GestureUpdated || pinch->state() == Qt::GestureFinished) {
-                double factor = pinch->scaleFactor();
-                font_scale_ = qBound(0.5, font_scale_ * factor, 2.5);
-                int sz = qBound(8, qRound(11.0 * font_scale_), 28);
-                QString qss = QStringLiteral("QTableView { font-size:%1px; }").arg(sz);
-                auto apply_to_view = [sz](QTableView *v) {
-                    if (!v) return;
+        auto *ge = dynamic_cast<QGestureEvent *>(e);
+        if (!ge) return QMainWindow::event(e);
+
+        auto *pinch = qobject_cast<QPinchGesture *>(ge->gesture(Qt::PinchGesture));
+        if (pinch) {
+            if (pinch->state() == Qt::GestureUpdated) {
+                font_scale_ = qBound(0.6, font_scale_ * pinch->scaleFactor(), 2.5);
+                int base = qBound(8, qRound(11.0 * font_scale_), 28);
+                for (auto *v : {ui->log_view, ui->alert_view, ui->honey_view,
+                                ui->recent_alerts_view, ui->attackers_view}) {
+                    if (!v) continue;
                     auto f = v->font();
-                    f.setPixelSize(sz);
+                    f.setPixelSize(base);
                     v->setFont(f);
-                };
-                apply_to_view(ui->log_view);
-                apply_to_view(ui->alert_view);
-                apply_to_view(ui->honey_view);
-                apply_to_view(ui->recent_alerts_view);
-                if (pinch->state() == Qt::GestureFinished)
-                    pinch->setScaleFactor(1.0);
+                }
+                QFont mf(QStringLiteral("SF Mono"), base);
+                mf.setStyleHint(QFont::Monospace);
+                for (auto *te : {ui->monitor_conf_edit, ui->database_conf_edit,
+                                 ui->slack_conf_edit, ui->discord_conf_edit,
+                                 ui->dingtalk_conf_edit, ui->feishu_conf_edit,
+                                 ui->wechat_conf_edit, ui->email_conf_edit,
+                                 ui->telegram_conf_edit, ui->local_conf_edit}) {
+                    if (te) te->setFont(mf);
+                }
+                return true;
+            }
+            if (pinch->state() == Qt::GestureFinished)
+                pinch->setScaleFactor(1.0);
+        }
+    }
+
+    // ── trackpad horizontal scroll ↔ page switching ──
+    if (e->type() == QEvent::Wheel) {
+        auto *we = dynamic_cast<QWheelEvent *>(e);
+        if (we && qAbs(we->angleDelta().x()) > qAbs(we->angleDelta().y()) * 2) {
+            static qreal swipeAccum = 0;
+            swipeAccum += we->angleDelta().x();
+            int threshold = 250;
+            if (swipeAccum > threshold && ui->sidebar) {
+                int cur = ui->sidebar->currentRow();
+                ui->sidebar->setCurrentRow(qMax(cur - 1, 0));
+                swipeAccum = 0;
+                return true;
+            } else if (swipeAccum < -threshold && ui->sidebar) {
+                int cur = ui->sidebar->currentRow();
+                ui->sidebar->setCurrentRow(qMin(cur + 1, ui->sidebar->count() - 1));
+                swipeAccum = 0;
                 return true;
             }
         }
     }
+
     return QMainWindow::event(e);
 }
 
@@ -600,6 +679,7 @@ void monitor::apply_theme(bool d) {
     if (honey_detail_panel_) honey_detail_panel_->set_dark(d);
 
     auto Bg   = d ? Theme::DkBg        : Theme::LtBg;
+    auto Sh   = d ? Theme::DkSheet     : Theme::LtSheet;
     auto Card = d ? Theme::DkCard      : Theme::LtCard;
     auto Br   = d ? Theme::DkBorder    : Theme::LtBorder;
     auto BrH  = d ? Theme::DkBorderHover : Theme::LtBorderHover;
@@ -624,7 +704,7 @@ void monitor::apply_theme(bool d) {
 
     // ── header ──
     s += QStringLiteral(
-        "#header { background:") + Card + QStringLiteral("; border-bottom:1px solid ") + Br + QStringLiteral("; } "
+        "#header { background:") + Sh + QStringLiteral("; border-bottom:1px solid ") + Br + QStringLiteral("; } "
         "#app_title { font-size:16px; font-weight:700; color:") + Pk + QStringLiteral("; letter-spacing:0.5px; } "
         "#brand_badge { background:transparent; } "
         "#clock_label { font-size:10px; color:") + Mu + QStringLiteral("; } "
@@ -633,11 +713,16 @@ void monitor::apply_theme(bool d) {
 
     // ── sidebar ──
     s += QStringLiteral(
-        "#sidebar { background:") + Card + QStringLiteral("; border-right:1px solid ") + Br + QStringLiteral("; } "
+        "#sidebar { background:") + Sh + QStringLiteral("; border-right:1px solid ") + Br + QStringLiteral("; } "
         "#sidebar::item { color:") + Mu + QStringLiteral("; padding:12px 22px; font-size:13px; border:none; "
         "margin:3px 12px; border-radius:14px; } "
         "#sidebar::item:selected { background:") + Sel + QStringLiteral("; color:") + Pk + QStringLiteral("; font-weight:600; } "
         "#sidebar::item:hover:!selected { background:") + Hov + QStringLiteral("; color:") + Wis + QStringLiteral("; } ");
+
+    // ── network page cards ──
+    s += QStringLiteral(
+        "QFrame#netcard { background:") + Card + QStringLiteral("; border:1px solid ") + Br + QStringLiteral("; "
+        "border-radius:18px; } ");
 
     // ── section titles ──
     s += QStringLiteral(
@@ -650,17 +735,17 @@ void monitor::apply_theme(bool d) {
     s += QStringLiteral(
         "QFrame#card_logs,QFrame#card_alerts,QFrame#card_threats,QFrame#card_uptime { "
         "background:") + Card + QStringLiteral("; border:1px solid ") + Br + QStringLiteral("; "
-        "border-radius:20px; padding:10px 20px; } "
-        "QFrame#card_logs { border-top:3px solid ") + Pk + QStringLiteral("; } "
-        "QFrame#card_alerts { border-top:3px solid ") + Sea + QStringLiteral("; } "
-        "QFrame#card_threats { border-top:3px solid ") + Wis + QStringLiteral("; } "
-        "QFrame#card_uptime { border-top:3px solid ") + Theme::Matcha + QStringLiteral("; } "
-        "QFrame#card_logs:hover { border-color:") + Pk + QStringLiteral("; background:") + Hov + QStringLiteral("; } "
-        "QFrame#card_alerts:hover { border-color:") + Sea + QStringLiteral("; background:") + Hov + QStringLiteral("; } "
-        "QFrame#card_threats:hover { border-color:") + Wis + QStringLiteral("; background:") + Hov + QStringLiteral("; } "
-        "QFrame#card_uptime:hover { border-color:") + Theme::Matcha + QStringLiteral("; background:") + Hov + QStringLiteral("; } "
+        "border-radius:20px; padding:16px 22px; } "
+        "QFrame#card_logs { border-left:4px solid ") + Pk + QStringLiteral("; } "
+        "QFrame#card_alerts { border-left:4px solid ") + Sea + QStringLiteral("; } "
+        "QFrame#card_threats { border-left:4px solid ") + Wis + QStringLiteral("; } "
+        "QFrame#card_uptime { border-left:4px solid ") + Theme::Matcha + QStringLiteral("; } "
+        "QFrame#card_logs:hover { background:") + Hov + QStringLiteral("; border-color:") + BrH + QStringLiteral("; } "
+        "QFrame#card_alerts:hover { background:") + Hov + QStringLiteral("; border-color:") + BrH + QStringLiteral("; } "
+        "QFrame#card_threats:hover { background:") + Hov + QStringLiteral("; border-color:") + BrH + QStringLiteral("; } "
+        "QFrame#card_uptime:hover { background:") + Hov + QStringLiteral("; border-color:") + BrH + QStringLiteral("; } "
         "#card_logs_value,#card_alerts_value,#card_threats_value,#card_uptime_value { "
-        "font-size:30px; font-weight:800; color:") + Tx + QStringLiteral("; } "
+        "font-size:34px; font-weight:900; color:") + Tx + QStringLiteral("; } "
         "#card_logs_label,#card_alerts_label,#card_threats_label,#card_uptime_label { "
         "font-size:11px; font-weight:600; color:") + Mu + QStringLiteral("; } ");
 
@@ -722,12 +807,16 @@ void monitor::apply_theme(bool d) {
     // ── tab widget ──
     s += QStringLiteral(
         "QTabWidget::pane { background:") + Card + QStringLiteral("; border:1px solid ") + Br + QStringLiteral("; "
-        "border-radius:16px; padding:6px; } "
+        "border-radius:16px; padding:8px; } "
         "QTabBar::tab { background:") + Bg + QStringLiteral("; color:") + Mu + QStringLiteral("; "
-        "padding:9px 22px; border:1px solid ") + Br + QStringLiteral("; border-bottom:none; "
-        "border-top-left-radius:14px; border-top-right-radius:14px; font-size:11px; margin-right:3px; } "
+        "padding:7px 16px; border:1px solid ") + Br + QStringLiteral("; border-bottom:none; "
+        "border-top-left-radius:14px; border-top-right-radius:14px; font-size:11px; margin-right:2px; } "
         "QTabBar::tab:selected { background:") + Card + QStringLiteral("; color:") + Pk + QStringLiteral("; font-weight:700; } "
-        "QTabBar::tab:hover:!selected { background:") + Hov + QStringLiteral("; color:") + Wis + QStringLiteral("; } ");
+        "QTabBar::tab:hover:!selected { background:") + Hov + QStringLiteral("; color:") + Wis + QStringLiteral("; } "
+        "QTabBar::scroller { width:20px; } "
+        "QTabBar QToolButton { background:") + Card + QStringLiteral("; border:1px solid ") + Br + QStringLiteral("; "
+        "border-radius:10px; color:") + Mu + QStringLiteral("; padding:2px; } "
+        "QTabBar QToolButton:hover { background:") + Hov + QStringLiteral("; color:") + Pk + QStringLiteral("; } ");
 
     // ── plain text edits ──
     s += QStringLiteral(
@@ -748,10 +837,13 @@ void monitor::apply_theme(bool d) {
 
     // ── quick stats ──
     s += QStringLiteral(
-        "#qs_tor,#qs_blocked,#qs_engines,#qs_types { border-radius:12px; "
-        "font-family:\"SF Mono\",\"Menlo\",monospace; font-size:10px; font-weight:600; "
-        "padding:5px 10px; background:") + Card + QStringLiteral("; color:") + Mu + QStringLiteral("; "
-        "border:1px solid ") + Br + QStringLiteral("; } ");
+        "#qs_tor,#qs_blocked,#qs_engines,#qs_types { border-radius:14px; "
+        "font-size:11px; font-weight:700; padding:8px 14px; "
+        "border:1px solid ") + Br + QStringLiteral("; } "
+        "#qs_tor { background:rgba(242,160,182,0.10); color:") + Pk + QStringLiteral("; } "
+        "#qs_blocked { background:rgba(232,80,104,0.10); color:") + Theme::Cherry + QStringLiteral("; } "
+        "#qs_engines { background:rgba(96,208,176,0.10); color:") + Sea + QStringLiteral("; } "
+        "#qs_types { background:rgba(184,160,232,0.10); color:") + Wis + QStringLiteral("; } ");
 
     // ── settings page ──
     s += QStringLiteral(
@@ -875,6 +967,121 @@ void monitor::setup_network_table(QTableWidget *t) {
     t->setSelectionBehavior(QAbstractItemView::SelectRows);
 }
 
+void monitor::setup_network_page() {
+    // helper: wrap a widget in a styled card with title
+    auto makeCard = [this](const QString &title, QWidget *content, const QString &accentColor) -> QFrame* {
+        auto *card = new QFrame(this);
+        card->setObjectName(QStringLiteral("netcard"));
+        card->setFrameShape(QFrame::NoFrame);
+        auto *lay = new QVBoxLayout(card);
+        lay->setSpacing(8);
+        lay->setContentsMargins(14, 12, 14, 12);
+
+        auto *header = new QHBoxLayout();
+        auto *dot = new QLabel(QStringLiteral("●"));
+        dot->setStyleSheet(QStringLiteral("font-size:8px; color:") + accentColor + QStringLiteral("; background:transparent;"));
+        auto *lbl = new QLabel(title);
+        lbl->setStyleSheet(QStringLiteral(
+            "font-size:11px; font-weight:700; color:") + (dark_mode_ ? Theme::DkText : Theme::LtText) +
+            QStringLiteral("; background:transparent;"));
+        header->addWidget(dot);
+        header->addWidget(lbl);
+        header->addStretch();
+        lay->addLayout(header);
+        lay->addWidget(content);
+        return card;
+    };
+
+    // ── clear & rebuild page_network layout ──
+    auto *page = ui->page_network;
+    if (page->layout()) {
+        QLayoutItem *child;
+        while ((child = page->layout()->takeAt(0)) != nullptr) {
+            // don't delete widgets, just detach them from the old layout
+        }
+        delete page->layout();
+    }
+
+    auto *root = new QVBoxLayout(page);
+    root->setSpacing(14);
+    root->setContentsMargins(22, 18, 22, 18);
+
+    // ── header ──
+    auto *hdr = new QHBoxLayout();
+    ui->network_title->setStyleSheet(QStringLiteral("font-size:14px; font-weight:700; background:transparent;"));
+    hdr->addWidget(ui->network_title);
+    hdr->addStretch();
+    ui->refresh_network->setText(QStringLiteral("刷新网络信息"));
+    hdr->addWidget(ui->refresh_network);
+    root->addLayout(hdr);
+
+    // ── row 1: radar (left) + protocol stats (right) ──
+    auto *row1 = new QHBoxLayout();
+    row1->setSpacing(14);
+
+    // radar
+    radar_widget_ = new RadarWidget();
+    radar_widget_->dark = dark_mode_;
+    radar_widget_->setMinimumSize(360, 360);
+    radar_widget_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    auto *radarCard = makeCard(QStringLiteral("局域网设备扫描"),
+                                radar_widget_,
+                                dark_mode_ ? Theme::Seafoam : Theme::SeafoamDeep);
+    row1->addWidget(radarCard, 2); // 2:1 ratio vs protocol stats
+
+    // protocol stats
+    protocol_table_ = new QTableWidget(0, 4, this);
+    protocol_table_->setFrameShape(QFrame::NoFrame);
+    protocol_table_->setAlternatingRowColors(true);
+    protocol_table_->setShowGrid(false);
+    protocol_table_->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    protocol_table_->setSelectionMode(QAbstractItemView::SingleSelection);
+    protocol_table_->setSelectionBehavior(QAbstractItemView::SelectRows);
+    protocol_table_->verticalHeader()->hide();
+    protocol_table_->horizontalHeader()->setStretchLastSection(true);
+    protocol_table_->setHorizontalHeaderLabels({
+        QStringLiteral("协议"), QStringLiteral("包数"),
+        QStringLiteral("字节"), QStringLiteral("占比")
+    });
+    protocol_table_->setMinimumHeight(360);
+    setup_network_table(protocol_table_);
+    auto *protoCard = makeCard(QStringLiteral("实时协议统计"),
+                                protocol_table_,
+                                dark_mode_ ? Theme::Wisteria : Theme::WisteriaDeep);
+    row1->addWidget(protoCard, 1); // narrower column
+
+    root->addLayout(row1);
+
+    // ── row 2: local interfaces (full width) ──
+    ui->local_ip_table->setMinimumHeight(120);
+    ui->local_ip_table->setMaximumHeight(220);
+    auto *localCard = makeCard(QStringLiteral("本地网络接口"),
+                                ui->local_ip_table,
+                                dark_mode_ ? Theme::Sakura : Theme::SakuraDeep);
+    root->addWidget(localCard);
+
+    // ── row 3: arp (left) + quarantine (right) ──
+    auto *row3 = new QHBoxLayout();
+    row3->setSpacing(14);
+
+    ui->arp_table->setMinimumHeight(140);
+    ui->arp_table->setMaximumHeight(260);
+    auto *arpCard = makeCard(QStringLiteral("ARP 缓存表"),
+                              ui->arp_table,
+                              dark_mode_ ? Theme::Sky : Theme::Sky);
+    row3->addWidget(arpCard, 1);
+
+    ui->quarantine_table->setMinimumHeight(140);
+    ui->quarantine_table->setMaximumHeight(260);
+    auto *quarCard = makeCard(QStringLiteral("隔离列表"),
+                               ui->quarantine_table,
+                               dark_mode_ ? Theme::SakuraHot : Theme::SakuraHot);
+    row3->addWidget(quarCard, 1);
+
+    root->addLayout(row3);
+    root->addStretch();
+}
+
 // -- models --
 void monitor::init_models() {
     log_model_ = new LogModel(this);
@@ -967,6 +1174,7 @@ void monitor::init_models() {
     connect(ui->honey_view, &QTableView::clicked, this, &monitor::show_honey_detail);
 
     // network page
+    setup_network_page();
     for (auto *t: {ui->local_ip_table, ui->arp_table, ui->quarantine_table})
         setup_network_table(t);
 
@@ -983,7 +1191,7 @@ void monitor::init_models() {
     refresh_network_info();
     auto *netTimer = new QTimer(this);
     connect(netTimer, &QTimer::timeout, this, &monitor::refresh_network_info);
-    netTimer->start(10000); // 每 10s 刷新 ARP/雷达/本地接口/隔离列表
+    netTimer->start(10000);
 
     // sparkline
     sparkline_widget_ = new SparklineWidget();
@@ -992,41 +1200,6 @@ void monitor::init_models() {
     auto *vbl = new QVBoxLayout(ui->sparkline_frame);
     vbl->setContentsMargins(0, 0, 0, 0);
     vbl->addWidget(sparkline_widget_);
-
-    // radar
-    radar_widget_ = new RadarWidget();
-    radar_widget_->dark = dark_mode_;
-    if (ui->radar_frame->layout()) delete ui->radar_frame->layout();
-    auto *rvbl = new QVBoxLayout(ui->radar_frame);
-    rvbl->setContentsMargins(0, 0, 0, 0);
-    rvbl->addWidget(radar_widget_);
-
-    // protocol stats table on network page
-    {
-        auto *net_layout = qobject_cast<QVBoxLayout *>(ui->page_network->layout());
-        if (net_layout) {
-            auto *proto_label = new QLabel(QStringLiteral("协议统计 · 实时"));
-            proto_label->setObjectName(QStringLiteral("quarantine_label"));
-            net_layout->addWidget(proto_label);
-
-            protocol_table_ = new QTableWidget(0, 4, this);
-            protocol_table_->setMaximumHeight(200);
-            protocol_table_->setFrameShape(QFrame::NoFrame);
-            protocol_table_->setAlternatingRowColors(true);
-            protocol_table_->setShowGrid(false);
-            protocol_table_->setEditTriggers(QAbstractItemView::NoEditTriggers);
-            protocol_table_->setSelectionMode(QAbstractItemView::SingleSelection);
-            protocol_table_->setSelectionBehavior(QAbstractItemView::SelectRows);
-            protocol_table_->verticalHeader()->hide();
-            protocol_table_->horizontalHeader()->setStretchLastSection(true);
-            protocol_table_->setHorizontalHeaderLabels({
-                QStringLiteral("协议"), QStringLiteral("包数"),
-                QStringLiteral("字节"), QStringLiteral("占比")
-            });
-            setup_network_table(protocol_table_);
-            net_layout->addWidget(protocol_table_);
-        }
-    }
 
     // detail panels
     auto replace = [this](QTextEdit *old, DetailPanel *&panel, int maxH) {
@@ -1518,21 +1691,26 @@ void monitor::record_attacker(const QString &ip, double score, const QString &ty
     a.count++;
     if (!type.isEmpty()) a.type = type;
 
-    QList<std::pair<QString, Attacker> > sorted;
-    for (auto it = attackers_.begin(); it != attackers_.end(); ++it)
-        sorted.append({it.key(), it.value()});
-    std::sort(sorted.begin(), sorted.end(), [](const auto &a, const auto &b) {
-        return a.second.score * a.second.count > b.second.score * b.second.count;
-    });
+    // cap attackers map: evict lowest-score entries when over limit
+    constexpr int kMaxAttackers = 200;
+    if (attackers_.size() > kMaxAttackers) {
+        QString worst;
+        double worstVal = 1e18;
+        for (auto it = attackers_.cbegin(); it != attackers_.cend(); ++it) {
+            double v = it->score * it->count;
+            if (v < worstVal) { worstVal = v; worst = it.key(); }
+        }
+        if (!worst.isEmpty()) attackers_.remove(worst);
+    }
 
-    attackers_model_->clear();
-    int rank = 0;
-    for (const auto &[ip, a]: sorted) {
-        if (++rank > 10) break;
-        attackers_model_->append(
-            QStringLiteral("#%1").arg(rank),
-            a.score > 80 ? QStringLiteral("CRIT") : a.score > 50 ? QStringLiteral("WARN") : QStringLiteral("INFO"),
-            QStringLiteral("%1  |  %2分  x%3  [%4]").arg(ip).arg(static_cast<int>(a.score)).arg(a.count).arg(a.type));
+    // debounce model rebuild: batch every 200ms to avoid O(n log n) per alert
+    static QElapsedTimer lastRebuild;
+    if (lastRebuild.isValid() && lastRebuild.elapsed() < 200) return;
+    lastRebuild.start();
+
+    // throttle with a single-shot timer to coalesce rapid-fire alerts
+    if (attackers_model_) {
+        QTimer::singleShot(50, this, [this]() { refresh_attackers(); });
     }
 }
 
@@ -1689,8 +1867,7 @@ void monitor::refresh_local_ips() {
     t->resizeColumnToContents(0);
     t->setColumnWidth(0, 24);
     t->horizontalHeader()->setStretchLastSection(true);
-    ui->local_ip_label->setText(
-        QStringLiteral("本地接口 · %1 个").arg(t->rowCount()));
+    // card title updated by layout
 }
 
 void monitor::refresh_arp_table() {
@@ -1792,8 +1969,6 @@ void monitor::refresh_arp_table() {
 #endif
     t->resizeColumnToContents(0);
     t->horizontalHeader()->setStretchLastSection(true);
-    ui->arp_label->setText(
-        QStringLiteral("ARP 缓存表 · %1 台设备").arg(t->rowCount()));
     if (radar_widget_) {
         QVector<RadarDevice> devices;
         for (int r = 0; r < t->rowCount(); ++r) {
@@ -1874,8 +2049,6 @@ void monitor::refresh_quarantine_list() {
     t->sortByColumn(2, Qt::DescendingOrder);
     t->resizeColumnToContents(0);
     t->horizontalHeader()->setStretchLastSection(true);
-    ui->quarantine_label->setText(
-        QStringLiteral("隔离列表 · %1 个 IP").arg(t->rowCount()));
 }
 
 // -- misc --
@@ -2417,101 +2590,174 @@ void monitor::import_nzc() {
 
 void monitor::run_nmap_scan(const QString &ip) {
     bool d = dark_mode_;
-    auto bg     = d ? Theme::DkBg     : Theme::LtBg;
-    auto card   = d ? Theme::DkCard   : Theme::LtCard;
-    auto border = d ? Theme::DkBorder : Theme::LtBorder;
-    auto text   = d ? Theme::DkText   : Theme::LtText;
-    auto muted  = d ? Theme::DkMuted  : Theme::LtMuted;
-    auto accent = d ? Theme::Cyan     : Theme::CyanDeep;
-    auto hover  = d ? Theme::DkHover  : Theme::LtHover;
+    auto Bg     = d ? Theme::DkBg        : Theme::LtBg;
+    auto Card   = d ? Theme::DkCard      : Theme::LtCard;
+    auto Br     = d ? Theme::DkBorder    : Theme::LtBorder;
+    auto Tx     = d ? Theme::DkText      : Theme::LtText;
+    auto Mu     = d ? Theme::DkMuted     : Theme::LtMuted;
+    auto Pk     = d ? Theme::Sakura      : Theme::SakuraDeep;
+    auto Sea    = d ? Theme::Seafoam     : Theme::SeafoamDeep;
+    auto Wis    = d ? Theme::Wisteria    : Theme::WisteriaDeep;
+    auto Sel    = d ? Theme::DkSelected  : Theme::LtSelected;
 
     auto *dlg = new QDialog(this);
-    dlg->setWindowTitle(QStringLiteral("Nmap Scan — %1").arg(ip));
-    dlg->resize(760, 600);
+    dlg->setWindowTitle(QStringLiteral("Nmap 扫描"));
+    dlg->resize(780, 620);
+    dlg->setMinimumSize(600, 440);
     dlg->setWindowFlags(Qt::Dialog | Qt::WindowCloseButtonHint);
-    dlg->setStyleSheet(QStringLiteral(
-        "QDialog { background:%1; border:2px solid %2; border-radius:8px; }")
-        .arg(bg, accent));
+    dlg->setStyleSheet(QStringLiteral("QDialog { background:") + Bg + QStringLiteral("; }"));
 
     auto *root = new QVBoxLayout(dlg);
-    root->setContentsMargins(12, 10, 12, 10);
-    root->setSpacing(6);
+    root->setContentsMargins(20, 18, 20, 18);
+    root->setSpacing(14);
 
-    auto *header = new QLabel(QStringLiteral(
-        "========================================\n"
-        "   Nezha Nmap Scan Engine\n"
-        "   TARGET: %1\n"
-        "========================================").arg(ip));
-    header->setStyleSheet(QStringLiteral(
-        "color:%1; font-family:\"Menlo\",\"JetBrains Mono\",monospace; font-size:13px;"
-        "background:transparent;").arg(accent));
-    root->addWidget(header);
+    // ── header card ──
+    auto *hdrCard = new QFrame(dlg);
+    hdrCard->setObjectName(QStringLiteral("netcard"));
+    hdrCard->setStyleSheet(QStringLiteral(
+        "QFrame#netcard { background:") + Card + QStringLiteral("; border:1px solid ") + Br +
+        QStringLiteral("; border-radius:18px; }"));
+    auto *hdrLay = new QHBoxLayout(hdrCard);
+    hdrLay->setContentsMargins(20, 16, 20, 16);
+    hdrLay->setSpacing(16);
 
+    // target icon + info
+    auto *iconLbl = new QLabel(QStringLiteral("目标"));
+    iconLbl->setStyleSheet(QStringLiteral(
+        "font-size:9px; font-weight:800; color:") + Pk + QStringLiteral("; "
+        "background:rgba(242,160,182,0.15); border-radius:10px; padding:4px 10px; "
+        "letter-spacing:1px;"));
+    hdrLay->addWidget(iconLbl);
+
+    auto *ipLbl = new QLabel(ip);
+    ipLbl->setStyleSheet(QStringLiteral(
+        "font-size:16px; font-weight:700; color:") + Tx + QStringLiteral("; "
+        "font-family:\"SF Mono\",\"Menlo\",monospace; background:transparent;"));
+    ipLbl->setTextInteractionFlags(Qt::TextSelectableByMouse);
+    hdrLay->addWidget(ipLbl);
+
+    hdrLay->addStretch();
+
+    // status dot
+    auto *statusDot = new QLabel(QStringLiteral("扫描中"));
+    statusDot->setObjectName(QStringLiteral("scan_status"));
+    statusDot->setStyleSheet(QStringLiteral(
+        "font-size:9px; font-weight:700; color:") + Sea + QStringLiteral("; "
+        "background:rgba(96,208,176,0.15); border-radius:10px; padding:4px 12px; "
+        "letter-spacing:1px;"));
+    hdrLay->addWidget(statusDot);
+
+    root->addWidget(hdrCard);
+
+    // ── output area ──
     auto *output = new QTextEdit(dlg);
     output->setReadOnly(true);
     output->setStyleSheet(QStringLiteral(
-        "QTextEdit { background:%1; color:%2; border:1px solid %3; border-radius:6px;"
-        "  font-family:\"Menlo\",\"JetBrains Mono\",monospace; font-size:13px; padding:10px;"
-        "  selection-background-color:%4; selection-color:%5; }"
-        "QScrollBar:vertical { background:%1; width:8px; border:none; border-radius:4px; }"
-        "QScrollBar::handle:vertical { background:%3; border-radius:4px; min-height:20px; }"
-        "QScrollBar::handle:vertical:hover { background:%4; }"
-        "QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical { height:0; }")
-        .arg(card, text, border, accent, bg));
+        "QTextEdit { background:") + Card + QStringLiteral("; color:") + Tx + QStringLiteral("; "
+        "border:1px solid ") + Br + QStringLiteral("; border-radius:16px; "
+        "font-family:\"SF Mono\",\"Menlo\",\"Cascadia Code\",monospace; font-size:12px; "
+        "padding:14px; selection-background-color:") + Sel + QStringLiteral("; "
+        "selection-color:") + Tx + QStringLiteral("; line-height:1.6; }"
+        "QScrollBar:vertical { background:transparent; width:5px; margin:2px; }"
+        "QScrollBar::handle:vertical { background:") + Br + QStringLiteral("; border-radius:3px; }"
+        "QScrollBar::handle:vertical:hover { background:") + Pk + QStringLiteral("; }"
+        "QScrollBar::add-line:vertical,QScrollBar::sub-line:vertical { height:0; }"));
     output->setText(QStringLiteral(
-        "Initializing scan engine...\n"
-        "Target: %1\n"
-        "Args: -sT -sV -v\n"
-        "Launching nmap subprocess...\n"
-        "--------------------------------------------------\n").arg(ip));
-    root->addWidget(output);
+        "扫描引擎 v1.0 · 参数: -sT -sV -v\n"
+        "目标: %1\n"
+        "启动 nmap...\n").arg(ip));
+    root->addWidget(output, 1);
 
+    // ── button bar ──
     auto *btnBar = new QHBoxLayout();
-    btnBar->setSpacing(8);
-    root->addLayout(btnBar);
+    btnBar->setSpacing(10);
+
+    auto mkbtn = [&](const QString &label, const QString &fg) -> QPushButton* {
+        auto *b = new QPushButton(label, dlg);
+        b->setCursor(Qt::PointingHandCursor);
+        b->setStyleSheet(QStringLiteral(
+            "QPushButton { background:") + Card + QStringLiteral("; color:") + fg + QStringLiteral("; "
+            "border:1px solid ") + Br + QStringLiteral("; border-radius:14px; "
+            "padding:7px 20px; font-size:11px; font-weight:600; }"
+            "QPushButton:hover { border-color:") + fg + QStringLiteral("; "
+            "background:") + Sel + QStringLiteral("; }"));
+        return b;
+    };
+
+    auto *copyBtn = mkbtn(QStringLiteral("Copy Results"), Sea);
+    btnBar->addWidget(copyBtn);
+
+    auto *exportBtn = mkbtn(QStringLiteral("Export .txt"), Wis);
+    btnBar->addWidget(exportBtn);
+
     btnBar->addStretch();
 
-    auto *closeBtn = new QPushButton(QStringLiteral("Close"));
-    closeBtn->setCursor(Qt::PointingHandCursor);
-    closeBtn->setStyleSheet(QStringLiteral(
-        "QPushButton { background:%1; color:%2; border:1px solid %3; border-radius:6px;"
-        "  padding:5px 18px; font-family:\"Menlo\",\"JetBrains Mono\",monospace;"
-        "  font-size:12px; font-weight:600; }"
-        "QPushButton:hover { background:%4; color:%1; }")
-        .arg(bg, accent, border, hover));
+    auto *closeBtn = mkbtn(QStringLiteral("Close"), Pk);
     btnBar->addWidget(closeBtn);
 
+    root->addLayout(btnBar);
+
+    // ── nmap process ──
     auto *proc = new QProcess(dlg);
     proc->setProgram(QStringLiteral("nmap"));
     proc->setArguments({QStringLiteral("-sT"), QStringLiteral("-sV"), QStringLiteral("-v"), ip});
     proc->setProcessChannelMode(QProcess::MergedChannels);
 
-    // cleanup: kill nmap first, then delete dialog (avoid QProcess dtor blocking UI)
+    QElapsedTimer *scanTimer = new QElapsedTimer();
+    scanTimer->start();
+
+    // cleanup
     connect(dlg, &QDialog::finished, dlg, [proc, dlg]() {
         if (proc->state() != QProcess::NotRunning) {
             proc->terminate();
-            if (!proc->waitForFinished(2000)) {
-                proc->kill();
-                proc->waitForFinished(1000);
-            }
+            if (!proc->waitForFinished(2000)) { proc->kill(); proc->waitForFinished(1000); }
         }
         dlg->deleteLater();
     });
     connect(closeBtn, &QPushButton::clicked, dlg, &QDialog::close);
 
+    // copy results
+    connect(copyBtn, &QPushButton::clicked, dlg, [output]() {
+        QApplication::clipboard()->setText(output->toPlainText());
+    });
+
+    // export to file
+    connect(exportBtn, &QPushButton::clicked, dlg, [output, ip]() {
+        QString path = QFileDialog::getSaveFileName(
+            nullptr, QStringLiteral("Export Nmap Results"),
+            QStringLiteral("nmap_%1_%2.txt")
+                .arg(ip, QDateTime::currentDateTime().toString(QStringLiteral("yyyyMMdd_HHmmss"))),
+            QStringLiteral("Text files (*.txt);;All files (*)"));
+        if (!path.isEmpty()) {
+            QFile f(path);
+            if (f.open(QIODevice::WriteOnly | QIODevice::Text)) {
+                f.write(output->toPlainText().toUtf8());
+                f.close();
+            }
+        }
+    });
+
+    // stream output
     connect(proc, &QProcess::readyRead, dlg, [proc, output]() {
         output->append(QString::fromUtf8(proc->readAll()));
     });
+
+    // scan finished
     connect(proc, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
-            dlg, [output, ip](int code, QProcess::ExitStatus) {
-        output->append(QStringLiteral("--------------------------------------------------"));
+            dlg, [output, ip, scanTimer, statusDot, Sea, Wis](int code, QProcess::ExitStatus) {
+        double elapsed = scanTimer->elapsed() / 1000.0;
+        output->append(QString());
+
         if (code == 0) {
-            output->append(QStringLiteral("Scan complete — %1").arg(ip));
-            output->append(QStringLiteral("Nmap done. All packets processed."));
+            output->append(QStringLiteral("Scan completed successfully in %1s").arg(elapsed, 0, 'f', 1));
         } else {
-            output->append(QStringLiteral("nmap exited with error — exit code: %1").arg(code));
+            output->append(QStringLiteral("Scan exited with code %1 after %2s").arg(code).arg(elapsed, 0, 'f', 1));
         }
-        output->append(QStringLiteral("========================================"));
+        statusDot->setText(code == 0 ? QStringLiteral("COMPLETE") : QStringLiteral("ERROR"));
+        statusDot->setStyleSheet(QStringLiteral(
+            "font-size:9px; font-weight:700; color:") + (code == 0 ? Sea : Wis) + QStringLiteral("; "
+            "background:rgba(") + (code == 0 ? QStringLiteral("96,208,176") : QStringLiteral("184,160,232")) +
+            QStringLiteral(",0.15); border-radius:10px; padding:4px 12px; letter-spacing:1px;"));
         output->moveCursor(QTextCursor::End);
     });
 
