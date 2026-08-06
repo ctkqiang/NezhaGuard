@@ -23,14 +23,16 @@ void DetailPanel::clear() {
 
 QString DetailPanel::css() const {
     return QStringLiteral(R"(
-        body { margin:0; padding:8px 12px; background:%1; color:%2;
-               font-family:"Menlo","SF Mono",monospace; font-size:11px; line-height:1.6; }
-        .card { background:%3; border:1px solid %4; border-radius:10px; margin-bottom:6px; overflow:hidden; }
-        .card-header { padding:7px 12px; font-weight:700; font-size:11px;
-                       border-bottom:1px solid %4; }
-        .card-body { padding:6px 12px; }
+        body { margin:0; padding:10px 14px; background:%1; color:%2;
+               font-family:"SF Mono","Menlo","Cascadia Code",monospace;
+               font-size:11px; line-height:1.7; }
+        .card { background:%3; border:1px solid %4; border-radius:16px;
+                margin-bottom:8px; overflow:hidden; }
+        .card-header { padding:10px 16px; font-weight:700; font-size:11px;
+                       border-bottom:1px solid %4; letter-spacing:0.3px; }
+        .card-body { padding:10px 16px; }
         table { width:100%%; border-collapse:collapse; }
-        td { padding:3px 6px 3px 0; vertical-align:top; }
+        td { padding:4px 8px 4px 0; vertical-align:top; }
         td.k { color:%5; font-weight:600; white-space:nowrap; width:1%%; }
         td.v { color:%2; word-break:break-all; }
     )").arg(dark_ ? Theme::DkBg : Theme::LtBg,

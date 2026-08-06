@@ -87,33 +87,33 @@ void SparklineWidget::paintEvent(QPaintEvent *) {
     p.setRenderHint(QPainter::Antialiasing);
 
     auto bg = QColor(dark ? Theme::DkCard : Theme::LtCard);
-    auto fg = QColor(dark ? Theme::Cyan : Theme::CyanDeep);
+    auto fg = QColor(dark ? Theme::Seafoam : Theme::SeafoamDeep);
     auto gr = QColor(dark ? Theme::DkBorder : Theme::LtBorder);
 
     p.setBrush(bg);
     p.setPen(Qt::NoPen);
-    p.drawRoundedRect(rect(), 8, 8);
+    p.drawRoundedRect(rect(), 14, 14);
 
     if (data_.isEmpty()) {
         p.setPen(fg);
-        p.setFont(QFont(QStringLiteral("PingFang SC"), 11));
-        p.drawText(rect(), Qt::AlignCenter, QStringLiteral("—"));
+        p.setFont(QFont(QStringLiteral("SF Pro Rounded"), 11));
+        p.drawText(rect(), Qt::AlignCenter, QStringLiteral("--"));
         return;
     }
 
     int n = data_.size();
     int maxv = std::max(1, *std::max_element(data_.begin(), data_.end()));
-    QRect r = rect().adjusted(10, 14, -10, -26);
+    QRect r = rect().adjusted(12, 16, -12, -28);
     double w = static_cast<double>(r.width()) / (n - 1);
     double h = static_cast<double>(r.height());
 
+    // subtle grid lines
     p.setPen(QPen(gr, 0.5, Qt::DotLine));
-    for (int i = 1; i <= 3; ++i) {
+    for (int i = 1; i <= 3; ++i)
         p.drawLine(QPointF(r.left(), r.top() + h * i / 4),
-                   QPointF(r.right(), r.top() + h * i / 4)
-        );
-    }
+                   QPointF(r.right(), r.top() + h * i / 4));
 
+    // gradient fill under the curve
     QPainterPath fill;
     fill.moveTo(r.left(), r.bottom());
     for (int i = 0; i < n; ++i)
@@ -121,20 +121,25 @@ void SparklineWidget::paintEvent(QPaintEvent *) {
     fill.lineTo(r.right(), r.bottom());
     fill.closeSubpath();
 
-    QColor fc = QColor(dark ? Theme::Cyan : Theme::CyanDeep);
-    fc.setAlpha(25);
-    p.setBrush(fc);
+    QLinearGradient grad(r.topLeft(), r.bottomLeft());
+    QColor gs = fg; gs.setAlpha(35);
+    QColor ge = fg; ge.setAlpha(0);
+    grad.setColorAt(0.0, gs);
+    grad.setColorAt(1.0, ge);
+    p.setBrush(grad);
     p.setPen(Qt::NoPen);
     p.drawPath(fill);
 
-    p.setPen(QPen(fg, 1.5));
+    // line
+    p.setPen(QPen(fg, 2.0));
     for (int i = 1; i < n; ++i)
         p.drawLine(QPointF(r.left() + w * (i - 1), r.bottom() - (data_[i - 1] * h / maxv)),
                    QPointF(r.left() + w * i, r.bottom() - (data_[i] * h / maxv)));
 
+    // label
     p.setPen(fg);
-    p.setFont(QFont(QStringLiteral("PingFang SC"), 9));
-    p.drawText(QRect(r.left(), r.bottom() + 4, r.width(), 20),
+    p.setFont(QFont(QStringLiteral("SF Mono"), 9));
+    p.drawText(QRect(r.left(), r.bottom() + 4, r.width(), 22),
                Qt::AlignRight | Qt::AlignVCenter,
                QStringLiteral("%1 pts  max %2").arg(n).arg(maxv));
 }
@@ -144,43 +149,52 @@ void LogDelegate::paint(QPainter *p, const QStyleOptionViewItem &opt, const QMod
     QStyleOptionViewItem o = opt;
     initStyleOption(&o, idx);
     p->save();
+
     auto bg = dark
-                  ? (idx.row() % 2 ? QColor(Theme::DkCard) : QColor(Theme::DkBg))
-                  : (idx.row() % 2 ? QColor(Theme::LtHover) : QColor(Theme::LtCard));
-    if (o.state & QStyle::State_Selected) bg = dark ? QColor(Theme::DkSelected) : QColor(Theme::LtSelected);
+        ? (idx.row() % 2 ? QColor(Theme::DkCard) : QColor(Theme::DkBg))
+        : (idx.row() % 2 ? QColor(Theme::LtCardHover) : QColor(Theme::LtCard));
+    if (o.state & QStyle::State_Selected)
+        bg = dark ? QColor(Theme::DkSelected) : QColor(Theme::LtSelected);
     p->fillRect(o.rect, bg);
 
     QColor fg = idx.data(LogModel::ColorRole).value<QColor>();
-    if (!fg.isValid()) fg = dark ? QColor(Theme::CyanLight) : QColor(Theme::CyanDeep);
+    if (!fg.isValid()) fg = dark ? QColor(Theme::SeafoamLight) : QColor(Theme::SeafoamDeep);
 
     QString tm = idx.data(LogModel::TimestampRole).toString();
     QString msg = idx.data(LogModel::MessageRole).toString();
     QString lv = idx.data(LogModel::LevelRole).toString();
 
-    QFont mf(QStringLiteral("Menlo"), 10);
+    QFont mf(QStringLiteral("SF Mono"), 10);
     mf.setStyleHint(QFont::Monospace);
     p->setFont(mf);
-    QRect r = o.rect.adjusted(10, 2, -10, -2);
+    QRect r = o.rect.adjusted(12, 2, -12, -2);
     int x = r.x();
 
+    // timestamp
     p->setPen(dark ? QColor(Theme::DkMuted) : QColor(Theme::LtMuted));
     p->drawText(x, r.y(), r.width(), r.height(), Qt::AlignLeft | Qt::AlignVCenter, tm);
-    x += p->fontMetrics().horizontalAdvance(tm) + 10;
+    x += p->fontMetrics().horizontalAdvance(tm) + 12;
 
-    auto badgeW = p->fontMetrics().horizontalAdvance(lv) + 14;
-    QRect bd(x, r.y() + 3, badgeW, r.height() - 6);
+    // level badge — softer pill shape
+    auto badgeW = p->fontMetrics().horizontalAdvance(lv) + 16;
+    QRect bd(x, r.y() + 2, badgeW, r.height() - 4);
     p->setRenderHint(QPainter::Antialiasing);
-    p->setBrush(fg);
+    {
+        QColor badgeBg = fg;
+        badgeBg.setAlpha(dark ? 200 : 180);
+        p->setBrush(badgeBg);
+    }
     p->setPen(Qt::NoPen);
-    p->drawRoundedRect(bd, 5, 5);
-    p->setPen(QColor("#fff"));
-    QFont bf = QApplication::font();
-    bf.setPointSize(8);
+    p->drawRoundedRect(bd, 7, 7);
+    p->setPen(dark ? QColor(Theme::DkBg) : QColor(Theme::LtCard));
+    QFont bf(QStringLiteral("SF Pro Rounded"), 9);
     bf.setBold(true);
+    bf.setStyleHint(QFont::SansSerif);
     p->setFont(bf);
     p->drawText(bd, Qt::AlignCenter, lv);
-    x += badgeW + 10;
+    x += badgeW + 12;
 
+    // message
     p->setFont(mf);
     p->setPen(fg);
     p->drawText(QRect(x, r.y(), r.right() - x, r.height()), Qt::AlignLeft | Qt::AlignVCenter,
@@ -188,43 +202,58 @@ void LogDelegate::paint(QPainter *p, const QStyleOptionViewItem &opt, const QMod
     p->restore();
 }
 
-QSize LogDelegate::sizeHint(const QStyleOptionViewItem &, const QModelIndex &) const { return {200, 28}; }
+QSize LogDelegate::sizeHint(const QStyleOptionViewItem &, const QModelIndex &) const { return {200, 30}; }
 
 void AlertDelegate::paint(QPainter *p, const QStyleOptionViewItem &opt, const QModelIndex &idx) const {
     QStyleOptionViewItem o = opt;
     initStyleOption(&o, idx);
     p->save();
+
     auto bg = dark
-                  ? (idx.row() % 2 ? QColor(Theme::DkCard) : QColor(Theme::DkBg))
-                  : (idx.row() % 2 ? QColor(Theme::LtHover) : QColor(Theme::LtCard));
-    if (o.state & QStyle::State_Selected) bg = dark ? QColor(Theme::DkSelected) : QColor(Theme::LtSelected);
+        ? (idx.row() % 2 ? QColor(Theme::DkCard) : QColor(Theme::DkBg))
+        : (idx.row() % 2 ? QColor(Theme::LtCardHover) : QColor(Theme::LtCard));
+    if (o.state & QStyle::State_Selected)
+        bg = dark ? QColor(Theme::DkSelected) : QColor(Theme::LtSelected);
     p->fillRect(o.rect, bg);
+
     QColor fg = idx.data(LogModel::ColorRole).value<QColor>();
-    if (!fg.isValid()) fg = dark ? QColor(Theme::Pink) : QColor(Theme::PinkDeep);
+    if (!fg.isValid()) fg = dark ? QColor(Theme::Sakura) : QColor(Theme::SakuraDeep);
+
     QString tm = idx.data(LogModel::TimestampRole).toString();
     QString msg = idx.data(LogModel::MessageRole).toString();
     QString lv = idx.data(LogModel::LevelRole).toString();
-    QFont mf(QStringLiteral("Menlo"), 10);
+
+    QFont mf(QStringLiteral("SF Mono"), 10);
     mf.setStyleHint(QFont::Monospace);
     p->setFont(mf);
-    QRect r = o.rect.adjusted(10, 2, -10, -2);
+    QRect r = o.rect.adjusted(12, 2, -12, -2);
     int x = r.x();
+
+    // timestamp
     p->setPen(dark ? QColor(Theme::DkMuted) : QColor(Theme::LtMuted));
     p->drawText(x, r.y(), r.width(), r.height(), Qt::AlignLeft | Qt::AlignVCenter, tm);
-    x += p->fontMetrics().horizontalAdvance(tm) + 10;
-    auto badgeW = p->fontMetrics().horizontalAdvance(lv) + 14;
-    QRect bd(x, r.y() + 3, badgeW, r.height() - 6);
+    x += p->fontMetrics().horizontalAdvance(tm) + 12;
+
+    // severity badge — softer pill
+    auto badgeW = p->fontMetrics().horizontalAdvance(lv) + 16;
+    QRect bd(x, r.y() + 2, badgeW, r.height() - 4);
     p->setRenderHint(QPainter::Antialiasing);
-    p->setBrush(fg);
+    {
+        QColor badgeBg = fg;
+        badgeBg.setAlpha(dark ? 200 : 180);
+        p->setBrush(badgeBg);
+    }
     p->setPen(Qt::NoPen);
-    p->drawRoundedRect(bd, 5, 5);
-    p->setPen(QColor("#fff"));
-    QFont bf = QApplication::font();
-    bf.setPointSize(8);
+    p->drawRoundedRect(bd, 7, 7);
+    p->setPen(dark ? QColor(Theme::DkBg) : QColor(Theme::LtCard));
+    QFont bf(QStringLiteral("SF Pro Rounded"), 9);
     bf.setBold(true);
+    bf.setStyleHint(QFont::SansSerif);
     p->setFont(bf);
     p->drawText(bd, Qt::AlignCenter, lv);
-    x += badgeW + 10;
+    x += badgeW + 12;
+
+    // message
     p->setFont(mf);
     p->setPen(fg);
     p->drawText(QRect(x, r.y(), r.right() - x, r.height()), Qt::AlignLeft | Qt::AlignVCenter,
@@ -232,7 +261,7 @@ void AlertDelegate::paint(QPainter *p, const QStyleOptionViewItem &opt, const QM
     p->restore();
 }
 
-QSize AlertDelegate::sizeHint(const QStyleOptionViewItem &, const QModelIndex &) const { return {200, 28}; }
+QSize AlertDelegate::sizeHint(const QStyleOptionViewItem &, const QModelIndex &) const { return {200, 30}; }
 
 // monitor
 monitor::monitor(QWidget *parent) : QMainWindow(parent), ui(new Ui::monitor) {
@@ -437,67 +466,74 @@ bool monitor::event(QEvent *e) {
 
 // -- animations --
 void monitor::start_animations() {
-    // 标题柔光呼吸动画 — 粉/青循环
+    // ── 标题柔光呼吸 ── sakura <-> wisteria <-> seafoam cycle
     auto *glow = new QGraphicsDropShadowEffect(this);
-    glow->setBlurRadius(4);
+    glow->setBlurRadius(6);
     glow->setOffset(0, 0);
-    glow->setColor(QColor(Theme::Pink));
+    glow->setColor(QColor(Theme::Sakura));
     ui->app_title->setGraphicsEffect(glow);
 
     auto *ga = new QPropertyAnimation(glow, "blurRadius", this);
-    ga->setDuration(3000);
-    ga->setStartValue(3);
-    ga->setKeyValueAt(0.5, 10);
-    ga->setEndValue(3);
+    ga->setDuration(3200);
+    ga->setStartValue(4);
+    ga->setKeyValueAt(0.5, 14);
+    ga->setEndValue(4);
     ga->setEasingCurve(QEasingCurve::InOutSine);
     ga->setLoopCount(-1);
     ga->start();
 
     auto *gc = new QPropertyAnimation(glow, "color", this);
-    gc->setDuration(4500);
-    gc->setStartValue(QColor(Theme::Pink));
-    gc->setKeyValueAt(0.33, QColor(Theme::Cyan));
-    gc->setKeyValueAt(0.66, QColor(Theme::Lavender));
-    gc->setEndValue(QColor(Theme::Pink));
+    gc->setDuration(4800);
+    gc->setStartValue(QColor(Theme::Sakura));
+    gc->setKeyValueAt(0.33, QColor(Theme::Wisteria));
+    gc->setKeyValueAt(0.66, QColor(Theme::Seafoam));
+    gc->setEndValue(QColor(Theme::Sakura));
     gc->setEasingCurve(QEasingCurve::InOutSine);
     gc->setLoopCount(-1);
     gc->start();
 
-    // 状态指示器柔和心跳脉冲
+    // ── 状态指示器脉冲 ──
     for (auto *s: {ui->status_dot}) {
         auto *a = new QPropertyAnimation(s, "minimumSize", this);
-        a->setDuration(1600);
+        a->setDuration(1800);
         a->setStartValue(QSize(8, 8));
-        a->setKeyValueAt(0.5, QSize(13, 13));
+        a->setKeyValueAt(0.5, QSize(12, 12));
         a->setEndValue(QSize(8, 8));
         a->setEasingCurve(QEasingCurve::InOutSine);
         a->setLoopCount(-1);
         a->start();
         auto *b = new QPropertyAnimation(s, "maximumSize", this);
-        b->setDuration(1600);
+        b->setDuration(1800);
         b->setStartValue(QSize(8, 8));
-        b->setKeyValueAt(0.5, QSize(13, 13));
+        b->setKeyValueAt(0.5, QSize(12, 12));
         b->setEndValue(QSize(8, 8));
         b->setEasingCurve(QEasingCurve::InOutSine);
         b->setLoopCount(-1);
         b->start();
     }
 
-    // 卡片依次淡入
+    // ── 仪表盘卡片入场 + 永久柔和阴影 ──
     QFrame *cards[] = {ui->card_logs, ui->card_alerts, ui->card_threats, ui->card_uptime};
     for (int i = 0; i < 4; ++i) {
         auto *fx = new QGraphicsOpacityEffect(this);
         fx->setOpacity(0.0);
         cards[i]->setGraphicsEffect(fx);
         auto *anim = new QPropertyAnimation(fx, "opacity", this);
-        anim->setDuration(500);
+        anim->setDuration(600);
         anim->setStartValue(0.0);
         anim->setEndValue(1.0);
         anim->setEasingCurve(QEasingCurve::OutCubic);
-        connect(anim, &QPropertyAnimation::finished, this, [card = cards[i]]() {
-            card->setGraphicsEffect(nullptr);
+        connect(anim, &QPropertyAnimation::finished, this, [=, this]() {
+            cards[i]->setGraphicsEffect(nullptr);
+            // add permanent soft shadow after fade-in
+            auto *shadow = new QGraphicsDropShadowEffect(this);
+            shadow->setBlurRadius(18);
+            shadow->setOffset(0, 4);
+            shadow->setColor(QColor(0, 0, 0, 40));
+            shadow->setEnabled(true);
+            cards[i]->setGraphicsEffect(shadow);
         });
-        QTimer::singleShot(100 + i * 80, anim, [anim]() { anim->start(); });
+        QTimer::singleShot(120 + i * 100, anim, [anim]() { anim->start(); });
     }
 }
 
@@ -563,149 +599,188 @@ void monitor::apply_theme(bool d) {
     if (alert_detail_panel_) alert_detail_panel_->set_dark(d);
     if (honey_detail_panel_) honey_detail_panel_->set_dark(d);
 
-    // pink = primary, cyan = secondary
-    auto B  = d ? Theme::DkBg      : Theme::LtBg;
-    auto C  = d ? Theme::DkCard    : Theme::LtCard;
-    auto Br = d ? Theme::DkBorder  : Theme::LtBorder;
-    auto T  = d ? Theme::DkText    : Theme::LtText;
-    auto M  = d ? Theme::DkMuted   : Theme::LtMuted;
-    auto S  = d ? Theme::DkSelected: Theme::LtSelected;
-    auto H  = d ? Theme::DkHover   : Theme::LtHover;
-    auto P  = d ? Theme::Pink      : Theme::PinkDeep;    // pink accent
-    auto Pl = d ? Theme::PinkLight : Theme::PinkDeep;
-    auto Cy = d ? Theme::Cyan      : Theme::CyanDeep;    // cyan accent
-    auto Cl = d ? Theme::CyanLight : Theme::CyanDeep;
-
-    // cute glassmorphism theme — soft, rounded, modern
-    auto BrS = d ? QStringLiteral("#3a2032") : QStringLiteral("#f0d0e0");
-    auto CardBg = d ? QStringLiteral("rgba(30,16,24,0.85)") : QStringLiteral("rgba(255,255,255,0.9)");
-    auto SideBg = d ? QStringLiteral("rgba(22,12,18,0.7)") : QStringLiteral("rgba(255,245,250,0.8)");
-    auto TblBg = d ? QStringLiteral("rgba(18,8,16,0.55)") : QStringLiteral("rgba(255,240,245,0.7)");
-    auto TblAlt = d ? QStringLiteral("rgba(30,16,24,0.35)") : QStringLiteral("rgba(255,250,252,0.6)");
-    auto HdrBg = d ? QStringLiteral("rgba(30,16,24,0.6)") : QStringLiteral("rgba(255,240,248,0.8)");
-    auto HdrBg2 = d ? QStringLiteral("rgba(22,12,18,0.6)") : QStringLiteral("rgba(255,245,250,0.8)");
-    auto CardBgDk = d ? QStringLiteral("rgba(30,16,24,0.7)") : QStringLiteral("rgba(255,255,255,0.85)");
-    auto CardBgDk2 = d ? QStringLiteral("rgba(22,12,18,0.5)") : QStringLiteral("rgba(255,248,252,0.7)");
-    auto CardHov = d ? QStringLiteral("rgba(40,20,30,0.8)") : QStringLiteral("rgba(255,235,245,0.9)");
-    auto BtnBg = d ? QStringLiteral("rgba(30,16,24,0.7)") : QStringLiteral("rgba(255,255,255,0.85)");
-    auto BtnBg2 = d ? QStringLiteral("rgba(22,12,18,0.5)") : QStringLiteral("rgba(255,248,252,0.7)");
-    auto BtnHov = d ? QStringLiteral("rgba(40,20,32,0.8)") : QStringLiteral("rgba(255,235,245,0.9)");
-    auto TabSel = d ? QStringLiteral("rgba(18,8,16,0.4)") : QStringLiteral("rgba(255,242,248,0.6)");
-    auto TabHov = d ? QStringLiteral("rgba(40,20,32,0.5)") : QStringLiteral("rgba(255,235,245,0.7)");
-    auto BadgeBg = d ? QStringLiteral("rgba(30,16,24,0.5)") : QStringLiteral("rgba(255,255,255,0.7)");
-    auto InputBg = CardBg;
-    auto TblHov = d ? QStringLiteral("rgba(40,20,32,0.5)") : QStringLiteral("rgba(255,235,245,0.7)");
-    auto TxtEdit = d ? QStringLiteral("rgba(18,8,16,0.55)") : QStringLiteral("rgba(255,240,245,0.7)");
-    auto RowHov = d ? QStringLiteral("rgba(40,20,32,0.5)") : QStringLiteral("rgba(255,235,245,0.7)");
+    auto Bg   = d ? Theme::DkBg        : Theme::LtBg;
+    auto Card = d ? Theme::DkCard      : Theme::LtCard;
+    auto Br   = d ? Theme::DkBorder    : Theme::LtBorder;
+    auto BrH  = d ? Theme::DkBorderHover : Theme::LtBorderHover;
+    auto Tx   = d ? Theme::DkText      : Theme::LtText;
+    auto Mu   = d ? Theme::DkMuted     : Theme::LtMuted;
+    auto Sel  = d ? Theme::DkSelected  : Theme::LtSelected;
+    auto Hov  = d ? Theme::DkCardHover : Theme::LtCardHover;
+    auto Pk   = d ? Theme::Sakura      : Theme::SakuraDeep;
+    auto PkL  = d ? Theme::SakuraLight : Theme::SakuraDeep;
+    auto Wis  = d ? Theme::Wisteria    : Theme::WisteriaDeep;
+    auto WisL = d ? Theme::WisteriaLight : Theme::WisteriaDeep;
+    auto Sea  = d ? Theme::Seafoam     : Theme::SeafoamDeep;
+    auto SeaL = d ? Theme::SeafoamLight : Theme::SeafoamDeep;
+    auto SkyC = d ? Theme::Sky         : Theme::Sky;
 
     QString s;
-    s += QStringLiteral("* { font-family:\"PingFang SC\",\"SF Pro Display\",sans-serif; } ");
-    s += QStringLiteral("QMainWindow { background:") + B + QStringLiteral("; } ");
+    // ── global defaults ──
+    s += QStringLiteral(
+        "* { font-family:\"SF Pro Rounded\",\"PingFang SC\",\"SF Pro Display\",system-ui,sans-serif; } "
+        "QMainWindow { background:") + Bg + QStringLiteral("; } "
+        "QLabel { color:") + Tx + QStringLiteral("; background:transparent; } ");
 
-    // header — clean solid
-    s += QStringLiteral("#header { background:qlineargradient(x1:0,y1:0,x2:1,y2:0,stop:0 ")
-         + C + QStringLiteral(",stop:1 ") + C
-         + QStringLiteral("); border-bottom:1px solid ") + Br + QStringLiteral("; } ");
+    // ── header ──
+    s += QStringLiteral(
+        "#header { background:") + Card + QStringLiteral("; border-bottom:1px solid ") + Br + QStringLiteral("; } "
+        "#app_title { font-size:16px; font-weight:700; color:") + Pk + QStringLiteral("; letter-spacing:0.5px; } "
+        "#brand_badge { background:transparent; } "
+        "#clock_label { font-size:10px; color:") + Mu + QStringLiteral("; } "
+        "#status_text { font-size:10px; color:") + Sea + QStringLiteral("; font-weight:600; } "
+        "#status_dot { background:") + Pk + QStringLiteral("; border-radius:5px; } ");
 
-    s += QStringLiteral("QLabel { color:") + T + QStringLiteral("; } ");
+    // ── sidebar ──
+    s += QStringLiteral(
+        "#sidebar { background:") + Card + QStringLiteral("; border-right:1px solid ") + Br + QStringLiteral("; } "
+        "#sidebar::item { color:") + Mu + QStringLiteral("; padding:12px 22px; font-size:13px; border:none; "
+        "margin:3px 12px; border-radius:14px; } "
+        "#sidebar::item:selected { background:") + Sel + QStringLiteral("; color:") + Pk + QStringLiteral("; font-weight:600; } "
+        "#sidebar::item:hover:!selected { background:") + Hov + QStringLiteral("; color:") + Wis + QStringLiteral("; } ");
 
-    // app title — soft pink
-    s += QStringLiteral("#app_title { font-size:17px; font-weight:700; color:") + P
-         + QStringLiteral("; letter-spacing:1px; } ");
+    // ── section titles ──
+    s += QStringLiteral(
+        "#dash_title,#logs_title,#alerts_title,#honey_title,#network_title,"
+        "#recent_alerts_label,#attackers_label,#local_ip_label,#arp_label,#quarantine_label "
+        "{ font-size:13px; font-weight:700; color:") + Tx + QStringLiteral("; padding-bottom:8px; "
+        "border-bottom:2px solid ") + Br + QStringLiteral("; } ");
 
-    // brand badge — app icon
-    s += QStringLiteral("#brand_badge { background:transparent; border-radius:8px; } ");
+    // ── dashboard stat cards ──
+    s += QStringLiteral(
+        "QFrame#card_logs,QFrame#card_alerts,QFrame#card_threats,QFrame#card_uptime { "
+        "background:") + Card + QStringLiteral("; border:1px solid ") + Br + QStringLiteral("; "
+        "border-radius:20px; padding:10px 20px; } "
+        "QFrame#card_logs { border-top:3px solid ") + Pk + QStringLiteral("; } "
+        "QFrame#card_alerts { border-top:3px solid ") + Sea + QStringLiteral("; } "
+        "QFrame#card_threats { border-top:3px solid ") + Wis + QStringLiteral("; } "
+        "QFrame#card_uptime { border-top:3px solid ") + Theme::Matcha + QStringLiteral("; } "
+        "QFrame#card_logs:hover { border-color:") + Pk + QStringLiteral("; background:") + Hov + QStringLiteral("; } "
+        "QFrame#card_alerts:hover { border-color:") + Sea + QStringLiteral("; background:") + Hov + QStringLiteral("; } "
+        "QFrame#card_threats:hover { border-color:") + Wis + QStringLiteral("; background:") + Hov + QStringLiteral("; } "
+        "QFrame#card_uptime:hover { border-color:") + Theme::Matcha + QStringLiteral("; background:") + Hov + QStringLiteral("; } "
+        "#card_logs_value,#card_alerts_value,#card_threats_value,#card_uptime_value { "
+        "font-size:30px; font-weight:800; color:") + Tx + QStringLiteral("; } "
+        "#card_logs_label,#card_alerts_label,#card_threats_label,#card_uptime_label { "
+        "font-size:11px; font-weight:600; color:") + Mu + QStringLiteral("; } ");
 
-    s += QStringLiteral("#clock_label { font-size:10px; color:") + M + QStringLiteral("; font-weight:500; } ");
-    s += QStringLiteral("#status_text { font-size:10px; color:") + Cy + QStringLiteral("; font-weight:600; } ");
+    // ── table views ──
+    s += QStringLiteral(
+        "QTableView { background:") + Bg + QStringLiteral("; alternate-background-color:") + Card + QStringLiteral("; "
+        "gridline-color:") + Br + QStringLiteral("; color:") + Tx + QStringLiteral("; "
+        "border:1px solid ") + Br + QStringLiteral("; border-radius:16px; font-size:11px; "
+        "selection-background-color:") + Sel + QStringLiteral("; selection-color:") + Tx + QStringLiteral("; } "
+        "QTableView::item { padding:4px 8px; } "
+        "QTableView::item:selected { background:") + Sel + QStringLiteral("; } "
+        "QHeaderView::section { background:") + Card + QStringLiteral("; color:") + Mu + QStringLiteral("; "
+        "border:none; border-bottom:1px solid ") + Br + QStringLiteral("; padding:6px 10px; font-size:10px; font-weight:700; } ");
 
-    // status dot
-    s += QStringLiteral("#status_dot { background:qlineargradient(x1:0,y1:0,x2:1,y2:1,stop:0 ")
-         + P + QStringLiteral(",stop:1 ") + Cy
-         + QStringLiteral("); border-radius:6px; } ");
+    // ── combo box ──
+    s += QStringLiteral(
+        "QComboBox { background:") + Card + QStringLiteral("; color:") + Tx + QStringLiteral("; "
+        "border:1px solid ") + Br + QStringLiteral("; border-radius:12px; padding:6px 14px; "
+        "font-size:11px; min-width:90px; } "
+        "QComboBox:hover { border-color:") + Sea + QStringLiteral("; } "
+        "QComboBox::drop-down { border:none; width:24px; } "
+        "QComboBox QAbstractItemView { background:") + Card + QStringLiteral("; color:") + Tx + QStringLiteral("; "
+        "selection-background-color:") + Sel + QStringLiteral("; border:1px solid ") + Br + QStringLiteral("; "
+        "border-radius:12px; padding:6px; outline:none; } ");
 
-    s += QStringLiteral("QStatusBar { background:") + SideBg + QStringLiteral("; border-top:1px solid ")
-         + BrS + QStringLiteral("; font-size:10px; color:") + M + QStringLiteral("; padding:4px 16px; } QStatusBar::item { border:none; } ");
-    s += QStringLiteral("QToolTip { background:") + C + QStringLiteral("; color:") + T
-         + QStringLiteral("; border:1px solid ") + BrS + QStringLiteral("; border-radius:12px; padding:8px 14px; font-size:10px; } ");
+    // ── buttons ──
+    s += QStringLiteral(
+        "QPushButton { background:") + Card + QStringLiteral("; color:") + Sea + QStringLiteral("; "
+        "border:1px solid ") + Br + QStringLiteral("; border-radius:14px; padding:8px 20px; "
+        "font-size:11px; font-weight:600; } "
+        "QPushButton:hover { background:") + Hov + QStringLiteral("; border-color:") + Pk + QStringLiteral("; "
+        "color:") + Pk + QStringLiteral("; } "
+        "QPushButton:pressed { background:") + Sel + QStringLiteral("; } ");
 
-    // sidebar — bubble style
-    s += QStringLiteral("#sidebar { background:") + SideBg + QStringLiteral("; border-right:1px solid ") + BrS + QStringLiteral("; } ");
-    s += QStringLiteral("#sidebar::item { color:") + M + QStringLiteral("; padding:13px 24px; font-size:12px; border:none; margin:4px 10px; border-radius:18px; } ");
-    s += QStringLiteral("#sidebar::item:selected { background:qlineargradient(x1:0,y1:0,x2:1,y2:0,stop:0 ")
-         + (d ? QStringLiteral("rgba(240,96,160,0.25)") : QStringLiteral("rgba(208,72,128,0.2)"))
-         + QStringLiteral(",stop:1 ")
-         + (d ? QStringLiteral("rgba(48,200,160,0.15)") : QStringLiteral("rgba(32,152,120,0.12)"))
-         + QStringLiteral("); color:") + P + QStringLiteral("; font-weight:600; } ");
-    s += QStringLiteral("#sidebar::item:hover:!selected { background:") + H + QStringLiteral("; color:") + Cy + QStringLiteral("; } ");
+    // ── inputs ──
+    s += QStringLiteral(
+        "QLineEdit { background:") + Bg + QStringLiteral("; color:") + Tx + QStringLiteral("; "
+        "border:1px solid ") + Br + QStringLiteral("; border-radius:12px; padding:8px 14px; "
+        "font-size:11px; selection-background-color:") + Sel + QStringLiteral("; } "
+        "QLineEdit:focus { border-color:") + Sea + QStringLiteral("; } "
+        "QTextEdit,QTableWidget { background:") + Bg + QStringLiteral("; color:") + Tx + QStringLiteral("; "
+        "border:1px solid ") + Br + QStringLiteral("; border-radius:16px; font-size:11px; "
+        "selection-background-color:") + Sel + QStringLiteral("; } "
+        "QTextEdit:focus { border-color:") + Sea + QStringLiteral("; } "
+        "QTableWidget::item:selected { background:") + Sel + QStringLiteral("; } "
+        "QTableWidget::item:hover { background:") + Hov + QStringLiteral("; } ");
 
-    // section titles
-    s += QStringLiteral("#dash_title,#logs_title,#alerts_title,#honey_title,#network_title,#recent_alerts_label,#attackers_label,#local_ip_label,#arp_label,#quarantine_label { font-size:13px; font-weight:600; color:") + Cy + QStringLiteral("; padding-bottom:8px; border-bottom:1px solid ") + BrS + QStringLiteral("; } ");
+    // ── scrollbar ──
+    s += QStringLiteral(
+        "QScrollBar:vertical { background:transparent; width:5px; margin:2px; } "
+        "QScrollBar::handle:vertical { background:") + BrH + QStringLiteral("; border-radius:3px; min-height:30px; } "
+        "QScrollBar::handle:vertical:hover { background:") + Pk + QStringLiteral("; } "
+        "QScrollBar::add-line:vertical,QScrollBar::sub-line:vertical { height:0; width:0; } "
+        "QScrollBar:horizontal { background:transparent; height:5px; margin:2px; } "
+        "QScrollBar::handle:horizontal { background:") + BrH + QStringLiteral("; border-radius:3px; min-width:30px; } "
+        "QScrollBar::handle:horizontal:hover { background:") + Pk + QStringLiteral("; } "
+        "QScrollBar::add-line:horizontal,QScrollBar::sub-line:horizontal { width:0; } ");
 
-    // dashboard cards — glass style
-    s += QStringLiteral("QFrame#card_logs,QFrame#card_alerts,QFrame#card_threats,QFrame#card_uptime { background:qlineargradient(x1:0,y1:0,x2:0,y2:1,stop:0 ") + CardBgDk + QStringLiteral(",stop:1 ") + CardBgDk2 + QStringLiteral("); border:1px solid ") + BrS + QStringLiteral("; border-radius:24px; padding:8px 16px; } ");
-    s += QStringLiteral("QFrame#card_logs { border-top:2px solid ") + P + QStringLiteral("; } ");
-    s += QStringLiteral("QFrame#card_alerts { border-top:2px solid ") + Cy + QStringLiteral("; } ");
-    s += QStringLiteral("QFrame#card_threats { border-top:2px solid ") + Theme::Lavender + QStringLiteral("; } ");
-    s += QStringLiteral("QFrame#card_uptime { border-top:2px solid ") + Theme::Mint + QStringLiteral("; } ");
-    s += QStringLiteral("QFrame#card_logs:hover { border-color:") + P + QStringLiteral("; background:") + CardHov + QStringLiteral("; } ");
-    s += QStringLiteral("QFrame#card_alerts:hover { border-color:") + Cy + QStringLiteral("; background:") + CardHov + QStringLiteral("; } ");
-    s += QStringLiteral("QFrame#card_threats:hover { border-color:") + Theme::Lavender + QStringLiteral("; background:") + CardHov + QStringLiteral("; } ");
-    s += QStringLiteral("QFrame#card_uptime:hover { border-color:") + Theme::Mint + QStringLiteral("; background:") + CardHov + QStringLiteral("; } ");
+    // ── tab widget ──
+    s += QStringLiteral(
+        "QTabWidget::pane { background:") + Card + QStringLiteral("; border:1px solid ") + Br + QStringLiteral("; "
+        "border-radius:16px; padding:6px; } "
+        "QTabBar::tab { background:") + Bg + QStringLiteral("; color:") + Mu + QStringLiteral("; "
+        "padding:9px 22px; border:1px solid ") + Br + QStringLiteral("; border-bottom:none; "
+        "border-top-left-radius:14px; border-top-right-radius:14px; font-size:11px; margin-right:3px; } "
+        "QTabBar::tab:selected { background:") + Card + QStringLiteral("; color:") + Pk + QStringLiteral("; font-weight:700; } "
+        "QTabBar::tab:hover:!selected { background:") + Hov + QStringLiteral("; color:") + Wis + QStringLiteral("; } ");
 
-    s += QStringLiteral("#card_logs_value,#card_alerts_value,#card_threats_value,#card_uptime_value { font-size:26px; font-weight:800; color:") + T + QStringLiteral("; } ");
-    s += QStringLiteral("#card_logs_label,#card_alerts_label,#card_threats_label,#card_uptime_label { font-size:10px; font-weight:600; color:") + M + QStringLiteral("; margin-top:2px; } ");
+    // ── plain text edits ──
+    s += QStringLiteral(
+        "QPlainTextEdit { background:") + Bg + QStringLiteral("; color:") + Tx + QStringLiteral("; "
+        "border:1px solid ") + Br + QStringLiteral("; border-radius:16px; "
+        "font-family:\"SF Mono\",\"Menlo\",\"Cascadia Code\",monospace; font-size:11px; padding:12px; "
+        "selection-background-color:") + Sel + QStringLiteral("; } "
+        "QPlainTextEdit:focus { border-color:") + Sea + QStringLiteral("; } ");
 
-    // table views — softer
-    s += QStringLiteral("QTableView { background:") + TblBg + QStringLiteral("; alternate-background-color:") + TblAlt + QStringLiteral("; gridline-color:") + BrS + QStringLiteral("; color:") + T + QStringLiteral("; border:1px solid ") + BrS + QStringLiteral("; border-radius:18px; font-size:11px; } ");
-    s += QStringLiteral("QTableView::item:selected { background:") + S + QStringLiteral("; } ");
-    s += QStringLiteral("QHeaderView::section { background:") + HdrBg + QStringLiteral("; color:") + Cy + QStringLiteral("; padding:8px 16px; border:none; border-bottom:1px solid ") + BrS + QStringLiteral("; font-size:10px; font-weight:600; } ");
+    // ── severity badges ──
+    s += QStringLiteral(
+        "#sev_crit,#sev_error,#sev_warn,#sev_info { border-radius:12px; font-family:\"SF Mono\",\"Menlo\",monospace; "
+        "font-size:10px; font-weight:700; padding:5px 0; background:") + Card + QStringLiteral("; } "
+        "#sev_crit { color:") + Theme::Cherry + QStringLiteral("; } "
+        "#sev_error { color:") + Theme::Tangerine + QStringLiteral("; } "
+        "#sev_warn { color:") + PkL + QStringLiteral("; } "
+        "#sev_info { color:") + SeaL + QStringLiteral("; } ");
 
-    // combo box
-    s += QStringLiteral("QComboBox { background:") + CardBg + QStringLiteral("; color:") + T + QStringLiteral("; border:1px solid ") + BrS + QStringLiteral("; border-radius:16px; padding:7px 16px; font-size:11px; min-width:80px; } ");
-    s += QStringLiteral("QComboBox:hover { border-color:") + Cy + QStringLiteral("; } QComboBox::drop-down { border:none; width:22px; } ");
-    s += QStringLiteral("QComboBox QAbstractItemView { background:") + C + QStringLiteral("; color:") + T + QStringLiteral("; selection-background-color:") + S + QStringLiteral("; border:1px solid ") + BrS + QStringLiteral("; border-radius:12px; padding:6px; } ");
+    // ── quick stats ──
+    s += QStringLiteral(
+        "#qs_tor,#qs_blocked,#qs_engines,#qs_types { border-radius:12px; "
+        "font-family:\"SF Mono\",\"Menlo\",monospace; font-size:10px; font-weight:600; "
+        "padding:5px 10px; background:") + Card + QStringLiteral("; color:") + Mu + QStringLiteral("; "
+        "border:1px solid ") + Br + QStringLiteral("; } ");
 
-    // buttons — pill shaped
-    s += QStringLiteral("QPushButton { background:qlineargradient(x1:0,y1:0,x2:0,y2:1,stop:0 ") + BtnBg + QStringLiteral(",stop:1 ") + BtnBg2 + QStringLiteral("); color:") + Cy + QStringLiteral("; border:1px solid ") + BrS + QStringLiteral("; border-radius:20px; padding:8px 22px; font-size:11px; font-weight:600; } ");
-    s += QStringLiteral("QPushButton:hover { background:") + BtnHov + QStringLiteral("; border-color:") + P + QStringLiteral("; color:") + P + QStringLiteral("; } ");
-    s += QStringLiteral("QPushButton:pressed { background:") + S + QStringLiteral("; padding:7px 20px; } ");
+    // ── settings page ──
+    s += QStringLiteral(
+        "#settings_title { font-size:20px; font-weight:700; color:") + Pk + QStringLiteral("; } "
+        "#settings_version { font-size:11px; color:") + Mu + QStringLiteral("; } "
+        "#app_info_card { background:") + Card + QStringLiteral("; border:1px solid ") + Br + QStringLiteral("; "
+        "border-radius:18px; } ");
 
-    // input
-    s += QStringLiteral("QLineEdit { background:") + InputBg + QStringLiteral("; color:") + T + QStringLiteral("; border:1px solid ") + BrS + QStringLiteral("; border-radius:16px; padding:8px 16px; font-size:11px; } ");
-    s += QStringLiteral("QLineEdit:focus { border-color:") + Cy + QStringLiteral("; } ");
-    s += QStringLiteral("QTextEdit,QTableWidget { background:") + TxtEdit + QStringLiteral("; color:") + T + QStringLiteral("; border:1px solid ") + BrS + QStringLiteral("; border-radius:18px; font-size:11px; } ");
-    s += QStringLiteral("QTextEdit:focus { border-color:") + Cy + QStringLiteral("; } ");
-    s += QStringLiteral("QTableWidget::item:selected { background:") + S + QStringLiteral("; } ");
-    s += QStringLiteral("QTableWidget::item:hover { background:") + RowHov + QStringLiteral("; } ");
+    // ── status bar ──
+    s += QStringLiteral(
+        "QStatusBar { background:") + Card + QStringLiteral("; border-top:1px solid ") + Br + QStringLiteral("; "
+        "font-size:10px; color:") + Mu + QStringLiteral("; padding:4px 16px; } "
+        "QStatusBar::item { border:none; } ");
 
-    // scrollbar — thin pink
-    s += QStringLiteral("QScrollBar:vertical { background:transparent; width:6px; margin:2px; } ");
-    s += QStringLiteral("QScrollBar::handle:vertical { background:") + BrS + QStringLiteral("; border-radius:4px; min-height:28px; } ");
-    s += QStringLiteral("QScrollBar::handle:vertical:hover { background:") + P + QStringLiteral("; } ");
-    s += QStringLiteral("QScrollBar::add-line:vertical,QScrollBar::sub-line:vertical { height:0; } ");
+    // ── tooltips ──
+    s += QStringLiteral(
+        "QToolTip { background:") + Card + QStringLiteral("; color:") + Tx + QStringLiteral("; "
+        "border:1px solid ") + BrH + QStringLiteral("; border-radius:14px; padding:8px 14px; font-size:11px; } ");
 
-    // tab widget
-    s += QStringLiteral("QTabWidget::pane { background:") + CardBg + QStringLiteral("; border:1px solid ") + BrS + QStringLiteral("; border-radius:18px; } ");
-    s += QStringLiteral("QTabBar::tab { background:") + TabSel + QStringLiteral("; color:") + M + QStringLiteral("; padding:10px 22px; border:1px solid ") + BrS + QStringLiteral("; border-bottom:none; border-top-left-radius:14px; border-top-right-radius:14px; font-size:11px; margin-right:2px; } ");
-    s += QStringLiteral("QTabBar::tab:selected { background:") + CardBg + QStringLiteral("; color:") + P + QStringLiteral("; font-weight:600; } ");
-    s += QStringLiteral("QTabBar::tab:hover:!selected { background:") + TabHov + QStringLiteral("; color:") + Cy + QStringLiteral("; } ");
-
-    // text edit
-    s += QStringLiteral("QPlainTextEdit { background:") + TxtEdit + QStringLiteral("; color:") + T + QStringLiteral("; border:1px solid ") + BrS + QStringLiteral("; border-radius:18px; font-family:\"Menlo\",\"SF Mono\",monospace; font-size:11px; padding:12px; } ");
-    s += QStringLiteral("QPlainTextEdit:focus { border-color:") + Cy + QStringLiteral("; } ");
-
-    // severity badges — pill shaped
-    s += QStringLiteral("#sev_crit,#sev_error,#sev_warn,#sev_info { border-radius:16px; font-family:\"Menlo\"; font-size:10px; font-weight:700; padding:5px 0; background:") + BadgeBg + QStringLiteral("; } ");
-    s += QStringLiteral("#sev_crit { color:") + Theme::PinkHot + QStringLiteral("; } #sev_error { color:") + Theme::Orange + QStringLiteral("; } #sev_warn { color:") + Pl + QStringLiteral("; } #sev_info { color:") + Cl + QStringLiteral("; } ");
-
-    // quick stats
-    s += QStringLiteral("#qs_tor,#qs_blocked,#qs_engines,#qs_types { border-radius:16px; font-family:\"Menlo\"; font-size:9px; font-weight:700; padding:6px 10px; background:") + BadgeBg + QStringLiteral("; color:") + M + QStringLiteral("; border:1px solid ") + BrS + QStringLiteral("; } ");
-
-    // settings page
-    s += QStringLiteral("#settings_title { font-size:20px; font-weight:700; color:") + P + QStringLiteral("; letter-spacing:1px; } ");
-    s += QStringLiteral("#settings_version { font-size:10px; color:") + M + QStringLiteral("; } ");
-    s += QStringLiteral("#app_info_card { background:") + CardBg + QStringLiteral("; border:1px solid ") + BrS + QStringLiteral("; border-radius:20px; } ");
+    // ── menu bar ──
+    s += QStringLiteral(
+        "QMenuBar { background:") + Card + QStringLiteral("; color:") + Tx + QStringLiteral("; "
+        "border-bottom:1px solid ") + Br + QStringLiteral("; padding:2px 8px; font-size:11px; } "
+        "QMenuBar::item:selected { background:") + Sel + QStringLiteral("; border-radius:8px; } "
+        "QMenu { background:") + Card + QStringLiteral("; color:") + Tx + QStringLiteral("; "
+        "border:1px solid ") + Br + QStringLiteral("; border-radius:14px; padding:6px; } "
+        "QMenu::item { padding:8px 28px 8px 16px; border-radius:8px; font-size:11px; } "
+        "QMenu::item:selected { background:") + Sel + QStringLiteral("; color:") + Pk + QStringLiteral("; } "
+        "QMenu::separator { height:1px; background:") + Br + QStringLiteral("; margin:4px 8px; } ");
 
     setStyleSheet(s);
 }
@@ -742,24 +817,24 @@ void monitor::animate_page_switch(int row) {
         return;
     }
 
-    // fade out current page
+    // fade out + slight scale down
     auto *out_fx = new QGraphicsOpacityEffect(this);
     current_widget->setGraphicsEffect(out_fx);
     auto *out_anim = new QPropertyAnimation(out_fx, "opacity", this);
-    out_anim->setDuration(120);
+    out_anim->setDuration(130);
     out_anim->setStartValue(1.0);
     out_anim->setEndValue(0.0);
-    out_anim->setEasingCurve(QEasingCurve::OutCubic);
+    out_anim->setEasingCurve(QEasingCurve::InOutCubic);
 
     connect(out_anim, &QPropertyAnimation::finished, this, [=, this]() {
         current_widget->setGraphicsEffect(nullptr);
         ui->pages->setCurrentIndex(row);
 
-        // fade in new page
+        // fade in + slight slide up
         auto *in_fx = new QGraphicsOpacityEffect(this);
         target_widget->setGraphicsEffect(in_fx);
         auto *in_anim = new QPropertyAnimation(in_fx, "opacity", this);
-        in_anim->setDuration(150);
+        in_anim->setDuration(180);
         in_anim->setStartValue(0.0);
         in_anim->setEndValue(1.0);
         in_anim->setEasingCurve(QEasingCurve::OutCubic);

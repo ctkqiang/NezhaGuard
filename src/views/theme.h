@@ -2,65 +2,110 @@
 #define NEZHAGUARD_THEME_H
 
 namespace Theme {
-    // pink family (primary accent)
-    inline constexpr auto Pink         = "#f060a0";   // readable kawaii pink
-    inline constexpr auto PinkLight    = "#f8a0c8";   // soft petal pink
-    inline constexpr auto PinkDeep     = "#d04880";   // deep rose (light theme accent)
-    inline constexpr auto PinkBlush    = "#ffe0ef";   // blush tint
-    inline constexpr auto PinkHot      = "#e83070";   // hot pink (crit/alert)
 
-    // cyan family (secondary accent)
-    inline constexpr auto Cyan         = "#30c8a0";   // readable kawaii cyan
-    inline constexpr auto CyanLight    = "#70e0c8";   // soft mint cyan
-    inline constexpr auto CyanDeep     = "#209878";   // deep teal (light theme accent)
-    inline constexpr auto CyanNeon     = "#18d8a8";   // dark theme cyan glow — visible on dark
-    inline constexpr auto CyanIce      = "#a0f0e0";
+// ── Sakura (cherry blossom pink) ── primary accent ──
+inline constexpr auto Sakura          = "#F2A0B6";
+inline constexpr auto SakuraLight     = "#F9C8D6";
+inline constexpr auto SakuraPale      = "#FDE4EB";
+inline constexpr auto SakuraDeep      = "#D47890";
+inline constexpr auto SakuraHot       = "#E84878";
 
-    // lavender / purple
-    inline constexpr auto Lavender     = "#b888f0";
-    inline constexpr auto LavenderLight= "#d4b8ff";
-    inline constexpr auto LavenderDeep = "#9060d8";
-    inline constexpr auto Lilac        = "#c8a0f8";
+// ── Wisteria (soft lavender) ── secondary accent ──
+inline constexpr auto Wisteria        = "#B8A0E8";
+inline constexpr auto WisteriaLight   = "#D0C0F8";
+inline constexpr auto WisteriaPale    = "#EBE4FA";
+inline constexpr auto WisteriaDeep    = "#9078D0";
 
-    // baby blue
-    inline constexpr auto BabyBlue     = "#60b8f0";
-    inline constexpr auto BabyBlueLight= "#90d0f8";
+// ── Seafoam (mint cyan) ── tertiary accent ──
+inline constexpr auto Seafoam         = "#60D0B0";
+inline constexpr auto SeafoamLight    = "#90E8D0";
+inline constexpr auto SeafoamPale     = "#D0F8EE";
+inline constexpr auto SeafoamDeep     = "#40A888";
 
-    // mint / green
-    inline constexpr auto Mint         = "#50d898";
-    inline constexpr auto MintLight    = "#88f0c0";
-    inline constexpr auto MintDeep     = "#38b878";
+// ── Sky (baby blue) ──
+inline constexpr auto Sky             = "#78C0F0";
+inline constexpr auto SkyLight        = "#A8DCF8";
+inline constexpr auto SkyPale         = "#DCF0FC";
 
-    // peach / coral
-    inline constexpr auto Peach        = "#f8a878";
-    inline constexpr auto PeachLight   = "#fcc8a8";
-    inline constexpr auto PeachDeep    = "#d88858";
+// ── Peach ──
+inline constexpr auto Peach           = "#F8B088";
+inline constexpr auto PeachLight      = "#FCD0B8";
+inline constexpr auto PeachPale       = "#FEE8D8";
 
-    // semantic
-    inline constexpr auto Red          = "#e84060";   // readable cherry
-    inline constexpr auto Orange       = "#e87850";   // readable tangerine
-    inline constexpr auto Green        = "#40c878";   // readable mint
-    inline constexpr auto Purple       = "#a870e0";   // readable wisteria
-    inline constexpr auto White        = "#fef8fb";   // cream white
-    inline constexpr auto Grey         = "#988898";   // mauve grey
+// ── Semantic ──
+inline constexpr auto Cherry          = "#E85068";
+inline constexpr auto Tangerine       = "#E88858";
+inline constexpr auto Matcha          = "#50C888";
+inline constexpr auto Iris            = "#A880E0";
+inline constexpr auto Cream           = "#FEFAFC";
+inline constexpr auto Mauve           = "#A890A0";
 
-    // dark theme
-    inline constexpr auto DkBg         = "#120810";   // deep rose black
-    inline constexpr auto DkCard       = "#1e1018";   // pink-tinted card
-    inline constexpr auto DkBorder     = "#422838";   // visible pink border
-    inline constexpr auto DkHover      = "#2a1825";
-    inline constexpr auto DkSelected   = "#351d30";
-    inline constexpr auto DkText       = "#f8e8f0";   // warm pink-white
-    inline constexpr auto DkMuted      = "#b890a0";
+// ── Legacy aliases (keep compat) ──
+inline constexpr auto Pink            = Sakura;
+inline constexpr auto PinkLight       = SakuraLight;
+inline constexpr auto PinkDeep        = SakuraDeep;
+inline constexpr auto PinkBlush       = SakuraPale;
+inline constexpr auto PinkHot         = SakuraHot;
+inline constexpr auto Cyan            = Seafoam;
+inline constexpr auto CyanLight       = SeafoamLight;
+inline constexpr auto CyanDeep        = SeafoamDeep;
+inline constexpr auto CyanNeon        = Seafoam;
+inline constexpr auto CyanIce         = SeafoamPale;
+inline constexpr auto Lavender        = Wisteria;
+inline constexpr auto LavenderLight   = WisteriaLight;
+inline constexpr auto LavenderDeep    = WisteriaDeep;
+inline constexpr auto Lilac           = WisteriaLight;
+inline constexpr auto BabyBlue        = Sky;
+inline constexpr auto BabyBlueLight   = SkyLight;
+inline constexpr auto Mint            = Seafoam;
+inline constexpr auto MintLight       = SeafoamLight;
+inline constexpr auto MintDeep        = SeafoamDeep;
+inline constexpr auto Red             = Cherry;
+inline constexpr auto Orange          = Tangerine;
+inline constexpr auto Green           = Matcha;
+inline constexpr auto Purple          = Iris;
+inline constexpr auto White           = Cream;
+inline constexpr auto Grey            = Mauve;
+inline constexpr auto PeachDeep       = Peach;
 
-    // light theme
-    inline constexpr auto LtBg         = "#fff2f8";   // blush pink
-    inline constexpr auto LtCard       = "#ffffff";
-    inline constexpr auto LtBorder     = "#ecc8d8";
-    inline constexpr auto LtHover      = "#fff5fa";
-    inline constexpr auto LtSelected   = "#ffe4f0";
-    inline constexpr auto LtText       = "#2a101d";
-    inline constexpr auto LtMuted      = "#a88095";
-}
+// ── Dark theme ──
+inline constexpr auto DkBg            = "#0D0710";
+inline constexpr auto DkSheet         = "#160E18";
+inline constexpr auto DkCard          = "#1C121E";
+inline constexpr auto DkCardHover     = "#241824";
+inline constexpr auto DkBorder        = "#382838";
+inline constexpr auto DkBorderHover   = "#584858";
+inline constexpr auto DkSelected      = "#302030";
+inline constexpr auto DkText          = "#F4E8F2";
+inline constexpr auto DkMuted         = "#A08898";
 
-#endif
+// ── Light theme ──
+inline constexpr auto LtBg            = "#FFF4F8";
+inline constexpr auto LtSheet         = "#FFFAFC";
+inline constexpr auto LtCard          = "#FFFFFF";
+inline constexpr auto LtCardHover     = "#FFF0F5";
+inline constexpr auto LtBorder        = "#F0D8E2";
+inline constexpr auto LtBorderHover   = "#E0C0D0";
+inline constexpr auto LtSelected      = "#FFE8F0";
+inline constexpr auto LtText          = "#28101C";
+inline constexpr auto LtMuted         = "#A88095";
+
+// legacy hover names (reference DkCardHover/LtCardHover above)
+inline constexpr auto DkHover         = DkCardHover;
+inline constexpr auto LtHover         = LtCardHover;
+
+// ── Glass alpha variants (dark theme) ──
+inline constexpr auto GlassDk         = "rgba(28,18,30,0.85)";
+inline constexpr auto GlassDkCard     = "rgba(28,18,30,0.65)";
+inline constexpr auto GlassDkHover    = "rgba(36,24,36,0.80)";
+inline constexpr auto GlassBorder     = "rgba(248,160,182,0.18)";
+
+// ── Glass alpha variants (light theme) ──
+inline constexpr auto GlassLt         = "rgba(255,255,255,0.85)";
+inline constexpr auto GlassLtCard     = "rgba(255,255,255,0.72)";
+inline constexpr auto GlassLtHover    = "rgba(255,240,245,0.88)";
+inline constexpr auto GlassBorderLt   = "rgba(210,120,150,0.15)";
+
+} // namespace Theme
+
+#endif // NEZHAGUARD_THEME_H

@@ -1,4 +1,3 @@
-
 //
 // 哪吒网络安全 SIEM — 主入口
 // 串联：抓包采集 + 日志监控 + 蜜罐监听 → 攻击检测引擎 → 告警管理
@@ -48,10 +47,10 @@ using namespace Nezha;
 namespace fs = std::filesystem;
 
 struct AppPaths {
-    std::string rules_dir;    // rules/default.yaml
-    std::string config_dir;   // config/
-    std::string data_dir;     // data/ (DB + writable)
-    std::string log_dir;      // logs/
+    std::string rules_dir; // rules/default.yaml
+    std::string config_dir; // config/
+    std::string data_dir; // data/ (DB + writable)
+    std::string log_dir; // logs/
 };
 
 // 解析应用路径：macOS .app bundle → ~/Library/Application Support +
@@ -73,20 +72,20 @@ static AppPaths resolve_app_paths() {
                 std::string home = getenv("HOME") ? getenv("HOME") : "/tmp";
                 std::string app_support = home + "/Library/Application Support/NezhaGuard";
 
-                p.rules_dir  = resources + "rules/";
+                p.rules_dir = resources + "rules/";
                 p.config_dir = resources + "config/";
-                p.data_dir   = app_support + "/data/";
-                p.log_dir    = app_support + "/logs/";
+                p.data_dir = app_support + "/data/";
+                p.log_dir = app_support + "/logs/";
                 return p;
             }
         }
     }
 #endif
     // 开发环境 / CLI / Linux — 使用当前目录
-    p.rules_dir  = "rules/";
+    p.rules_dir = "rules/";
     p.config_dir = "config/";
-    p.data_dir   = "data/";
-    p.log_dir    = "logs/";
+    p.data_dir = "data/";
+    p.log_dir = "logs/";
     return p;
 }
 
@@ -180,16 +179,16 @@ static int run_cli_mode() {
     NZ_INFO("  CPU:      {} cores  |  Memory: {} MB", ncpu, (phys_pages * page_size) / (1024 * 1024));
     NZ_INFO("  Host:     {}  |  PID: {}", hostname, getpid());
     NZ_INFO("  User:     {}  |  Build: {} {} {}",
-             getenv("USER") ? getenv("USER") : "unknown",
-             Configuration::ApplicationConstants::ApplicationVersion, __DATE__, __TIME__);
+            getenv("USER") ? getenv("USER") : "unknown",
+            Configuration::ApplicationConstants::ApplicationVersion, __DATE__, __TIME__);
     NZ_INFO("");
     NZ_INFO("  ◆ 引擎配置");
     NZ_INFO("  Mode:     CLI (Headless)  |  Interface: {}", get_net_interface());
     NZ_INFO("  BPF:      tcp or udp or icmp  |  Honeypots: 8 ports");
     NZ_INFO("  LogSrc:   4 files  |  Threshold: {}",
-             Configuration::ApplicationConstants::AnomaliesQuarantineThreshold);
+            Configuration::ApplicationConstants::AnomaliesQuarantineThreshold);
     NZ_INFO("  Dedup:    10s  |  Arena: 128KB  |  Tor: {} nodes",
-             tor_checker.total_nodes());
+            tor_checker.total_nodes());
     NZ_INFO("  Quarantine history: {} records", qlist.size());
 
     if (!qlist.empty()) {
@@ -349,13 +348,14 @@ static int run_cli_mode() {
                 double elapsed = (e.ts_ns - last_stats) / 1'000'000'000.0;
                 auto arp_count = Core::arp_table_size();
                 double mbps = (s.total_bytes * 8.0) / (elapsed * 1'000'000.0);
-                NZ_INFO("◆ STATS | pkts:{} flow:{:.1f}MB rate:{:.0f}pps/{:.2f}Mbps | TCP:{} UDP:{} ICMP:{} HTTP:{} | alerts:{} quar:{} arp:{} tor:{} rules:{} arena:{}KB",
-                        s.total_packets, s.total_bytes / 1'000'000.0,
-                        s.total_packets / elapsed, mbps,
-                        s.tcp_pkts, s.udp_pkts, s.icmp_pkts, s.http_pkts,
-                        alerter.total_alerts(), ql.size(), arp_count,
-                        tor_checker.total_nodes(), detector.rule_count(),
-                        arena.bytes_used() / 1024);
+                NZ_INFO(
+                    "◆ STATS | pkts:{} flow:{:.1f}MB rate:{:.0f}pps/{:.2f}Mbps | TCP:{} UDP:{} ICMP:{} HTTP:{} | alerts:{} quar:{} arp:{} tor:{} rules:{} arena:{}KB",
+                    s.total_packets, s.total_bytes / 1'000'000.0,
+                    s.total_packets / elapsed, mbps,
+                    s.tcp_pkts, s.udp_pkts, s.icmp_pkts, s.http_pkts,
+                    alerter.total_alerts(), ql.size(), arp_count,
+                    tor_checker.total_nodes(), detector.rule_count(),
+                    arena.bytes_used() / 1024);
                 Core::ProtocolStats::instance().reset();
                 pkt_count = 0;
                 last_stats = e.ts_ns;
@@ -386,11 +386,11 @@ static int run_cli_mode() {
     NZ_INFO("║  哪吒网络安全 SIEM — 运行摘要                               ║");
     NZ_INFO("╠══════════════════════════════════════════════════════════════╣");
     NZ_INFO("║  Alerts: {:<5}  |  Quarantined: {:<3}  |  Tor: {:<5}  |  ARP: {:<3}        ║",
-             alerter.total_alerts(), final_qlist.size(), tor_checker.total_nodes(), arp_count);
+            alerter.total_alerts(), final_qlist.size(), tor_checker.total_nodes(), arp_count);
     NZ_INFO("║  Rules: {:<5}   |  Arena: {:<4}KB   |  CPU user: {:.2f}s  sys: {:.2f}s  ║",
-             detector.rule_count(), arena.bytes_used() / 1024,
-             ru.ru_utime.tv_sec + ru.ru_utime.tv_usec / 1'000'000.0,
-             ru.ru_stime.tv_sec + ru.ru_stime.tv_usec / 1'000'000.0);
+            detector.rule_count(), arena.bytes_used() / 1024,
+            ru.ru_utime.tv_sec + ru.ru_utime.tv_usec / 1'000'000.0,
+            ru.ru_stime.tv_sec + ru.ru_stime.tv_usec / 1'000'000.0);
 #if defined(__APPLE__)
     NZ_INFO("║  RSS: {} MB                                                  ║", ru.ru_maxrss / (1024 * 1024));
 #else
@@ -425,8 +425,8 @@ static int run_gui_mode(int argc, char *argv[]) {
     };
 
     QApplication app(argc, argv);
-    app.setApplicationName(QStringLiteral("哪吒网络安全 SIEM"));
-    app.setApplicationVersion(
+    QApplication::setApplicationName(QStringLiteral("哪吒网络安全 SIEM"));
+    QApplication::setApplicationVersion(
         QString::fromLatin1(Configuration::ApplicationConstants::ApplicationVersion)
     );
 
@@ -436,7 +436,7 @@ static int run_gui_mode(int argc, char *argv[]) {
     ensure_dirs(paths);
     g_paths = paths;
 
-    Log::init_default((paths.log_dir + "nezha.log").c_str(), Log::Level::Info);
+    Log::init_default(paths.log_dir + "nezha.log", Log::Level::Info);
     Database::DatabaseHelper::InitializeQuarantineDatabase(paths.data_dir);
     Core::TorChecker tor_checker;
 
@@ -454,8 +454,7 @@ static int run_gui_mode(int argc, char *argv[]) {
     Core::dump_network_info();
 
     {
-        auto ipcn = Core::IpCn::lookup_self();
-        if (ipcn.valid) {
+        if (auto ipcn = Core::IpCn::lookup_self(); ipcn.valid) {
             std::string loc = ipcn.country;
             if (!ipcn.province.empty()) loc += std::format(" {}", ipcn.province);
             if (!ipcn.city.empty()) loc += std::format(" {}", ipcn.city);
@@ -472,16 +471,16 @@ static int run_gui_mode(int argc, char *argv[]) {
 
     Core::Arena arena(128 * 1024);
     Core::AttackDetector detector;
-    detector.load_rules((paths.rules_dir + "default.yaml").c_str());
+    detector.load_rules(paths.rules_dir + "default.yaml");
     g_detector = &detector;
     Core::AlertManager alerter;
     alerter.set_dedup_window(10);
 
-    Service::Notifier::instance().load_config_dir((paths.config_dir + "notifier").c_str());
+    Service::Notifier::instance().load_config_dir(paths.config_dir + "notifier");
     Service::Notifier::instance().set_gui_callback([](const std::string &title, const std::string &body) {
 #if defined(__APPLE__)
-        std::string cmd = std::format(
-            "osascript -e 'display notification \"{}\" with title \"{}\" sound name \"Glass\"' 2>/dev/null",
+        const std::string cmd = std::format(
+            R"(osascript -e 'display notification "{}" with title "{}" sound name "Glass"' 2>/dev/null)",
             body, title);
         std::system(cmd.c_str());
 #elif defined(__linux__)
@@ -494,20 +493,22 @@ static int run_gui_mode(int argc, char *argv[]) {
         Service::Notifier::instance().on_alert(a);
         if (a.level >= Severity::Error && a.count >= 5) {
             std::string ip(a.src_ip);
-            std::string host = IPAddress::ipaddr::ResolveHostname(ip);
 
-            if (host != ip)
-                NZ_WARN("[聚合] {}  {} ({}), {} 次, 评分 {:.0f}",
-                    attack_type_cstr(a.type), ip, host, a.count, a.score);
-            else
-                NZ_WARN("[聚合] {}  {}, {} 次, 评分 {:.0f}",
-                    attack_type_cstr(a.type), ip, a.count, a.score);
+            if (std::string host = IPAddress::ipaddr::ResolveHostname(ip); host != ip) {
+                NZ_WARN("[聚合] {}  {} ({}), {} 次, 评分 {:.0f}", attack_type_cstr(a.type), ip, host, a.count, a.score);
+            } else {
+                NZ_WARN("[聚合] {}  {}, {} 次, 评分 {:.0f}", attack_type_cstr(a.type), ip, a.count, a.score);
+            }
         }
+
         uint64_t ts_ns = a.ts_ns;
+
         std::string type_str = attack_type_cstr(a.type);
         std::string ip_str(a.src_ip);
+
         int cnt = static_cast<int>(a.count);
         double sc = a.score;
+
         QString sev = [](Severity s) -> QString {
             switch (s) {
                 case Severity::Critical: return QStringLiteral("CRIT");
@@ -580,7 +581,7 @@ static int run_gui_mode(int argc, char *argv[]) {
     NZ_INFO("日志引擎已启动: {} 监控源", sizeof(log_paths) / sizeof(log_paths[0]));
 
     if constexpr (Configuration::ApplicationConstants::ShowOtherApplicationLogs) {
-        int n = app_monitor.load_from_file((paths.config_dir + "monitor_apps.conf").c_str());
+        int n = app_monitor.load_from_file(paths.config_dir + "monitor_apps.conf");
         if (n > 0) {
             app_monitor.start();
             NZ_INFO("应用监控已启动: {} 个外部应用", n);
@@ -604,16 +605,16 @@ static int run_gui_mode(int argc, char *argv[]) {
 
                 if (!Core::ProtocolDecoder::decode(raw, len, ts, arena, e)) return;
                 {
-                    bool http = !e.msg.empty() && e.proto == PROTO_TCP;
+                    const bool http = !e.msg.empty() && e.proto == PROTO_TCP;
                     Core::ProtocolStats::instance().record_packet(e.proto, len, http);
                 }
 
                 if (Database::DatabaseHelper::IsIPQuarantined(e.src.to_string())) {
                     static std::unordered_map<std::string, Nanos> last_warn;
-                    Nanos now_ns = static_cast<Nanos>(ts.tv_sec) * 1'000'000'000ULL + ts.tv_usec * 1000ULL;
+                    const Nanos now_ns = static_cast<Nanos>(ts.tv_sec) * 1'000'000'000ULL + ts.tv_usec * 1000ULL;
 
-                    auto ip = e.src.to_string();
-                    auto it = last_warn.find(ip);
+                    const auto ip = e.src.to_string();
+                    const auto it = last_warn.find(ip);
 
                     if (it == last_warn.end() || (now_ns - it->second) > 10'000'000'000ULL) {
                         log_quarantine_block(ip, e.dst.to_string(), e.proto, e.dport, e.sport);
@@ -627,11 +628,12 @@ static int run_gui_mode(int argc, char *argv[]) {
 
                 detector.analyze(e, arena, [&](const Core::Alert &a) { alerter.submit(a); });
 
-                if (e.proto == PROTO_ICMP)
+                if (e.proto == PROTO_ICMP) {
                     NZ_DEBUG("ICMP {} -> {}", e.src.to_string(), e.dst.to_string());
-                else
+                } else {
                     NZ_TRACE("{} {}:{} -> :{}", e.proto == PROTO_TCP ? "TCP" : "UDP",
-                         e.src.to_string(), e.sport, e.dport);
+                             e.src.to_string(), e.sport, e.dport);
+                }
 
                 static Nanos last_flush = 0;
 
@@ -699,7 +701,7 @@ int main(const int argc, char *argv[]) {
     }
 
 #ifdef NEZHAGUARD_CLI_ONLY
-    (void)argc; (void)no_gui;
+    (void) argc; (void) no_gui;
     return run_cli_mode();
 #else
     if (no_gui) {
@@ -707,8 +709,10 @@ int main(const int argc, char *argv[]) {
     }
 
     bool show_gui = Configuration::ApplicationConstants::ShowGui;
-    const char *gui_env = std::getenv("NEZHA_SHOW_GUI");
-    if (gui_env) show_gui = (std::strcmp(gui_env, "0") != 0 && std::strcmp(gui_env, "false") != 0);
+
+    if (const char *gui_env = std::getenv("NEZHA_SHOW_GUI")) {
+        show_gui = (std::strcmp(gui_env, "0") != 0 && std::strcmp(gui_env, "false") != 0);
+    }
 
     if (show_gui) return run_gui_mode(argc, argv);
 
