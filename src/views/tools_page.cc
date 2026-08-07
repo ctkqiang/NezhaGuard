@@ -3,6 +3,7 @@
 //
 
 #include "tools_page.h"
+#include "spinner_widget.h"
 #include "theme.h"
 
 #include "../tools/tools.h"
@@ -49,6 +50,12 @@ void ToolsPage::build_ui() {
     status_label_->setStyleSheet(
         QStringLiteral("font-size:11px; font-weight:600; color:%1; background:transparent;").arg(Pk));
     hdr->addWidget(status_label_);
+
+    spinner_ = new SpinnerWidget(14, this);
+    spinner_->dark = dark_;
+    spinner_->hide();
+    hdr->addWidget(spinner_);
+
     hdr->addStretch();
 
     auto *optLbl = new QLabel("行数上限:");
@@ -137,9 +144,17 @@ void ToolsPage::build_ui() {
     connect(pattern_edit_, &QLineEdit::returnPressed, this, &ToolsPage::refresh);
 
     watcher_ = new QFutureWatcher<Nezha::Tools::ToolResult>(this);
-    connect(watcher_, &QFutureWatcher::finished, this, &ToolsPage::on_future_finished);
+    connect(watcher_, &QFutureWatcher<Nezha::Tools::ToolResult>::finished,
+            this, &ToolsPage::on_future_finished);
 
     refresh();
+}
+
+ToolsPage::~ToolsPage() {
+    if (watcher_ && watcher_->isRunning()) {
+        watcher_->cancel();
+        watcher_->waitForFinished();
+    }
 }
 
 void ToolsPage::on_tool_selected(int row) {
@@ -158,6 +173,7 @@ void ToolsPage::refresh() {
     running_ = true;
     refresh_btn_->setEnabled(false);
     status_label_->setText("运行中…");
+    spinner_->start();
 
     Nezha::Tools::ToolOptions opts;
     opts.limit = limit_spin_->value();
@@ -180,8 +196,12 @@ void ToolsPage::refresh() {
 void ToolsPage::on_future_finished() {
     running_ = false;
     refresh_btn_->setEnabled(true);
+    spinner_->stop();
 
-    auto result = watcher_->result();
+    if (watcher_->future().resultCount() == 0) {
+        return;
+    }
+    auto result = watcher_->future().result();
     auto Pk = dark_ ? Theme::Strawberry : Theme::RosyDeep;
     auto Mu = dark_ ? Theme::DkMuted : Theme::LtMuted;
 

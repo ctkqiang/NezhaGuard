@@ -17,6 +17,7 @@
 
 #if defined(__APPLE__)
 #include <sys/sysctl.h>
+#include <libproc.h>
 #include <pwd.h>
 #elif defined(__linux__)
 #include <dirent.h>
@@ -24,7 +25,6 @@
 #endif
 
 namespace Nezha::Tools {
-namespace {
 
 ToolResult PsTool::run(const ToolOptions &opts) const {
     auto t0 = std::chrono::steady_clock::now();
@@ -150,12 +150,13 @@ ToolResult PsTool::run(const ToolOptions &opts) const {
             case SSTOP: state = "T"; break;
         }
 
-        int rss_kb = kp[i].kp_proc.p_pid > 0
-            ? static_cast<int>(kp[i].kp_eproc.e_vm.vm_rssize / 1024)
-            : 0;
+        struct proc_taskinfo ti{};
+        int rss_mb = 0;
+        if (proc_pidinfo(pid, PROC_PIDTASKINFO, 0, &ti, sizeof(ti)) > 0)
+            rss_mb = static_cast<int>(ti.pti_resident_size / 1048576);
 
         rows.push_back({std::to_string(pid), std::to_string(ppid), user,
-                        state, std::to_string(rss_kb / 1024.0).substr(0, 5),
+                        state, std::to_string(rss_mb),
                         std::string(kp[i].kp_proc.p_comm)});
     }
     std::free(buf);

@@ -17,11 +17,13 @@
 
 class QPushButton;
 class QLabel;
+class SpinnerWidget;
 
 class ToolsPage : public QFrame {
     Q_OBJECT
 public:
     explicit ToolsPage(bool dark, QWidget *parent = nullptr);
+    ~ToolsPage() override;
     void set_dark(bool d);
 
 private slots:
@@ -41,6 +43,7 @@ private:
     QLineEdit *pattern_edit_ = nullptr;
 
     QFutureWatcher<Nezha::Tools::ToolResult> *watcher_ = nullptr;
+    SpinnerWidget *spinner_ = nullptr;
     Nezha::Tools::ToolId current_tool_ = Nezha::Tools::ToolId::Ps;
     bool dark_ = true;
     bool running_ = false;

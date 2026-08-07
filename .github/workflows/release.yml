@@ -1,0 +1,174 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+
+  # ═══════════════════════════════════════════════════════════════
+  # macOS · .pkg
+  # ═══════════════════════════════════════════════════════════════
+  macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Qt6
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.8.*'
+          modules: qtconcurrent
+          cache: true
+
+      - name: Install libpcap & sqlite3
+        run: brew install libpcap sqlite3
+
+      - name: Configure
+        run: >
+          cmake -B build -G Ninja
+          -DCMAKE_BUILD_TYPE=Release
+          -DCMAKE_PREFIX_PATH="${{ env.Qt6_DIR }}"
+          -DCMAKE_OSX_ARCHITECTURES=arm64
+
+      - name: Build
+        run: cmake --build build --config Release --parallel
+
+      - name: Deploy Qt frameworks
+        run: |
+          macdeployqt build/NezhaGuard.app -verbose=1 -always-overwrite
+          # copy rules + config into bundle
+          mkdir -p build/NezhaGuard.app/Contents/Resources/rules
+          mkdir -p build/NezhaGuard.app/Contents/Resources/config
+          cp -R rules/ build/NezhaGuard.app/Contents/Resources/rules/
+          cp -R config/ build/NezhaGuard.app/Contents/Resources/config/
+
+      - name: Codesign
+        run: |
+          codesign --deep --force --verify --verbose \
+            --sign - build/NezhaGuard.app
+          codesign --verify --verbose build/NezhaGuard.app
+
+      - name: Create .pkg
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          pkgbuild --component build/NezhaGuard.app \
+            --install-location /Applications \
+            --identifier com.nezhaguard.siem \
+            --version "$VERSION" \
+            "NezhaGuard-${VERSION}-macOS-arm64.pkg"
+
+      - name: Upload .pkg
+        uses: softprops/action-gh-release@v2
+        with:
+          files: NezhaGuard-*.pkg
+
+  # ═══════════════════════════════════════════════════════════════
+  # Windows · .exe (zipped)
+  # ═══════════════════════════════════════════════════════════════
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Install Qt6
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.8.*'
+          arch: win64_msvc2022_64
+          modules: qtconcurrent
+          cache: true
+
+      - name: Install Npcap SDK
+        run: |
+          curl -L -o npcap-sdk.zip https://npcap.com/dist/npcap-sdk-1.79.zip
+          7z x npcap-sdk.zip -onpcap-sdk
+
+      - name: Install sqlite3
+        run: |
+          curl -L -o sqlite.zip https://sqlite.org/2025/sqlite-amalgamation-3490100.zip
+          7z x sqlite.zip -osqlite-src
+
+      - name: Build sqlite3 lib
+        shell: cmd
+        run: |
+          call "%ProgramFiles%\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
+          cl /c /O2 /MD sqlite-src\sqlite3.c /Fo:sqlite-src\sqlite3.obj
+          lib /OUT:sqlite-src\sqlite3.lib sqlite-src\sqlite3.obj
+
+      - name: Configure
+        shell: bash
+        run: >
+          cmake -B build -G "Visual Studio 17 2022" -A x64
+          -DCMAKE_BUILD_TYPE=Release
+          -DCMAKE_PREFIX_PATH="${{ env.Qt6_DIR }}"
+          -DPCAP_INCLUDE_DIR="${{ github.workspace }}/npcap-sdk/Include"
+          -DPCAP_LIB="${{ github.workspace }}/npcap-sdk/Lib/x64/wpcap.lib"
+          -DSQLITE3_INCLUDE_DIR="${{ github.workspace }}/sqlite-src"
+          -DSQLITE3_LIB="${{ github.workspace }}/sqlite-src/sqlite3.lib"
+
+      - name: Build
+        run: cmake --build build --config Release --parallel
+
+      - name: Deploy Qt DLLs
+        run: |
+          windeployqt build/Release/NezhaGuard.exe --verbose=1 --no-translations
+          mkdir build/Release/rules build/Release/config
+          xcopy /E /I rules build\Release\rules
+          xcopy /E /I config build\Release\config
+
+      - name: Package (zip)
+        shell: bash
+        run: |
+          cd build/Release
+          7z a "../../NezhaGuard-${GITHUB_REF_NAME}-Windows-x64.zip" *
+
+      - name: Upload .zip
+        uses: softprops/action-gh-release@v2
+        with:
+          files: NezhaGuard-*.zip
+
+  # ═══════════════════════════════════════════════════════════════
+  # Ubuntu · .deb
+  # ═══════════════════════════════════════════════════════════════
+  ubuntu:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y --no-install-recommends \
+            cmake ninja-build build-essential dpkg-dev \
+            qt6-base-dev libqt6concurrent6-dev \
+            libpcap-dev libsqlite3-dev \
+            qt6-tools-dev-tools
+
+      - name: Configure
+        run: >
+          cmake -B build -G Ninja
+          -DCMAKE_BUILD_TYPE=Release
+          -DCMAKE_INSTALL_PREFIX=/usr
+
+      - name: Build
+        run: cmake --build build --config Release --parallel
+
+      - name: Create .deb
+        run: |
+          cd build
+          DESTDIR=/tmp/nezhaguard-deb cmake --install . --prefix /usr
+          mkdir -p /tmp/nezhaguard-deb/DEBIAN
+          VERSION="${GITHUB_REF_NAME#v}"
+          printf 'Package: nezhaguard\nVersion: %s\nSection: net\nPriority: optional\nArchitecture: amd64\nDepends: libqt6widgets6t64 (>= 6.5.0), libpcap0.8t64 (>= 1.10.0), libsqlite3-0 (>= 3.40.0)\nMaintainer: 钟智强 <johnmelodymel@qq.com>\nDescription: 哪吒网络安全 SIEM — 蓝队主动防御平台\n' "$VERSION" > /tmp/nezhaguard-deb/DEBIAN/control
+          dpkg-deb --build /tmp/nezhaguard-deb "nezhaguard-${VERSION}-Linux-amd64.deb"
+
+      - name: Upload .deb
+        uses: softprops/action-gh-release@v2
+        with:
+          files: build/nezhaguard-*.deb

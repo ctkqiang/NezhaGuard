@@ -99,6 +99,8 @@ if(NOT CLI_ONLY)
         src/views/radar_widget.h
         src/views/tools_page.cc
         src/views/tools_page.h
+        src/views/spinner_widget.cc
+        src/views/spinner_widget.h
         src/views/theme.h
     )
     set(NEZHA_ALL_SOURCES ${NEZHA_CORE_SOURCES} ${NEZHA_GUI_SOURCES})
