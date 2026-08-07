@@ -4,6 +4,7 @@
 #include "gui_sink.h"
 #include "detail_panel.h"
 #include "radar_widget.h"
+#include "tools_page.h"
 #include "theme.h"
 #include <unistd.h>
 
@@ -355,7 +356,7 @@ monitor::monitor(QWidget *parent) : QMainWindow(parent), ui(new Ui::monitor) {
         ui->log_search_box->setFocus();
     });
     new QShortcut(QKeySequence(QStringLiteral("Ctrl+L")), this, [this]() { clear_logs(); });
-    for (int k = 1; k <= 7; ++k) {
+    for (int k = 1; k <= 8; ++k) {
         new QShortcut(QKeySequence(QStringLiteral("Ctrl+%1").arg(k)), this, [this, k]() {
             ui->sidebar->setCurrentRow(k - 1);
         });
@@ -656,7 +657,7 @@ void monitor::apply_theme(bool d) {
 
     // ── global ──
     s += QStringLiteral(
-        "* { font-family:\"SF Pro Rounded\",\"PingFang SC\",system-ui,sans-serif; "
+        "* { font-family:\"SF Pro Rounded\",\"-apple-system\",sans-serif; "
         "selection-background-color:") + Sel + QStringLiteral("; selection-color:") + Tx + QStringLiteral("; } "
         "QMainWindow { background:") + Bg + QStringLiteral("; } "
         "QLabel { color:") + Tx + QStringLiteral("; background:transparent; } ");
@@ -850,6 +851,7 @@ void monitor::setup_sidebar() {
         QStringLiteral("蜜罐监控"),
         QStringLiteral("网络信息"),
         QStringLiteral("流量端点"),
+        QStringLiteral("系统工具"),
         QStringLiteral("系统配置")
     };
     ui->sidebar->clear();
@@ -904,7 +906,7 @@ void monitor::animate_page_switch(int row) {
     });
     out_anim->start(QAbstractAnimation::DeleteWhenStopped);
 
-    if (row == 6) load_settings_configs();
+    if (row == 7) load_settings_configs();
 }
 
 void monitor::update_clock() {
@@ -1207,6 +1209,8 @@ void monitor::init_models() {
     setup_network_page();
     // traffic page
     setup_traffic_page();
+    // tools page
+    setup_tools_page();
     for (auto *t: {ui->local_ip_table, ui->arp_table, ui->quarantine_table})
         setup_network_table(t);
 

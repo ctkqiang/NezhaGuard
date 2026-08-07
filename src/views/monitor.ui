@@ -61,6 +61,7 @@
          <item><property name="text"><string>  蜜罐监控</string></property></item>
          <item><property name="text"><string>  网络信息</string></property></item>
          <item><property name="text"><string>  流量端点</string></property></item>
+         <item><property name="text"><string>  系统工具</string></property></item>
          <item><property name="text"><string>  系统配置</string></property></item>
         </widget>
        </item>
@@ -279,6 +280,15 @@
            <property name="leftMargin"><number>22</number></property><property name="topMargin"><number>18</number></property>
            <property name="rightMargin"><number>22</number></property><property name="bottomMargin"><number>18</number></property>
            <item><widget class="QLabel" name="traffic_title"><property name="text"><string>流量端点追踪</string></property></widget></item>
+          </layout>
+         </widget>
+         <!-- ============ 系统工具 ============ -->
+         <widget class="QWidget" name="page_tools">
+          <layout class="QVBoxLayout" name="tools_layout">
+           <property name="spacing"><number>14</number></property>
+           <property name="leftMargin"><number>22</number></property><property name="topMargin"><number>18</number></property>
+           <property name="rightMargin"><number>22</number></property><property name="bottomMargin"><number>18</number></property>
+           <item><widget class="QLabel" name="tools_title"><property name="text"><string>系统工具</string></property></widget></item>
           </layout>
          </widget>
          <!-- ============ 系统配置 ============ -->

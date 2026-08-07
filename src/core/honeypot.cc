@@ -132,8 +132,7 @@ namespace Nezha::Core {
                     cb(e);
                 }
             } else {
-                int client = accept(fd, nullptr, nullptr);
-                if (client >= 0) {
+                if (int client = accept(fd, nullptr, nullptr); client >= 0) {
                     if (cb) {
                         event e{};
                         e.ts_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(
