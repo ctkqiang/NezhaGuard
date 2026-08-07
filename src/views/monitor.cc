@@ -366,7 +366,7 @@ monitor::monitor(QWidget *parent) : QMainWindow(parent), ui(new Ui::monitor) {
     new QShortcut(QKeySequence::Quit, this, [this]() { tray_quit(); });
     new QShortcut(QKeySequence::Close, this, [this]() { hide(); });
     new QShortcut(QKeySequence::Preferences, this, [this]() {
-        ui->sidebar->setCurrentRow(5);
+        ui->sidebar->setCurrentRow(7);
     });
 
     sparkline_timer_ = new QTimer(this);
@@ -627,6 +627,7 @@ void monitor::apply_theme(bool d) {
     if (honey_delegate_) honey_delegate_->dark = d;
     if (sparkline_widget_) sparkline_widget_->dark = d;
     if (radar_widget_) radar_widget_->dark = d;
+    if (tools_page_) tools_page_->set_dark(d);
     if (log_detail_panel_) log_detail_panel_->set_dark(d);
     if (alert_detail_panel_) alert_detail_panel_->set_dark(d);
     if (honey_detail_panel_) honey_detail_panel_->set_dark(d);
@@ -1112,6 +1113,29 @@ void monitor::setup_traffic_page() {
 
     root->addWidget(card, 1);
     root->addStretch();
+}
+
+void monitor::setup_tools_page() {
+    auto *page = ui->page_tools;
+    if (page->layout()) {
+        QLayoutItem *child;
+        while ((child = page->layout()->takeAt(0)) != nullptr) {}
+        delete page->layout();
+    }
+
+    auto *root = new QVBoxLayout(page);
+    root->setSpacing(14);
+    root->setContentsMargins(22, 18, 22, 18);
+
+    auto *hdr = new QHBoxLayout();
+    ui->tools_title->setStyleSheet(
+        QStringLiteral("font-size:14px; font-weight:700; background:transparent;"));
+    hdr->addWidget(ui->tools_title);
+    hdr->addStretch();
+    root->addLayout(hdr);
+
+    tools_page_ = new ToolsPage(dark_mode_, page);
+    root->addWidget(tools_page_, 1);
 }
 
 // -- models --

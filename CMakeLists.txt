@@ -57,6 +57,28 @@ set(NEZHA_CORE_SOURCES
     src/service/database_helper.h
     src/service/notifier.cc
     src/service/notifier.h
+    src/tools/types.h
+    src/tools/exec.cc
+    src/tools/exec.h
+    src/tools/system_tool.cc
+    src/tools/system_tool.h
+    src/tools/grep.cc
+    src/tools/grep.h
+    src/tools/history.cc
+    src/tools/history.h
+    src/tools/ps.cc
+    src/tools/ps.h
+    src/tools/netstat.cc
+    src/tools/netstat.h
+    src/tools/lastlog.cc
+    src/tools/lastlog.h
+    src/tools/lastb.cc
+    src/tools/lastb.h
+    src/tools/faillog.cc
+    src/tools/faillog.h
+    src/tools/journalctl.cc
+    src/tools/journalctl.h
+    src/tools/tools.h
     src/contants.h
 )
 
@@ -75,13 +97,15 @@ if(NOT CLI_ONLY)
         src/views/detail_panel.h
         src/views/radar_widget.cc
         src/views/radar_widget.h
+        src/views/tools_page.cc
+        src/views/tools_page.h
         src/views/theme.h
     )
     set(NEZHA_ALL_SOURCES ${NEZHA_CORE_SOURCES} ${NEZHA_GUI_SOURCES})
 else()
     add_compile_definitions(NEZHAGUARD_CLI_ONLY)
     set(NEZHA_ALL_SOURCES ${NEZHA_CORE_SOURCES} main.cc
-            src/service/macos_notification.mm)
+            src/embedded/os/macos_notification.mm)
 endif()
 
 if(APPLE AND NOT CLI_ONLY)

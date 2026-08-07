@@ -42,6 +42,7 @@
 #if defined(__APPLE__)
 #include "src/embedded/os/macos_notification.h"
 #endif
+#include "src/tools/system_tool.h"
 
 using namespace Nezha;
 
@@ -729,6 +730,10 @@ int main(const int argc, char *argv[]) {
             Log::Logger::instance().set_level(Log::Level::Debug);
         } else if (std::strcmp(argv[i], "--no-gui") == 0) {
             no_gui = true;
+        } else if (std::strcmp(argv[i], "--tool") == 0 && i + 1 < argc) {
+            std::vector<std::string> extra;
+            for (int j = i + 2; j < argc; ++j) extra.emplace_back(argv[j]);
+            return Nezha::Tools::run_cli_tool(argv[i + 1], extra);
         }
     }
 

@@ -4,8 +4,18 @@
 
 #include "system_tool.h"
 #include "types.h"
+#include "grep.h"
+#include "history.h"
+#include "ps.h"
+#include "netstat.h"
+#include "lastlog.h"
+#include "lastb.h"
+#include "faillog.h"
+#include "journalctl.h"
 
+#include <algorithm>
 #include <iostream>
+#include <memory>
 #include <sstream>
 
 namespace Nezha::Tools {
@@ -41,6 +51,27 @@ std::string format_plain(const ToolResult &result) {
         ss << "… (还有 " << (result.rows.size() - limit) << " 行)\n";
 
     return ss.str();
+}
+
+std::unique_ptr<SystemTool> make_tool(ToolId id) {
+    switch (id) {
+        case ToolId::Grep:       return std::make_unique<GrepTool>();
+        case ToolId::History:    return std::make_unique<HistoryTool>();
+        case ToolId::Ps:         return std::make_unique<PsTool>();
+        case ToolId::Netstat:    return std::make_unique<NetstatTool>();
+        case ToolId::Lastlog:    return std::make_unique<LastlogTool>();
+        case ToolId::Lastb:      return std::make_unique<LastbTool>();
+        case ToolId::Faillog:    return std::make_unique<FaillogTool>();
+        case ToolId::Journalctl: return std::make_unique<JournalctlTool>();
+    }
+    return nullptr;
+}
+
+std::vector<ToolId> all_tool_ids() {
+    return {
+        ToolId::Lastlog, ToolId::Journalctl, ToolId::Lastb, ToolId::Faillog,
+        ToolId::Netstat, ToolId::Ps, ToolId::History, ToolId::Grep,
+    };
 }
 
 int run_cli_tool(std::string_view name, const std::vector<std::string> &extra_args) {
