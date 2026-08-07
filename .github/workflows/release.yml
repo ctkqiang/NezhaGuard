@@ -34,19 +34,55 @@ jobs:
       - name: Deploy Qt frameworks
         run: |
           macdeployqt build/NezhaGuard.app -verbose=1 -always-overwrite
-          # copy rules + config into bundle
-          mkdir -p build/NezhaGuard.app/Contents/Resources/rules
-          mkdir -p build/NezhaGuard.app/Contents/Resources/config
+          mkdir -p build/NezhaGuard.app/Contents/Resources/{rules,config}
           cp -R rules/ build/NezhaGuard.app/Contents/Resources/rules/
           cp -R config/ build/NezhaGuard.app/Contents/Resources/config/
 
-      - name: Codesign
+      - name: Import Developer ID cert
+        id: cert
+        env:
+          DEV_CERT_B64: ${{ secrets.APPLE_DEVELOPER_CERT_B64 }}
+          DEV_CERT_PASS: ${{ secrets.APPLE_DEVELOPER_CERT_PASS }}
+          KEYCHAIN_PASS: ${{ secrets.APPLE_KEYCHAIN_PASS }}
+        if: env.DEV_CERT_B64 != ''
+        run: |
+          echo "$DEV_CERT_B64" | base64 -d > /tmp/dev_id.p12
+          security create-keychain -p "$KEYCHAIN_PASS" build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p "$KEYCHAIN_PASS" build.keychain
+          security import /tmp/dev_id.p12 -k build.keychain -P "$DEV_CERT_PASS" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASS" build.keychain
+          rm /tmp/dev_id.p12
+          echo "signed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Sign .app
+        if: steps.cert.outputs.signed == 'true'
+        run: |
+          codesign --deep --force --verify --verbose \
+            --options runtime --timestamp \
+            --sign "Developer ID Application" \
+            build/NezhaGuard.app
+          codesign --verify --verbose build/NezhaGuard.app
+
+      - name: Sign .app (ad-hoc fallback)
+        if: steps.cert.outputs.signed != 'true'
         run: |
           codesign --deep --force --verify --verbose \
             --sign - build/NezhaGuard.app
-          codesign --verify --verbose build/NezhaGuard.app
 
-      - name: Create .pkg
+      - name: Create .pkg (signed)
+        if: steps.cert.outputs.signed == 'true'
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          pkgbuild --component build/NezhaGuard.app \
+            --install-location /Applications \
+            --identifier com.nezhaguard.siem \
+            --version "$VERSION" \
+            --sign "Developer ID Installer" \
+            "NezhaGuard-${VERSION}-macOS-arm64.pkg"
+
+      - name: Create .pkg (unsigned)
+        if: steps.cert.outputs.signed != 'true'
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
           pkgbuild --component build/NezhaGuard.app \
@@ -54,6 +90,24 @@ jobs:
             --identifier com.nezhaguard.siem \
             --version "$VERSION" \
             "NezhaGuard-${VERSION}-macOS-arm64.pkg"
+
+      - name: Notarize .pkg
+        if: steps.cert.outputs.signed == 'true'
+        env:
+          APPLE_ID: ${{ secrets.APPLE_NOTARY_USER }}
+          APPLE_PASS: ${{ secrets.APPLE_NOTARY_PASSWORD }}
+          APPLE_TEAM: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          xcrun notarytool submit NezhaGuard-*.pkg \
+            --apple-id "$APPLE_ID" \
+            --password "$APPLE_PASS" \
+            --team-id "$APPLE_TEAM" \
+            --wait
+          xcrun stapler staple NezhaGuard-*.pkg
+
+      - name: Cleanup keychain
+        if: always()
+        run: security delete-keychain build.keychain || true
 
       - name: Upload .pkg
         uses: softprops/action-gh-release@v2
@@ -75,8 +129,10 @@ jobs:
         shell: bash
         run: |
           pip install aqtinstall
-          aqt install-qt windows desktop 6.7.2 win64_msvc2022_64 -m qtconcurrent qtbase qttools
-          echo "Qt6_DIR=${GITHUB_WORKSPACE}/6.7.2/msvc2022_64" >> "$GITHUB_ENV"
+          aqt install-qt windows desktop 6.7.2 win64_msvc2022_64 -m qtconcurrent qttools
+          QT6_DIR="${GITHUB_WORKSPACE}/6.7.2/msvc2022_64"
+          echo "Qt6_DIR=${QT6_DIR}" >> "$GITHUB_ENV"
+          echo "${QT6_DIR}/bin" >> "$GITHUB_PATH"
 
       - name: Install Npcap SDK
         shell: bash
@@ -107,9 +163,10 @@ jobs:
         run: cmake --build build --config Release --parallel
 
       - name: Deploy Qt DLLs
+        shell: cmd
         run: |
-          windeployqt build/Release/NezhaGuard.exe --verbose=1 --no-translations
-          mkdir build/Release/rules build/Release/config
+          windeployqt build\Release\NezhaGuard.exe --verbose=1 --no-translations
+          mkdir build\Release\rules build\Release\config
           xcopy /E /I rules build\Release\rules
           xcopy /E /I config build\Release\config
 
