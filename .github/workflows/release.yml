@@ -16,12 +16,12 @@ jobs:
   macos:
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Install Qt6
         uses: jurplel/install-qt-action@v4
         with:
-          version: '6.8.*'
+          version: '6.7.2'
           modules: qtconcurrent
           cache: true
 
@@ -73,31 +73,30 @@ jobs:
   windows:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: ilammy/msvc-dev-cmd@v1
+      - uses: actions/checkout@v5
+
+      - name: Setup MSVC
+        uses: ilammy/msvc-dev-cmd@v1
 
       - name: Install Qt6
         uses: jurplel/install-qt-action@v4
         with:
-          version: '6.8.*'
+          version: '6.7.2'
           arch: win64_msvc2022_64
           modules: qtconcurrent
           cache: true
 
       - name: Install Npcap SDK
+        shell: bash
         run: |
           curl -L -o npcap-sdk.zip https://npcap.com/dist/npcap-sdk-1.79.zip
           7z x npcap-sdk.zip -onpcap-sdk
 
-      - name: Install sqlite3
-        run: |
-          curl -L -o sqlite.zip https://sqlite.org/2025/sqlite-amalgamation-3490100.zip
-          7z x sqlite.zip -osqlite-src
-
       - name: Build sqlite3 lib
         shell: cmd
         run: |
-          call "%ProgramFiles%\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
+          curl -L -o sqlite.zip https://sqlite.org/2025/sqlite-amalgamation-3490100.zip
+          7z x sqlite.zip -osqlite-src
           cl /c /O2 /MD sqlite-src\sqlite3.c /Fo:sqlite-src\sqlite3.obj
           lib /OUT:sqlite-src\sqlite3.lib sqlite-src\sqlite3.obj
 
@@ -139,16 +138,16 @@ jobs:
   ubuntu:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Install dependencies
         run: |
           sudo apt update
           sudo apt install -y --no-install-recommends \
             cmake ninja-build build-essential dpkg-dev \
-            qt6-base-dev libqt6concurrent6-dev \
+            qt6-base-dev libqt6concurrent-dev \
             libpcap-dev libsqlite3-dev \
-            qt6-tools-dev-tools
+            qt6-tools-dev qt6-l10n-tools
 
       - name: Configure
         run: >
