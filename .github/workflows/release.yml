@@ -129,7 +129,7 @@ jobs:
         shell: bash
         run: |
           pip install aqtinstall==3.2.1
-          aqt install-qt windows desktop 6.7.2 win64_msvc2022_64 -m all
+          aqt install-qt windows desktop 6.7.2 win64_msvc2022_64
           QT6_DIR="${GITHUB_WORKSPACE}/6.7.2/msvc2022_64"
           echo "Qt6_DIR=${QT6_DIR}" >> "$GITHUB_ENV"
           echo "${QT6_DIR}/bin" >> "$GITHUB_PATH"
