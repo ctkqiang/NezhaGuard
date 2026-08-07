@@ -18,21 +18,14 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - name: Install Qt6
-        uses: jurplel/install-qt-action@v4
-        with:
-          version: '6.7.2'
-          modules: qtconcurrent
-          cache: true
-
-      - name: Install libpcap & sqlite3
-        run: brew install libpcap sqlite3
+      - name: Install Qt6, pcap & sqlite3
+        run: brew install qt@6 libpcap sqlite3
 
       - name: Configure
         run: >
           cmake -B build -G Ninja
           -DCMAKE_BUILD_TYPE=Release
-          -DCMAKE_PREFIX_PATH="${{ env.Qt6_DIR }}"
+          -DCMAKE_PREFIX_PATH=/opt/homebrew/opt/qt@6
           -DCMAKE_OSX_ARCHITECTURES=arm64
 
       - name: Build
@@ -78,24 +71,23 @@ jobs:
       - name: Setup MSVC
         uses: ilammy/msvc-dev-cmd@v1
 
-      - name: Install Qt6
-        uses: jurplel/install-qt-action@v4
-        with:
-          version: '6.7.2'
-          arch: win64_msvc2022_64
-          modules: qtconcurrent
-          cache: true
+      - name: Install Qt6 (aqtinstall)
+        shell: bash
+        run: |
+          pip install aqtinstall
+          aqt install-qt windows desktop 6.7.2 win64_msvc2022_64 -m qtconcurrent qtbase qttools
+          echo "Qt6_DIR=${GITHUB_WORKSPACE}/6.7.2/msvc2022_64" >> "$GITHUB_ENV"
 
       - name: Install Npcap SDK
         shell: bash
         run: |
-          curl -L -o npcap-sdk.zip https://npcap.com/dist/npcap-sdk-1.79.zip
+          curl -fsSL -o npcap-sdk.zip https://npcap.com/dist/npcap-sdk-1.79.zip
           7z x npcap-sdk.zip -onpcap-sdk
 
       - name: Build sqlite3 lib
         shell: cmd
         run: |
-          curl -L -o sqlite.zip https://sqlite.org/2025/sqlite-amalgamation-3490100.zip
+          curl -fsSL -o sqlite.zip https://sqlite.org/2025/sqlite-amalgamation-3490100.zip
           7z x sqlite.zip -osqlite-src
           cl /c /O2 /MD sqlite-src\sqlite3.c /Fo:sqlite-src\sqlite3.obj
           lib /OUT:sqlite-src\sqlite3.lib sqlite-src\sqlite3.obj
@@ -145,9 +137,10 @@ jobs:
           sudo apt update
           sudo apt install -y --no-install-recommends \
             cmake ninja-build build-essential dpkg-dev \
-            qt6-base-dev libqt6concurrent-dev \
+            qt6-base-dev qt6-base-private-dev \
+            libqt6concurrent-dev libqt6widgets6t64 \
             libpcap-dev libsqlite3-dev \
-            qt6-tools-dev qt6-l10n-tools
+            qt6-tools-dev
 
       - name: Configure
         run: >
