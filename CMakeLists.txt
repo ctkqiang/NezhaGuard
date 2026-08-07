@@ -80,10 +80,15 @@ if(NOT CLI_ONLY)
     set(NEZHA_ALL_SOURCES ${NEZHA_CORE_SOURCES} ${NEZHA_GUI_SOURCES})
 else()
     add_compile_definitions(NEZHAGUARD_CLI_ONLY)
-    set(NEZHA_ALL_SOURCES ${NEZHA_CORE_SOURCES} main.cc)
+    set(NEZHA_ALL_SOURCES ${NEZHA_CORE_SOURCES} main.cc
+            src/service/macos_notification.mm)
 endif()
 
 if(APPLE AND NOT CLI_ONLY)
+    set(NEZHA_ALL_SOURCES ${NEZHA_ALL_SOURCES}
+        src/embedded/os/macos_notification.mm
+        src/embedded/os/macos_notification.h
+    )
     add_executable(NezhaGuard MACOSX_BUNDLE
         ${NEZHA_ALL_SOURCES}
         src/views/app_icon.svg
@@ -133,7 +138,12 @@ find_path(SQLITE3_INCLUDE_DIR sqlite3.h REQUIRED
 target_include_directories(NezhaGuard PRIVATE ${SQLITE3_INCLUDE_DIR})
 
 if(NOT CLI_ONLY)
-    target_link_libraries(NezhaGuard PRIVATE ${PCAP_LIB} Qt6::Widgets Qt6::Concurrent ${SQLITE3_LIB})
+    if(APPLE)
+        find_library(USERNOTIFICATIONS_LIB UserNotifications REQUIRED)
+        target_link_libraries(NezhaGuard PRIVATE ${PCAP_LIB} Qt6::Widgets Qt6::Concurrent ${SQLITE3_LIB} ${USERNOTIFICATIONS_LIB})
+    else()
+        target_link_libraries(NezhaGuard PRIVATE ${PCAP_LIB} Qt6::Widgets Qt6::Concurrent ${SQLITE3_LIB})
+    endif()
 else()
     target_link_libraries(NezhaGuard PRIVATE ${PCAP_LIB} ${SQLITE3_LIB})
 endif()

@@ -125,41 +125,71 @@ void RadarWidget::paintEvent(QPaintEvent *) {
     p.drawEllipse(QPoint(sx, sy), 3, 3);
 
     // devices
-    QFont df(QStringLiteral("SF Mono"), 8);
+    QFont df(QStringLiteral("SF Mono"), 9);
     df.setStyleHint(QFont::Monospace);
     for (const auto &d : devices_) {
         uint32_t hash = qHash(d.ip) & 0xFFFF;
         double angle  = (hash % 360) * M_PI / 180.0;
-        double dist   = 0.22 + (hash >> 8) / 65535.0 * 0.70;
+        double dist   = 0.18 + (hash / 65535.0) * 0.72;
         int dx = cx + static_cast<int>(r * dist * std::cos(angle));
         int dy = cy - static_cast<int>(r * dist * std::sin(angle));
 
-        // breathing aura
-        double ar = 6.0 + std::sin(pulse_phase_ + angle) * 3.0;
-        QColor au(dark ? Theme::Strawberry : Theme::RosyDeep);
-        au.setAlphaF(0.12 + std::cos(pulse_phase_ + angle) * 0.06);
-        p.setBrush(au);
-        p.setPen(Qt::NoPen);
-        p.drawEllipse(QPoint(dx, dy), static_cast<int>(ar), static_cast<int>(ar));
+        auto dotColor = dark ? QColor(Theme::Strawberry) : QColor(Theme::RosyDeep);
+        auto glowColor = dark ? QColor(Theme::StrawberryLight) : QColor(Theme::RosyLight);
 
-        // ring
-        QColor rc(dark ? Theme::StrawberryLight : Theme::RosyDeep);
-        rc.setAlpha(130);
+        // outer glow ripple — sonar ping expanding ring
+        double ripplePhase = std::fmod(pulse_phase_ * 1.7 + angle, 2.0 * M_PI);
+        double rippleR = 5.0 + ripplePhase * 7.0;
+        QColor rp(dark ? Theme::Strawberry : Theme::RosyDeep);
+        rp.setAlphaF(std::max(0.0, 0.18 - ripplePhase * 0.06));
+        p.setPen(QPen(rp, 0.8));
         p.setBrush(Qt::NoBrush);
-        p.setPen(QPen(rc, 1.0));
-        p.drawEllipse(QPoint(dx, dy), 5, 5);
+        p.drawEllipse(QPoint(dx, dy), static_cast<int>(rippleR), static_cast<int>(rippleR));
 
-        // dot
-        p.setBrush(dark ? QColor(Theme::Strawberry) : QColor(Theme::RosyDeep));
+        // mid aura — soft breathing glow
+        double ar = 7.0 + std::sin(pulse_phase_ + angle) * 3.5;
+        for (int layer = 2; layer >= 0; --layer) {
+            double lr = ar - layer * 2.5;
+            if (lr < 1.0) continue;
+            QColor au(glowColor);
+            au.setAlphaF(0.06 + layer * 0.04 + std::cos(pulse_phase_ + angle) * 0.03);
+            p.setBrush(au);
+            p.setPen(Qt::NoPen);
+            p.drawEllipse(QPoint(dx, dy), static_cast<int>(lr), static_cast<int>(lr));
+        }
+
+        // ring — pulsing slightly
+        double ringR = 5.0 + std::sin(pulse_phase_ + angle) * 0.8;
+        QColor rc(glowColor);
+        rc.setAlpha(160);
+        p.setBrush(Qt::NoBrush);
+        p.setPen(QPen(rc, 1.2));
+        p.drawEllipse(QPoint(dx, dy), static_cast<int>(ringR), static_cast<int>(ringR));
+
+        // dot — radial gradient for depth
+        double dotR = 3.5;
+        QRadialGradient dg(dx - 0.5, dy - 0.5, dotR);
+        dg.setColorAt(0.0, dark ? QColor(Theme::Cream) : QColor(255, 255, 255));
+        dg.setColorAt(0.35, dark ? QColor(Theme::StrawberryLight) : QColor(Theme::RosyLight));
+        dg.setColorAt(1.0, dotColor);
         p.setPen(Qt::NoPen);
-        p.drawEllipse(QPoint(dx, dy), 3, 3);
+        p.setBrush(dg);
+        p.drawEllipse(QPoint(dx, dy), static_cast<int>(dotR), static_cast<int>(dotR));
 
-        // label
+        // label with subtle badge background
         auto parts = d.ip.split('.');
+        QString labelText = parts.size() == 4 ? QStringLiteral(".%1").arg(parts.last()) : d.ip;
+        QFontMetrics fm(df);
+        int labelW = fm.horizontalAdvance(labelText) + 14;
+        QRect labelBg(dx - labelW / 2, dy - 24, labelW, 16);
+        QColor lb(dark ? QColor(Theme::DkCard) : QColor(Theme::LtCard));
+        lb.setAlpha(180);
+        p.setBrush(lb);
+        p.setPen(Qt::NoPen);
+        p.drawRoundedRect(labelBg, 7, 7);
         p.setPen(fg);
         p.setFont(df);
-        p.drawText(QRect(dx - 20, dy - 22, 40, 14), Qt::AlignCenter,
-                   parts.size() == 4 ? QStringLiteral(".%1").arg(parts.last()) : d.ip);
+        p.drawText(labelBg, Qt::AlignCenter, labelText);
     }
 
     // center core

@@ -5,6 +5,9 @@
 #include "notifier.h"
 #include "../core/detector.h"
 #include "../utilities/logger.h"
+#if defined(__APPLE__)
+#include "../embedded/os/macos_notification.h"
+#endif
 
 #include <algorithm>
 #include <filesystem>
@@ -247,11 +250,7 @@ namespace Nezha::Service {
                 gui_callback_(title, body);
             } else {
 #if defined(__APPLE__)
-                std::string cmd = std::format(
-                    "osascript -e 'display notification \"{}\" with title \"{}\" sound name \"Glass\"' 2>/dev/null",
-                    body, title
-                );
-                std::system(cmd.c_str());
+                macos_send_notification(title, body);
 #elif defined(__linux__)
                 std::string cmd = std::format("notify-send '{}' '{}' 2>/dev/null", title, body);
                 std::system(cmd.c_str());
@@ -431,11 +430,7 @@ namespace Nezha::Service {
         }
 
 #if defined(__APPLE__)
-        std::string cmd = std::format(
-            "osascript -e 'display notification \"{}\" with title \"{}\" sound name \"Glass\"' 2>/dev/null",
-            escape_json(body), escape_json(title)
-        );
-        std::system(cmd.c_str());
+        macos_send_notification(title, body);
 #elif defined(__linux__)
         std::string cmd = std::format(
             "notify-send '{}' '{}' 2>/dev/null", title, body

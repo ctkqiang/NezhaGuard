@@ -39,6 +39,9 @@
 #include "src/service/database_helper.h"
 #include "src/service/notifier.h"
 #include "src/utilities/logger.h"
+#if defined(__APPLE__)
+#include "src/embedded/os/macos_notification.h"
+#endif
 
 using namespace Nezha;
 
@@ -284,7 +287,7 @@ static int run_cli_mode() {
     NZ_INFO("  ✓ 日志引擎: {} sources", sizeof(log_paths) / sizeof(log_paths[0]));
 
     if constexpr (Configuration::ApplicationConstants::ShowOtherApplicationLogs) {
-        int n = app_monitor.load_from_file((paths.config_dir + "monitor_apps.conf").c_str());
+        int n = app_monitor.load_from_file(paths.config_dir + "monitor_apps.conf");
         if (n > 0) {
             app_monitor.start();
             NZ_INFO("  ✓ 应用监控: {} apps", n);
@@ -480,6 +483,9 @@ static int run_gui_mode(int argc, char *argv[]) {
 
     monitor window;
     window.init_models();
+#if defined(__APPLE__)
+    Service::macos_request_notification_permission();
+#endif
     window.showMaximized();
 
     if (auto sink = window.gui_sink()) Log::Logger::instance().add_sink(sink);
@@ -495,10 +501,7 @@ static int run_gui_mode(int argc, char *argv[]) {
     Service::Notifier::instance().load_config_dir(paths.config_dir + "notifier");
     Service::Notifier::instance().set_gui_callback([](const std::string &title, const std::string &body) {
 #if defined(__APPLE__)
-        const std::string cmd = std::format(
-            R"(osascript -e 'display notification "{}" with title "{}" sound name "Glass"' 2>/dev/null)",
-            body, title);
-        std::system(cmd.c_str());
+        Service::macos_send_notification(title, body);
 #elif defined(__linux__)
         std::string cmd = std::format("notify-send '{}' '{}' 2>/dev/null", title, body);
         std::system(cmd.c_str());
@@ -527,7 +530,7 @@ static int run_gui_mode(int argc, char *argv[]) {
         int cnt = static_cast<int>(a.count);
         double sc = a.score;
 
-        QString sev = [](Severity s) -> QString {
+        QString sev = [](const Severity s) -> QString {
             switch (s) {
                 case Severity::Critical: return QStringLiteral("CRIT");
                 case Severity::Error: return QStringLiteral("ERROR");
@@ -537,17 +540,21 @@ static int run_gui_mode(int argc, char *argv[]) {
         }(a.level);
 
         QMetaObject::invokeMethod(&window, [window = &window, ts_ns, type_str, ip_str, cnt, sc, sev, type = a.type]() {
-            auto ns = static_cast<time_t>(ts_ns / 1'000'000'000ULL);
+            const auto ns = static_cast<time_t>(ts_ns / 1'000'000'000ULL);
             char ts[16];
+
             std::strftime(ts, sizeof(ts), "%H:%M:%S", std::localtime(&ns));
-            auto qIp = QString::fromUtf8(ip_str.c_str());
-            auto qType = QString::fromUtf8(type_str.c_str());
+
+            const auto qIp = QString::fromUtf8(ip_str.c_str());
+            const auto qType = QString::fromUtf8(type_str.c_str());
+
             window->append_alert(
                 QString::fromUtf8(ts), qType, qIp, cnt, sc, sev);
             window->record_attacker(qIp, sc, qType);
+
             // ICMP/scan alerts also show in honeypot tab
             if (type == Core::AttackType::PortScan || type == Core::AttackType::Scanner) {
-                auto now = QDateTime::currentDateTime().toString(QStringLiteral("yyyy-MM-dd HH:mm:ss.zzz"));
+                const auto now = QDateTime::currentDateTime().toString(QStringLiteral("yyyy-MM-dd HH:mm:ss.zzz"));
                 window->append_honeypot(now, qIp, 0, 0, QStringLiteral("ICMP 扫描"));
             }
         }, Qt::QueuedConnection);
@@ -726,7 +733,8 @@ int main(const int argc, char *argv[]) {
     }
 
 #ifdef NEZHAGUARD_CLI_ONLY
-    (void) argc; (void) no_gui;
+    (void) argc;
+    (void) no_gui;
     return run_cli_mode();
 #else
     if (no_gui) {
