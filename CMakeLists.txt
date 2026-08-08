@@ -53,6 +53,10 @@ set(NEZHA_CORE_SOURCES
     src/core/active_response.h
     src/core/application_monitor.cc
     src/core/application_monitor.h
+    src/core/sbom_scanner.cc
+    src/core/sbom_scanner.h
+    src/core/shellcode_detector.cc
+    src/core/shellcode_detector.h
     src/service/database_helper.cc
     src/service/database_helper.h
     src/service/notifier.cc
@@ -79,6 +83,8 @@ set(NEZHA_CORE_SOURCES
     src/tools/journalctl.cc
     src/tools/journalctl.h
     src/tools/tools.h
+    src/tools/installed_apps.cc
+    src/tools/installed_apps.h
     src/contants.h
 )
 
@@ -101,6 +107,10 @@ if(NOT CLI_ONLY)
         src/views/tools_page.h
         src/views/spinner_widget.cc
         src/views/spinner_widget.h
+        src/views/process_widget.cc
+        src/views/process_widget.h
+        src/views/app_security_page.cc
+        src/views/app_security_page.h
         src/views/theme.h
     )
     set(NEZHA_ALL_SOURCES ${NEZHA_CORE_SOURCES} ${NEZHA_GUI_SOURCES})

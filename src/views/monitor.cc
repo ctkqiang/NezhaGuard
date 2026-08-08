@@ -5,6 +5,8 @@
 #include "detail_panel.h"
 #include "radar_widget.h"
 #include "tools_page.h"
+#include "process_widget.h"
+#include "app_security_page.h"
 #include "theme.h"
 #include <unistd.h>
 
@@ -628,6 +630,7 @@ void monitor::apply_theme(bool d) {
     if (sparkline_widget_) sparkline_widget_->dark = d;
     if (radar_widget_) radar_widget_->dark = d;
     if (tools_page_) tools_page_->set_dark(d);
+    if (app_security_page_) app_security_page_->set_dark(d);
     if (log_detail_panel_) log_detail_panel_->set_dark(d);
     if (alert_detail_panel_) alert_detail_panel_->set_dark(d);
     if (honey_detail_panel_) honey_detail_panel_->set_dark(d);
@@ -853,6 +856,7 @@ void monitor::setup_sidebar() {
         QStringLiteral("网络信息"),
         QStringLiteral("流量端点"),
         QStringLiteral("系统工具"),
+        QStringLiteral("应用安全"),
         QStringLiteral("系统配置")
     };
     ui->sidebar->clear();
@@ -1138,6 +1142,29 @@ void monitor::setup_tools_page() {
     root->addWidget(tools_page_, 1);
 }
 
+void monitor::setup_app_security_page() {
+    auto *page = ui->page_app_security;
+    if (page->layout()) {
+        QLayoutItem *child;
+        while ((child = page->layout()->takeAt(0)) != nullptr) {}
+        delete page->layout();
+    }
+
+    auto *root = new QVBoxLayout(page);
+    root->setSpacing(14);
+    root->setContentsMargins(22, 18, 22, 18);
+
+    auto *hdr = new QHBoxLayout();
+    ui->app_sec_title->setStyleSheet(
+        QStringLiteral("font-size:14px; font-weight:700; background:transparent;"));
+    hdr->addWidget(ui->app_sec_title);
+    hdr->addStretch();
+    root->addLayout(hdr);
+
+    app_security_page_ = new AppSecurityPage(dark_mode_, page);
+    root->addWidget(app_security_page_, 1);
+}
+
 // -- models --
 void monitor::init_models() {
     log_model_ = new LogModel(this);
@@ -1229,12 +1256,43 @@ void monitor::init_models() {
     ui->honey_view->setItemDelegate(honey_delegate_);
     connect(ui->honey_view, &QTableView::clicked, this, &monitor::show_honey_detail);
 
+    // honeypot session table — live attacker activity
+    honey_session_table_ = new QTableWidget(0, 6, this);
+    honey_session_table_->setFrameShape(QFrame::NoFrame);
+    honey_session_table_->setAlternatingRowColors(true);
+    honey_session_table_->setShowGrid(false);
+    honey_session_table_->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    honey_session_table_->setSelectionMode(QAbstractItemView::SingleSelection);
+    honey_session_table_->setSelectionBehavior(QAbstractItemView::SelectRows);
+    honey_session_table_->verticalHeader()->hide();
+    honey_session_table_->horizontalHeader()->setStretchLastSection(true);
+    honey_session_table_->setMaximumHeight(260);
+    honey_session_table_->setHorizontalHeaderLabels({
+        "时间", "攻击者 IP", "服务", "战术/技术", "载荷", "评分"
+    });
+    setup_network_table(honey_session_table_);
+
+    // insert into honeypot page layout
+    if (auto *honeyLayout = qobject_cast<QVBoxLayout *>(ui->page_honeypot->layout())) {
+        auto *label = new QLabel("攻击者行为记录");
+        label->setStyleSheet("font-size:11px; font-weight:700; margin-top:8px;");
+        honeyLayout->insertWidget(honeyLayout->indexOf(ui->honey_detail), label);
+        honeyLayout->insertWidget(honeyLayout->indexOf(ui->honey_detail), honey_session_table_);
+    }
+
+    honey_session_timer_ = new QTimer(this);
+    connect(honey_session_timer_, &QTimer::timeout, this, &monitor::refresh_honeypot_sessions);
+    honey_session_timer_->start(3000);
+    refresh_honeypot_sessions();
+
     // network page
     setup_network_page();
     // traffic page
     setup_traffic_page();
     // tools page
     setup_tools_page();
+    // app security page
+    setup_app_security_page();
     for (auto *t: {ui->local_ip_table, ui->arp_table, ui->quarantine_table})
         setup_network_table(t);
 
@@ -1415,6 +1473,16 @@ void monitor::init_models() {
     auto *vbl = new QVBoxLayout(ui->sparkline_frame);
     vbl->setContentsMargins(0, 0, 0, 0);
     vbl->addWidget(sparkline_widget_);
+
+    // process monitor — cross-platform
+    {
+        auto *pw = new ProcessWidget(dark_mode_, this);
+        auto *dashLayout = qobject_cast<QVBoxLayout *>(ui->page_dashboard->layout());
+        if (dashLayout) {
+            int idx = dashLayout->indexOf(ui->sparkline_frame);
+            dashLayout->insertWidget(idx + 1, pw);
+        }
+    }
 
     // detail panels
     auto replace = [this](QTextEdit *old, DetailPanel *&panel, int maxH) {
@@ -1950,6 +2018,51 @@ void monitor::refresh_attackers() {
             a.score > 80 ? QStringLiteral("CRIT") : a.score > 50 ? QStringLiteral("WARN") : QStringLiteral("INFO"),
             QStringLiteral("%1  |  %2分  x%3  [%4]").arg(ip).arg(static_cast<int>(a.score)).arg(a.count).arg(a.type));
     }
+}
+
+void monitor::refresh_honeypot_sessions() {
+    if (!honey_session_table_) return;
+    auto sessions = Nezha::Database::DatabaseHelper::GetHoneypotSessions(50);
+    honey_session_table_->setRowCount(0);
+    honey_session_table_->setRowCount(static_cast<int>(sessions.size()));
+
+    auto Pk = QColor(dark_mode_ ? Theme::Strawberry : Theme::RosyDeep);
+    auto Tx = QColor(dark_mode_ ? Theme::DkText : Theme::LtText);
+    auto Coral = QColor(Theme::Coral);
+
+    for (size_t i = 0; i < sessions.size(); ++i) {
+        const auto &s = sessions[i];
+        int r = static_cast<int>(i);
+
+        auto *timeItem = new QTableWidgetItem(QString::fromStdString(s.captured_at));
+        timeItem->setForeground(Tx);
+
+        auto *ipItem = new QTableWidgetItem(QString::fromStdString(s.attacker_ip));
+        ipItem->setForeground(Coral);
+
+        auto *svcItem = new QTableWidgetItem(QString::fromStdString(s.service));
+        svcItem->setForeground(Pk);
+
+        auto *techItem = new QTableWidgetItem(QString::fromStdString(s.technique));
+        techItem->setForeground(Tx);
+
+        auto *payloadItem = new QTableWidgetItem(QString::fromStdString(s.payload));
+        payloadItem->setForeground(Tx);
+
+        auto *scoreItem = new QTableWidgetItem(
+            QString::fromStdString(std::to_string(static_cast<int>(s.threat_score))));
+        scoreItem->setForeground(s.threat_score > 60 ? Coral : Pk);
+
+        honey_session_table_->setItem(r, 0, timeItem);
+        honey_session_table_->setItem(r, 1, ipItem);
+        honey_session_table_->setItem(r, 2, svcItem);
+        honey_session_table_->setItem(r, 3, techItem);
+        honey_session_table_->setItem(r, 4, payloadItem);
+        honey_session_table_->setItem(r, 5, scoreItem);
+    }
+    honey_session_table_->resizeColumnsToContents();
+    ui->honey_stats_label->setText(
+        QStringLiteral("共 %1 条攻击记录").arg(sessions.size()));
 }
 
 // -- filters --

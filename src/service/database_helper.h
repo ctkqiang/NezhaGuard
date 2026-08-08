@@ -201,6 +201,52 @@ private:
     }
 };
 
+struct HoneypotSessionRecord {
+    int64_t     id = 0;
+    std::string attacker_ip;
+    std::string attacker_port;
+    std::string service;           // SSH, MySQL, HTTP...
+    std::string payload;           // attacker input / command
+    std::string technique;         // MITRE ATT&CK tag
+    std::string geo_country;
+    std::string geo_city;
+    std::string geo_isp;
+    double      threat_score = 0.0;
+    std::string captured_at;
+
+    using key_type = std::string;
+    static constexpr std::string_view table_name = "honeypot_sessions";
+
+    static constexpr auto columns = std::make_tuple(
+        Column<HoneypotSessionRecord, std::string>{"attacker_ip",   &HoneypotSessionRecord::attacker_ip},
+        Column<HoneypotSessionRecord, std::string>{"attacker_port", &HoneypotSessionRecord::attacker_port},
+        Column<HoneypotSessionRecord, std::string>{"service",       &HoneypotSessionRecord::service},
+        Column<HoneypotSessionRecord, std::string>{"payload",       &HoneypotSessionRecord::payload},
+        Column<HoneypotSessionRecord, std::string>{"technique",     &HoneypotSessionRecord::technique},
+        Column<HoneypotSessionRecord, std::string>{"geo_country",   &HoneypotSessionRecord::geo_country},
+        Column<HoneypotSessionRecord, std::string>{"geo_city",      &HoneypotSessionRecord::geo_city},
+        Column<HoneypotSessionRecord, std::string>{"geo_isp",       &HoneypotSessionRecord::geo_isp},
+        Column<HoneypotSessionRecord, double>     {"threat_score",  &HoneypotSessionRecord::threat_score},
+        Column<HoneypotSessionRecord, std::string>{"captured_at",   &HoneypotSessionRecord::captured_at, false}
+    );
+
+    static constexpr std::string_view ddl = R"SQL(
+        CREATE TABLE IF NOT EXISTS honeypot_sessions (
+            id            INTEGER PRIMARY KEY AUTOINCREMENT,
+            attacker_ip   TEXT NOT NULL,
+            attacker_port TEXT DEFAULT '',
+            service       TEXT DEFAULT '',
+            payload       TEXT DEFAULT '',
+            technique     TEXT DEFAULT '',
+            geo_country   TEXT DEFAULT '',
+            geo_city      TEXT DEFAULT '',
+            geo_isp       TEXT DEFAULT '',
+            threat_score  REAL DEFAULT 0,
+            captured_at   TEXT DEFAULT (datetime('now','localtime'))
+        );
+    )SQL";
+};
+
 class DatabaseHelper {
 public:
     static auto InitializeQuarantineDatabase(const std::string &data_dir = "data/") -> void;
@@ -208,6 +254,10 @@ public:
     static auto IsIPQuarantined(std::string_view ip) -> bool;
     static auto RemoveQuarantine(std::string_view ip) -> void;
     [[nodiscard]] static auto GetQuarantineList() -> std::vector<QuarantineRecord>;
+
+    // honeypot sessions
+    static auto InsertHoneypotSession(const HoneypotSessionRecord &rec) -> void;
+    [[nodiscard]] static auto GetHoneypotSessions(int limit = 200) -> std::vector<HoneypotSessionRecord>;
 
     static void InitiateDatabaseService(DatabaseService service);
     static auto GetDefaultInfo(DatabaseService service) -> DatabaseInformation;

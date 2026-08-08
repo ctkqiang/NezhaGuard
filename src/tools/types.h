@@ -21,6 +21,7 @@ enum class ToolId : std::uint8_t {
     Ps,
     History,
     Grep,
+    InstalledApps,
 };
 
 constexpr const char *tool_id_name(ToolId id) noexcept {
@@ -32,7 +33,8 @@ constexpr const char *tool_id_name(ToolId id) noexcept {
         case ToolId::Netstat:    return "netstat";
         case ToolId::Ps:         return "ps";
         case ToolId::History:    return "history";
-        case ToolId::Grep:       return "grep";
+        case ToolId::Grep:          return "grep";
+        case ToolId::InstalledApps: return "installed_apps";
     }
     return "???";
 }
@@ -46,7 +48,8 @@ constexpr const char *tool_display_name(ToolId id) noexcept {
         case ToolId::Netstat:    return "网络连接";
         case ToolId::Ps:         return "进程列表";
         case ToolId::History:    return "命令历史";
-        case ToolId::Grep:       return "日志搜索";
+        case ToolId::Grep:          return "日志搜索";
+        case ToolId::InstalledApps: return "已安装应用";
     }
     return "???";
 }
@@ -59,7 +62,8 @@ inline ToolId tool_id_from_name(const std::string &name) {
     if (name == "netstat")    return ToolId::Netstat;
     if (name == "ps")         return ToolId::Ps;
     if (name == "history")    return ToolId::History;
-    if (name == "grep")       return ToolId::Grep;
+    if (name == "grep")           return ToolId::Grep;
+    if (name == "installed_apps")  return ToolId::InstalledApps;
     return ToolId::Ps;
 }
 

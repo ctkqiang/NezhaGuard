@@ -31,6 +31,7 @@ QT_END_NAMESPACE
 class DetailPanel;
 class RadarWidget;
 class ToolsPage;
+class AppSecurityPage;
 
 class SparklineWidget : public QFrame {
     Q_OBJECT
@@ -114,6 +115,7 @@ private:
     void setup_network_page();
     void setup_traffic_page();
     void setup_tools_page();
+    void setup_app_security_page();
     void setup_log_table(QTableView *view);
     void setup_network_table(QTableWidget *table);
     void refresh_local_ips();
@@ -122,6 +124,7 @@ private:
     void refresh_protocol_stats();
     void refresh_attackers();
     void refresh_quickstats();
+    void refresh_honeypot_sessions();
     void start_animations();
 
     bool event(QEvent *e) override;
@@ -139,6 +142,7 @@ private:
     QTimer *clock_timer_ = nullptr;
     QTimer *sparkline_timer_ = nullptr;
     QTimer *proto_timer_ = nullptr;
+    QTimer *honey_session_timer_ = nullptr;
     LogDelegate *log_delegate_ = nullptr;
     AlertDelegate *alert_delegate_ = nullptr;
     AlertDelegate *recent_delegate_ = nullptr;
@@ -146,11 +150,13 @@ private:
     SparklineWidget *sparkline_widget_ = nullptr;
     RadarWidget *radar_widget_ = nullptr;
     ToolsPage *tools_page_ = nullptr;
+    AppSecurityPage *app_security_page_ = nullptr;
     DetailPanel *log_detail_panel_ = nullptr;
     DetailPanel *alert_detail_panel_ = nullptr;
     DetailPanel *honey_detail_panel_ = nullptr;
     QTableWidget *protocol_table_ = nullptr;
     QTableWidget *top_talkers_table_ = nullptr;
+    QTableWidget *honey_session_table_ = nullptr;
     struct Attacker { double score = 0; int count = 0; QString type; };
     QHash<QString, Attacker> attackers_;
     LogModel *attackers_model_ = nullptr;

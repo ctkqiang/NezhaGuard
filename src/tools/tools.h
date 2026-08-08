@@ -16,5 +16,6 @@
 #include "lastb.h"
 #include "faillog.h"
 #include "journalctl.h"
+#include "installed_apps.h"
 
 #endif // NEZHAGUARD_TOOLS_TOOLS_H

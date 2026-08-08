@@ -291,6 +291,15 @@
            <item><widget class="QLabel" name="tools_title"><property name="text"><string>系统工具</string></property></widget></item>
           </layout>
          </widget>
+         <!-- ============ 应用安全 ============ -->
+         <widget class="QWidget" name="page_app_security">
+          <layout class="QVBoxLayout" name="app_sec_layout">
+           <property name="spacing"><number>14</number></property>
+           <property name="leftMargin"><number>22</number></property><property name="topMargin"><number>18</number></property>
+           <property name="rightMargin"><number>22</number></property><property name="bottomMargin"><number>18</number></property>
+           <item><widget class="QLabel" name="app_sec_title"><property name="text"><string>应用安全分析</string></property></widget></item>
+          </layout>
+         </widget>
          <!-- ============ 系统配置 ============ -->
          <widget class="QWidget" name="page_settings">
           <layout class="QVBoxLayout" name="settings_layout">

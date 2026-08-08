@@ -12,6 +12,7 @@
 #include "lastb.h"
 #include "faillog.h"
 #include "journalctl.h"
+#include "installed_apps.h"
 
 #include <algorithm>
 #include <iostream>
@@ -62,7 +63,8 @@ std::unique_ptr<SystemTool> make_tool(ToolId id) {
         case ToolId::Lastlog:    return std::make_unique<LastlogTool>();
         case ToolId::Lastb:      return std::make_unique<LastbTool>();
         case ToolId::Faillog:    return std::make_unique<FaillogTool>();
-        case ToolId::Journalctl: return std::make_unique<JournalctlTool>();
+        case ToolId::Journalctl:    return std::make_unique<JournalctlTool>();
+        case ToolId::InstalledApps: return std::make_unique<InstalledAppsTool>();
     }
     return nullptr;
 }
@@ -71,6 +73,7 @@ std::vector<ToolId> all_tool_ids() {
     return {
         ToolId::Lastlog, ToolId::Journalctl, ToolId::Lastb, ToolId::Faillog,
         ToolId::Netstat, ToolId::Ps, ToolId::History, ToolId::Grep,
+        ToolId::InstalledApps,
     };
 }
 

@@ -185,12 +185,66 @@ namespace Nezha::Database {
             }
         };
 
-        QuarantineRepo g_repo; // 全局单例
+        class HoneypotSessionRepo {
+        public:
+            auto init(std::string_view data_dir) -> void {
+                std::lock_guard lock(mtx_);
+                db_path_ = std::format("{}/nezha_quarantine.db", data_dir);
+                db_.open(db_path_);
+            }
+
+            auto insert(const HoneypotSessionRecord &rec) -> void {
+                std::lock_guard lock(mtx_);
+                ensure_open();
+                Stmt stmt(db_.handle(), Orm<HoneypotSessionRecord>::insert_or_replace_sql());
+                if (!stmt) return;
+                stmt.bind(rec.attacker_ip, rec.attacker_port, rec.service,
+                          rec.payload, rec.technique, rec.geo_country,
+                          rec.geo_city, rec.geo_isp, rec.threat_score);
+                stmt.step();
+            }
+
+            auto fetch_all(int limit) -> std::vector<HoneypotSessionRecord> {
+                std::lock_guard lock(mtx_);
+                ensure_open();
+                std::vector<HoneypotSessionRecord> list;
+                std::string sql = std::format("SELECT * FROM {} ORDER BY id DESC LIMIT {}",
+                                              HoneypotSessionRecord::table_name, limit);
+                const Stmt stmt(db_.handle(), sql);
+                if (!stmt) return list;
+                while (stmt.step() == SQLITE_ROW) {
+                    HoneypotSessionRecord r{};
+                    r.id = stmt.col_int64(0);
+                    r.attacker_ip = stmt.col_text(1);
+                    r.attacker_port = stmt.col_text(2) ? stmt.col_text(2) : "";
+                    r.service = stmt.col_text(3) ? stmt.col_text(3) : "";
+                    r.payload = stmt.col_text(4) ? stmt.col_text(4) : "";
+                    r.technique = stmt.col_text(5) ? stmt.col_text(5) : "";
+                    r.geo_country = stmt.col_text(6) ? stmt.col_text(6) : "";
+                    r.geo_city = stmt.col_text(7) ? stmt.col_text(7) : "";
+                    r.geo_isp = stmt.col_text(8) ? stmt.col_text(8) : "";
+                    r.threat_score = stmt.col_double(9);
+                    r.captured_at = stmt.col_text(10) ? stmt.col_text(10) : "";
+                    list.push_back(std::move(r));
+                }
+                return list;
+            }
+
+        private:
+            DbGuard db_;
+            std::string db_path_;
+            std::mutex mtx_;
+            auto ensure_open() -> void { db_.open(db_path_); }
+        };
+
+        QuarantineRepo g_repo;
+        HoneypotSessionRepo g_honeypot_repo;
     }
 
 
     void DatabaseHelper::InitializeQuarantineDatabase(const std::string &data_dir) {
         g_repo.init(data_dir);
+        g_honeypot_repo.init(data_dir);
     }
 
     void DatabaseHelper::QuarantineIP(
@@ -226,5 +280,13 @@ namespace Nezha::Database {
             case DatabaseService::DB2: return {.Name = "IBM DB2", .Port = 50000};
             default: return {.Name = "Unknown", .Port = -1};
         }
+    }
+
+    void DatabaseHelper::InsertHoneypotSession(const HoneypotSessionRecord &rec) {
+        g_honeypot_repo.insert(rec);
+    }
+
+    std::vector<HoneypotSessionRecord> DatabaseHelper::GetHoneypotSessions(int limit) {
+        return g_honeypot_repo.fetch_all(limit);
     }
 }
